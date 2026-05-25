@@ -30,16 +30,19 @@ def _parse_csv(csv_path: Path) -> list[tuple[float, float, float]]:
         for row in reader:
             if not row:
                 continue
-            # Skip header / comment rows
-            if any(k in row[0] for k in ("#", "Part", "Time")) and header_idx["Pos.x"] is None:
-                # Try to parse header
+            # Skip header / comment rows. PartVTKOut header looks like
+            # "Pos.x [m];Pos.y [m];Pos.z [m];PartOut;..." — match the *prefix*.
+            first = row[0].strip()
+            if header_idx["Pos.x"] is None and (
+                first.startswith("Pos.x") or first.startswith("#") or first.startswith("Time")
+            ):
                 for i, c in enumerate(row):
                     c = c.strip()
-                    if c == "Pos.x":
+                    if c.startswith("Pos.x"):
                         header_idx["Pos.x"] = i
-                    elif c == "Pos.y":
+                    elif c.startswith("Pos.y"):
                         header_idx["Pos.y"] = i
-                    elif c == "Pos.z":
+                    elif c.startswith("Pos.z"):
                         header_idx["Pos.z"] = i
                 continue
             # Data row

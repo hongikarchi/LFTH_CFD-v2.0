@@ -47,9 +47,10 @@ where GenCase_win64
 | 연못 catchment | `<setmkbound>` rectangular box (pond) + AABB constraint | particle z<pond_top && pond_x_range 안 = "도달" |
 | Splash 정의 | 시뮬 종료 시점에 catchment AABB 밖에 있는 fluid particle 수 | PartVTKOut 또는 PartVTK CSV 후처리 |
 | 단위계 | SI (m, s, kg) | DualSPHysics default |
-| 해상도 (탐색) | `dp = 0.015 m` (1.5cm) | 5070 Ti로 GA eval 30-60초 목표 |
+| 해상도 (탐색 권장) | `dp = 0.020 m` (2cm) | RTX 5070 Ti로 cube STL 약 60-90초/eval 예상 |
+| 해상도 (정밀 탐색) | `dp = 0.015 m` (1.5cm) | **실측 138초/eval** (cube, timemax=4.0s) |
 | 해상도 (refine) | `dp = 0.005 m` (5mm) | 최종 후보만 |
-| 시뮬 시간 | `timemax = 4.0 s` | 정상상태 splash 패턴 안정화에 충분 |
+| 시뮬 시간 | `timemax = 4.0 s` (정밀) / 2.5 s (탐색) | splash 패턴 안정화 |
 | TimeOut (저장 간격) | `0.05 s` → 80 frame | refine 시 0.02s |
 
 ---
@@ -164,11 +165,16 @@ XML placeholder 치환 (e.g., `{{nozzle_x}}` → `0.15`) 후 GenCase → DualSPH
 ### Phase 5 — GH 컴포넌트 + GA (Week 2)
 **`gh/dualsphysics_eval_ghpy.py`:** GHPython3 컴포넌트 — sliders/STL 입력 → `run_case.py` subprocess 호출 → fitness 출력.
 
-Wallacei X 연결:
+**Wallacei X budget (실측 기반):**
+| Eval 시간 / Pop / Gen | 총 evals | 벽시간 (실측 138s/eval 기준) |
+|----------------------|---------|-----------------------------|
+| coarse: 60s × 20 × 15 | 300 | 5시간 |
+| 권장: 90s × 20 × 20 | 400 | 10시간 |
+| 정밀: 140s × 30 × 25 | 750 | 29시간 |
+
 - Genes: 9개 slider
 - Objective: minimize splash_ratio
-- Population: 20-30
-- Generations: 15-25
+- 첫 GA run은 `dp=0.020, timemax=2.5s`로 시작 (~5-7시간 overnight) 권장
 
 ### Phase 6 — Refinement (Week 3)
 Pareto front 상위 5-10 후보 → `dp=0.005`로 재시뮬 → 최종 선택 → Rhino에서 high-res 시각화.
@@ -226,27 +232,43 @@ PartVTK_win64.exe -dirin "runs\iter_<id>\Out" -savecsv "runs\iter_<id>\fluid_las
 
 ---
 
-## 9. 이번 세션에서 작성된 산출물
+## 9. 이번 세션에서 작성된 산출물 (모두 commit + push 완료)
 
 - `PLAN.md` (이 문서)
 - `.gitignore`
 - `templates/case_sculpture_template.xml`
-- `scripts/run_case.py`, `scripts/smoke_test.py`, `scripts/fitness.py`
+- `scripts/run_case.py`, `scripts/fitness.py`, `scripts/smoke_test.py`, `scripts/integration_test.py`
 - `gh/dualsphysics_eval_ghpy.py`
 - `rhino_import/load_vtk_particles.py`
-- Smoke test 결과 (로그 별도)
 
-모두 `https://github.com/hongikarchi/LFTH_CFD-v2.0` `main`에 commit + push.
+**검증된 실행:**
+- `smoke_test.py`: DamBreak2D 예제, 67초 GPU 시뮬, 201 VTK frame
+- `integration_test.py` (coarse dp=0.025, timemax=1.5s): 28초, 1656 particle, splash_ratio=0.89
+- 정밀 설정 (dp=0.015, timemax=4.0s): **138초**, 12,864 particle, 2,253 caught (17.5%)
+
+`runs/iter_timing_planned/Out/PartFluid_*.vtk` 81 frame이 Rhino import 대기 중.
+
+Remote: `https://github.com/hongikarchi/LFTH_CFD-v2.0` (`main` branch)
 
 ---
 
 ## 10. 다음 액션 (사용자 측)
 
+### 즉시 Rhino에서 시뮬 결과 확인 (GH 없이)
+1. Rhino 8 실행
+2. 명령 `_RunPythonScript` 또는 `_EditPythonScript`
+3. `C:\Users\user\Documents\LFTH_CFD v2.0\rhino_import\load_vtk_particles.py` 열기/실행
+4. `iter_timing_planned/Out/PartFluid_*.vtk` 81 frame이 layer별로 import됨
+   - 마지막 frame은 caught(녹색) / splash(빨강) 분리됨
+   - `pond_AABB` layer에 연못 박스 시각화
+5. Layer panel에서 frame toggle로 애니메이션 확인
+
+### GH 통합 (다음 작업 세션)
 1. **Rhino 8 + Wallacei X 설치 확인** (없으면 설치)
 2. `gh/sculpture_design.gh` 파일을 GH에서 새로 작성 — slider 9개 + 조형물 geometry 로직 + STL export
 3. `gh/dualsphysics_eval_ghpy.py` 코드를 GH의 Script 컴포넌트에 붙여넣기
 4. 첫 단일 평가 (slider 한 번 움직여 fitness 출력 확인)
-5. Wallacei X로 GA 연결, 첫 GA run
+5. Wallacei X로 GA 연결 — 첫 run은 coarse 설정 (`dp=0.020`, `timemax=2.5s`)으로 5-7시간 overnight
 
 ---
 
