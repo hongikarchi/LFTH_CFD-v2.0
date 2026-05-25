@@ -167,7 +167,74 @@
     padding: 18px;
     margin: 12px 0;
     display: flex; justify-content: center;
+    cursor: zoom-in;
+    position: relative;
+    transition: border-color 0.15s;
   }
+  .mermaid:hover { border-color: var(--accent); }
+  .mermaid::after {
+    content: "🔍 클릭하여 확대 · wheel zoom · drag pan";
+    position: absolute; right: 10px; top: 8px;
+    font-size: 11px; color: var(--muted);
+    background: var(--panel-2);
+    padding: 3px 8px; border-radius: 4px;
+    pointer-events: none;
+  }
+  .mermaid svg { max-width: 100%; height: auto; }
+  /* Modal overlay */
+  .diagram-modal {
+    position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 9999;
+    display: none;
+    align-items: center; justify-content: center;
+    cursor: zoom-out;
+  }
+  .diagram-modal.open { display: flex; }
+  .diagram-modal-stage {
+    width: 95vw; height: 92vh;
+    background: var(--panel);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    cursor: grab;
+  }
+  .diagram-modal-stage:active { cursor: grabbing; }
+  .diagram-modal-stage svg {
+    max-width: none; max-height: none;
+    display: block;
+    transform-origin: 0 0;
+    transition: transform 0.08s ease-out;
+    user-select: none;
+  }
+  .diagram-modal-close {
+    position: absolute; right: 14px; top: 12px;
+    background: var(--panel-2); border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 18px;
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    z-index: 1;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .diagram-modal-close:hover { background: var(--accent); color: var(--bg); }
+  .diagram-modal-hint {
+    position: absolute; left: 14px; bottom: 12px;
+    font-size: 12px; color: var(--muted);
+    background: var(--panel-2);
+    padding: 5px 10px; border-radius: 6px;
+    pointer-events: none;
+  }
+  .diagram-modal-reset {
+    position: absolute; right: 60px; top: 12px;
+    background: var(--panel-2); border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0 10px; height: 36px;
+    border-radius: 8px; cursor: pointer;
+    font-size: 13px;
+  }
+  .diagram-modal-reset:hover { background: var(--accent); color: var(--bg); }
   .file-tree {
     background: var(--code-bg);
     border: 1px solid var(--border);
@@ -930,6 +997,16 @@ gantt
 
 </main>
 
+<!-- Diagram zoom modal -->
+<div class="diagram-modal" id="diagramModal" aria-hidden="true">
+  <div class="diagram-modal-stage" id="diagramStage">
+    <button class="diagram-modal-reset" id="diagramReset" title="원본 크기로 리셋">⤺ Reset</button>
+    <button class="diagram-modal-close" id="diagramClose" title="닫기 (Esc)">✕</button>
+    <div id="diagramSvgHost"></div>
+    <div class="diagram-modal-hint">Wheel = zoom · Drag = pan · Esc/배경 클릭 = 닫기</div>
+  </div>
+</div>
+
 <script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -944,6 +1021,109 @@ gantt
     sequence: { useMaxWidth: true, wrap: true },
     gantt: { useMaxWidth: true, fontSize: 11, sectionFontSize: 12 },
   });
+  // Wait for mermaid auto-run to finish, then attach zoom handlers
+  setTimeout(initDiagramZoom, 800);
+
+  function initDiagramZoom() {
+    const modal = document.getElementById('diagramModal');
+    const stage = document.getElementById('diagramStage');
+    const host = document.getElementById('diagramSvgHost');
+    const closeBtn = document.getElementById('diagramClose');
+    const resetBtn = document.getElementById('diagramReset');
+    let svg = null;
+    let scale = 1, tx = 0, ty = 0;
+    let isDragging = false, dragStart = null;
+
+    function applyTransform() {
+      if (!svg) return;
+      svg.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+    }
+
+    function fitToStage() {
+      if (!svg) return;
+      const stageRect = stage.getBoundingClientRect();
+      const svgRect = svg.getBoundingClientRect();
+      // Use viewBox or natural size if available
+      const sw = svg.viewBox.baseVal.width || svg.getBBox().width || svgRect.width;
+      const sh = svg.viewBox.baseVal.height || svg.getBBox().height || svgRect.height;
+      const sx = (stageRect.width - 80) / sw;
+      const sy = (stageRect.height - 80) / sh;
+      scale = Math.min(sx, sy);
+      tx = (stageRect.width - sw * scale) / 2;
+      ty = (stageRect.height - sh * scale) / 2;
+      applyTransform();
+    }
+
+    function openModal(srcMermaid) {
+      const srcSvg = srcMermaid.querySelector('svg');
+      if (!srcSvg) return;
+      host.innerHTML = '';
+      svg = srcSvg.cloneNode(true);
+      // Remove inline width/height so transform controls size
+      svg.removeAttribute('style');
+      svg.setAttribute('width', '100%');
+      svg.setAttribute('height', '100%');
+      svg.style.maxWidth = 'none';
+      svg.style.maxHeight = 'none';
+      host.appendChild(svg);
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+      requestAnimationFrame(fitToStage);
+    }
+
+    function closeModal() {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+      host.innerHTML = '';
+      svg = null;
+      scale = 1; tx = 0; ty = 0;
+    }
+
+    // Attach to all mermaid blocks
+    document.querySelectorAll('.mermaid').forEach(el => {
+      el.addEventListener('click', () => openModal(el));
+    });
+
+    closeBtn.addEventListener('click', e => { e.stopPropagation(); closeModal(); });
+    resetBtn.addEventListener('click', e => { e.stopPropagation(); fitToStage(); });
+    modal.addEventListener('click', e => {
+      // Only close if click is on backdrop (not stage)
+      if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Wheel zoom
+    stage.addEventListener('wheel', e => {
+      if (!svg) return;
+      e.preventDefault();
+      const rect = stage.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const delta = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+      const newScale = Math.max(0.1, Math.min(8, scale * delta));
+      const ratio = newScale / scale;
+      tx = mx - (mx - tx) * ratio;
+      ty = my - (my - ty) * ratio;
+      scale = newScale;
+      applyTransform();
+    }, { passive: false });
+
+    // Drag pan
+    stage.addEventListener('mousedown', e => {
+      if (e.target === closeBtn || e.target === resetBtn) return;
+      isDragging = true;
+      dragStart = { x: e.clientX - tx, y: e.clientY - ty };
+    });
+    window.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      tx = e.clientX - dragStart.x;
+      ty = e.clientY - dragStart.y;
+      applyTransform();
+    });
+    window.addEventListener('mouseup', () => { isDragging = false; });
+  }
 </script>
 
 </body>
