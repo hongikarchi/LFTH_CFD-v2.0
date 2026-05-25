@@ -155,20 +155,84 @@ def render_template(template_text: str, mapping: dict) -> str:
     return out
 
 
+def _build_inlet_blocks(holes: list[tuple[float, float, float]], dp: float,
+                        nozzle_d: float, flow_v: float,
+                        tilt_x_deg: float, tilt_y_deg: float, thickness: float) -> dict:
+    """Generate <drawbox> + <inoutzone> XML for a list of nozzle holes."""
+    vx, vy, vz = angles_to_velocity_vector(flow_v, tilt_x_deg, tilt_y_deg)
+    geom_blocks = []
+    init_vel_blocks = []
+    inout_blocks = []
+    for i, (hx, hy, hz) in enumerate(holes, start=1):
+        mk = i  # MK_fluid 1..N
+        x0 = hx - nozzle_d / 2.0
+        y0 = hy - nozzle_d / 2.0
+        geom_blocks.append(
+            f'                    <setmkfluid mk="{mk}" />\n'
+            f'                    <drawbox>\n'
+            f'                        <boxfill>bottom</boxfill>\n'
+            f'                        <point x="{x0:.6f}" y="{y0:.6f}" z="{hz:.6f}" />\n'
+            f'                        <size x="{nozzle_d:.6f}" y="{nozzle_d:.6f}" z="{thickness:.6f}" />\n'
+            f'                    </drawbox>'
+        )
+        init_vel_blocks.append(
+            f'            <velocity mkfluid="{mk}" x="{vx:.6f}" y="{vy:.6f}" z="{vz:.6f}" />'
+        )
+        inout_blocks.append(
+            f'                <inoutzone>\n'
+            f'                    <refilling value="0" />\n'
+            f'                    <inputtreatment value="2" />\n'
+            f'                    <layers value="4" />\n'
+            f'                    <zone3d>\n'
+            f'                        <particles mkfluid="{mk}" direction="bottom" />\n'
+            f'                    </zone3d>\n'
+            f'                    <imposevelocity mode="0">\n'
+            f'                        <velocity v="{flow_v:.6f}" />\n'
+            f'                    </imposevelocity>\n'
+            f'                    <imposerhop mode="0" />\n'
+            f'                </inoutzone>'
+        )
+    return {
+        "INLET_GEOMETRY": "\n".join(geom_blocks),
+        "INLET_INITIAL_VELOCITIES": "\n".join(init_vel_blocks),
+        "INLET_INOUTZONES": "\n".join(inout_blocks),
+    }
+
+
 def build_mapping(params: dict, stl_path: Path, dp: float,
-                  timemax: float, timeout: float) -> dict:
+                  timemax: float, timeout: float,
+                  domain_override: dict | None = None,
+                  pond_override: dict | None = None) -> dict:
     """Compose the placeholder mapping from user params + defaults."""
-    nozzle_x = float(params["nozzle_x"])
-    nozzle_y = float(params["nozzle_y"])
-    nozzle_z = float(params.get("nozzle_z", DEFAULT_NOZZLE_Z))
     nozzle_d = float(params["nozzle_diameter"])
     flow_v = float(params["flow_velocity"])
     tilt_x = float(params.get("nozzle_angle_x", 0.0))
     tilt_y = float(params.get("nozzle_angle_y", 0.0))
+
+    # nozzle_holes overrides single-nozzle params if provided
+    holes = params.get("nozzle_holes")
+    if holes:
+        holes = [(float(h[0]), float(h[1]), float(h[2])) for h in holes]
+    else:
+        # single hole from legacy nozzle_x/y/z
+        nx = float(params["nozzle_x"])
+        ny = float(params["nozzle_y"])
+        nz = float(params.get("nozzle_z", DEFAULT_NOZZLE_Z))
+        holes = [(nx, ny, nz)]
+
+    inlet_blocks = _build_inlet_blocks(holes, dp, nozzle_d, flow_v,
+                                        tilt_x, tilt_y, NOZZLE_THICKNESS)
+
+    # Legacy single-nozzle vars (kept for compatibility with other placeholders)
+    nx, ny, nz = holes[0]
     vx, vy, vz = angles_to_velocity_vector(flow_v, tilt_x, tilt_y)
 
     domain = DEFAULT_DOMAIN.copy()
+    if domain_override:
+        domain.update(domain_override)
     pond = DEFAULT_POND.copy()
+    if pond_override:
+        pond.update(pond_override)
 
     mapping = {
         "dp": dp,
@@ -178,13 +242,13 @@ def build_mapping(params: dict, stl_path: Path, dp: float,
         "stl_scale": float(params["sculpture_size"]),
         "stl_rotate_z_deg": float(params["sculpture_angle"]),
         "stl_move_z": float(params["sculpture_height"]),
-        "nozzle_x": nozzle_x,
-        "nozzle_y": nozzle_y,
-        "nozzle_z": nozzle_z,
+        "nozzle_x": nx,
+        "nozzle_y": ny,
+        "nozzle_z": nz,
         "nozzle_diameter": nozzle_d,
         "nozzle_thickness": NOZZLE_THICKNESS,
-        "nozzle_x_minus_half": nozzle_x - nozzle_d / 2.0,
-        "nozzle_y_minus_half": nozzle_y - nozzle_d / 2.0,
+        "nozzle_x_minus_half": nx - nozzle_d / 2.0,
+        "nozzle_y_minus_half": ny - nozzle_d / 2.0,
         "nozzle_angle_x_deg": tilt_x,
         "nozzle_angle_y_deg": tilt_y,
         "flow_velocity": flow_v,
@@ -196,6 +260,7 @@ def build_mapping(params: dict, stl_path: Path, dp: float,
     }
     mapping.update(domain)
     mapping.update(pond)
+    mapping.update(inlet_blocks)
     return mapping
 
 
@@ -223,7 +288,10 @@ def evaluate(params: dict,
              timeout: float | None = None,
              use_gpu: bool | None = None,
              mode: str = "fast",
-             keep_outputs: bool = False) -> dict:
+             keep_outputs: bool = False,
+             domain_override: dict | None = None,
+             pond_override: dict | None = None,
+             extra_xml_patches: dict | None = None) -> dict:
     """Run one DualSPHysics simulation and return fitness.
 
     `mode`: one of 'fast' (GA exploration, ~9s for 10s sim), 'standard',
@@ -253,9 +321,14 @@ def evaluate(params: dict,
 
     # 2. Render XML template (with mode-specific patches)
     template_text = TEMPLATE_PATH.read_text(encoding="utf-8")
-    mapping = build_mapping(params, stl_local, dp, timemax, timeout)
+    mapping = build_mapping(params, stl_local, dp, timemax, timeout,
+                             domain_override=domain_override,
+                             pond_override=pond_override)
     case_xml_text = render_template(template_text, mapping)
-    case_xml_text = _apply_xml_patches(case_xml_text, xml_patches, inlet_layers)
+    combined_patches = dict(xml_patches)
+    if extra_xml_patches:
+        combined_patches.update(extra_xml_patches)
+    case_xml_text = _apply_xml_patches(case_xml_text, combined_patches, inlet_layers)
     # GenCase expects input WITHOUT .xml AND filename must end with _Def
     case_def_xml = iter_dir / "case_Def.xml"
     case_def_xml.write_text(case_xml_text, encoding="utf-8")
@@ -297,16 +370,20 @@ def evaluate(params: dict,
     fluid_vtks = sorted(out_dir.glob("PartFluid_*.vtk"))
     last_fluid_vtk = fluid_vtks[-1] if fluid_vtks else None
     splash_csv = _find_particle_csv(iter_dir, "splash_out")
+    # Effective pond AABB picks up overrides
+    pond_eff = DEFAULT_POND.copy()
+    if pond_override:
+        pond_eff.update(pond_override)
     fit = compute_fitness_from_vtk(
         last_fluid_vtk=last_fluid_vtk,
         splash_csv=splash_csv,
         pond_aabb=(
-            DEFAULT_POND["pond_xmin"],
-            DEFAULT_POND["pond_ymin"],
-            DEFAULT_POND["pond_xmin"] + DEFAULT_POND["pond_xsize"],
-            DEFAULT_POND["pond_ymin"] + DEFAULT_POND["pond_ysize"],
+            pond_eff["pond_xmin"],
+            pond_eff["pond_ymin"],
+            pond_eff["pond_xmin"] + pond_eff["pond_xsize"],
+            pond_eff["pond_ymin"] + pond_eff["pond_ysize"],
         ),
-        pond_top_z=DEFAULT_POND["pond_thickness"] + 0.30,
+        pond_top_z=pond_eff["pond_thickness"] + max(0.30, 3 * dp),
     )
 
     elapsed = time.time() - t0
