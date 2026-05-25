@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LFTH_CFD v2.0 — 아키텍처 보고서</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #161922;
+    --panel-2: #1e2230;
+    --text: #e6e8ee;
+    --muted: #9aa3b2;
+    --accent: #7cc4ff;
+    --accent-2: #ffbc6b;
+    --green: #5dd39e;
+    --red: #ff7a59;
+    --border: #2a3040;
+    --code-bg: #0b0d12;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --panel-2: #eef1f6;
+      --text: #1a1e29;
+      --muted: #5b6273;
+      --accent: #1d6ddc;
+      --accent-2: #c46900;
+      --green: #1f8b56;
+      --red: #d24a2a;
+      --border: #d6dbe5;
+      --code-bg: #f0f2f6;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Pretendard", "Noto Sans KR", Roboto, sans-serif;
+    line-height: 1.55;
+  }
+  body {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 100vh;
+  }
+  nav.toc {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 24px 18px;
+    position: sticky; top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  nav.toc h2 {
+    font-size: 13px; letter-spacing: 0.08em;
+    color: var(--muted); text-transform: uppercase;
+    margin: 0 0 12px 0;
+  }
+  nav.toc ol {
+    list-style: none; padding: 0; margin: 0;
+  }
+  nav.toc li {
+    margin: 4px 0;
+  }
+  nav.toc a {
+    color: var(--text);
+    text-decoration: none;
+    display: block;
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  nav.toc a:hover {
+    background: var(--panel-2);
+    color: var(--accent);
+  }
+  main {
+    padding: 36px 56px;
+    max-width: 1200px;
+  }
+  header.hero {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px; margin-bottom: 36px;
+  }
+  header.hero h1 {
+    font-size: 30px; margin: 0;
+    letter-spacing: -0.01em;
+  }
+  header.hero .subtitle {
+    color: var(--muted); margin-top: 6px;
+  }
+  header.hero .meta {
+    margin-top: 14px; display: flex; gap: 14px; flex-wrap: wrap;
+  }
+  header.hero .badge {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 12px; color: var(--muted);
+  }
+  header.hero .badge strong { color: var(--text); }
+  section {
+    margin-bottom: 48px;
+  }
+  section h2 {
+    font-size: 22px;
+    margin: 0 0 18px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  section h3 {
+    font-size: 16px;
+    margin: 24px 0 10px 0;
+    color: var(--accent);
+  }
+  p, li { font-size: 15px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin: 14px 0;
+  }
+  .card.callout-green { border-color: var(--green); background: color-mix(in srgb, var(--green) 5%, var(--panel)); }
+  .card.callout-amber { border-color: var(--accent-2); background: color-mix(in srgb, var(--accent-2) 5%, var(--panel)); }
+  .card.callout-red { border-color: var(--red); background: color-mix(in srgb, var(--red) 5%, var(--panel)); }
+  table {
+    width: 100%; border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 14px;
+  }
+  th, td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    text-align: left; vertical-align: top;
+  }
+  th {
+    background: var(--panel-2);
+    font-weight: 600;
+    color: var(--muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  tr:hover td { background: var(--panel-2); }
+  code, pre code {
+    font-family: "JetBrains Mono", "Fira Code", Consolas, Monaco, monospace;
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 14px 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+  }
+  pre code { background: transparent; padding: 0; font-size: 13px; }
+  .mermaid {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px;
+    margin: 12px 0;
+    display: flex; justify-content: center;
+  }
+  .file-tree {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+  .file-tree .comment { color: var(--muted); }
+  .file-tree .user-edits { color: var(--accent-2); font-weight: 600; }
+  .file-tree .auto { color: var(--accent); }
+  .legend {
+    display: flex; gap: 18px; flex-wrap: wrap;
+    margin: 8px 0 16px 0; font-size: 13px;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+  .legend .swatch {
+    width: 12px; height: 12px; border-radius: 3px; display: inline-block;
+  }
+  .status-done { color: var(--green); font-weight: 600; }
+  .status-pending { color: var(--accent-2); font-weight: 600; }
+  .status-future { color: var(--muted); font-weight: 600; }
+  .grid-2 {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+  }
+  @media (max-width: 1024px) {
+    body { grid-template-columns: 1fr; }
+    nav.toc { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    main { padding: 24px 18px; }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+  a { color: var(--accent); }
+  hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
+</style>
+</head>
+<body>
+
+<nav class="toc">
+  <h2>목차</h2>
+  <ol>
+    <li><a href="#overview">0. 한눈에 보기</a></li>
+    <li><a href="#pipeline">1. 전체 파이프라인</a></li>
+    <li><a href="#components">2. 시스템 컴포넌트</a></li>
+    <li><a href="#sequence">3. 단일 평가 sequence</a></li>
+    <li><a href="#ga-loop">4. GA 최적화 (미래)</a></li>
+    <li><a href="#user-controls">5. 사용자가 만질 수 있는 것</a></li>
+    <li><a href="#files">6. 파일 구조</a></li>
+    <li><a href="#status">7. 진행 상태 + 마일스톤</a></li>
+    <li><a href="#glossary">8. 용어집</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<header class="hero">
+  <h1>LFTH_CFD v2.0 — 아키텍처 보고서</h1>
+  <p class="subtitle">CFD-driven Parametric Sculpture Design Pipeline</p>
+  <div class="meta">
+    <span class="badge">작성 <strong>2026-05-26</strong></span>
+    <span class="badge">GPU <strong>RTX 5070 Ti (16GB)</strong></span>
+    <span class="badge">엔진 <strong>DualSPHysics v5.4.3</strong></span>
+    <span class="badge">모델링 <strong>Rhino 8 + Grasshopper</strong></span>
+    <span class="badge">최적화 <strong>Wallacei X (예정)</strong></span>
+    <span class="badge">Repo <strong><a href="https://github.com/hongikarchi/LFTH_CFD-v2.0">hongikarchi/LFTH_CFD-v2.0</a></strong></span>
+  </div>
+</header>
+
+<!-- 0. 한눈에 보기 -->
+<section id="overview">
+  <h2>0. 한눈에 보기</h2>
+  <div class="card">
+    <p><strong>목표:</strong> 위 노즐에서 떨어지는 물이 sculpture를 거쳐 바닥 연못에 도달하도록, 밖으로 튀는 물(splash)을 최소화하는 sculpture 디자인을 GA로 자동 최적화.</p>
+    <p><strong>현재까지 만들어진 것:</strong></p>
+    <ul>
+      <li>DualSPHysics CFD 시뮬레이션을 자동 실행하는 파이프라인 (XML 템플릿 → GenCase → GPU 시뮬 → VTK 출력 → splash 분류 → fitness 숫자)</li>
+      <li>Grasshopper에서 호출 가능한 Python 컴포넌트 코드</li>
+      <li>Rhino에서 시뮬 결과를 PointCloud로 시각화하는 IronPython 스크립트</li>
+      <li>matplotlib 기반 애니메이션 GIF 렌더러</li>
+      <li>End-to-end 검증 완료 (cube STL placeholder + 노즐 시나리오, 138초/eval @ 5070 Ti)</li>
+    </ul>
+    <p><strong>남은 것 (사용자 작업):</strong> Grasshopper definition 작성 + Wallacei X 연결 + GA 첫 run.</p>
+  </div>
+  <div class="grid-2">
+    <div class="card callout-green">
+      <h3 style="margin-top:0">✓ 검증된 사실</h3>
+      <ul>
+        <li>RTX 5070 Ti CUDA 13.2 + DualSPHysics GPU 빌드 = 정상 동작</li>
+        <li>GPU 시뮬레이션: cube STL, dp=0.015m, 4초 = <strong>138초</strong></li>
+        <li>End-to-end pipeline 12,864 particle 분류 (caught 2,253 / splash 10,611)</li>
+        <li>Rhino headless 자동 실행 + PointCloud import + viewport capture 가능</li>
+      </ul>
+    </div>
+    <div class="card callout-amber">
+      <h3 style="margin-top:0">→ 다음에 할 일</h3>
+      <ul>
+        <li>Grasshopper definition (sculpture parametric geometry + STL export)</li>
+        <li>Wallacei X 설치 + GA 연결</li>
+        <li>첫 coarse GA run (dp=0.020, timemax=2.5s, ~5-7시간)</li>
+        <li>Pareto front 상위 후보 dp=0.005로 refine</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 1. 전체 파이프라인 -->
+<section id="pipeline">
+  <h2>1. 전체 파이프라인</h2>
+  <p>슬라이더 한 번 움직이면 일어나는 일 — 그리고 GA가 자동으로 반복 호출.</p>
+  <div class="legend">
+    <span><span class="swatch" style="background:#7cc4ff"></span> 사용자 영역 (GH)</span>
+    <span><span class="swatch" style="background:#5dd39e"></span> Python 자동화</span>
+    <span><span class="swatch" style="background:#ffbc6b"></span> DualSPHysics 엔진</span>
+    <span><span class="swatch" style="background:#ff7a59"></span> 미래/GA</span>
+  </div>
+<pre class="mermaid">
+flowchart LR
+    classDef user fill:#7cc4ff,color:#0f1115,stroke:#1d6ddc,stroke-width:1px
+    classDef auto fill:#5dd39e,color:#0f1115,stroke:#1f8b56,stroke-width:1px
+    classDef eng fill:#ffbc6b,color:#0f1115,stroke:#c46900,stroke-width:1px
+    classDef fut fill:#ff7a59,color:#0f1115,stroke:#d24a2a,stroke-width:1px,stroke-dasharray:4 3
+
+    GH["Grasshopper<br/>9 sliders"]:::user
+    MESH["sculpture mesh<br/>(GH geometry)"]:::user
+    STL["sculpture.stl<br/>(ASCII STL)"]:::auto
+    XML["case_Def.xml<br/>(template fill)"]:::auto
+    GC["GenCase<br/>preprocessor"]:::eng
+    DS["DualSPHysics<br/>GPU solver"]:::eng
+    PV["PartVTK +<br/>PartVTKOut"]:::eng
+    FIT["fitness.py<br/>splash 분류"]:::auto
+    JSON["fitness.json<br/>{splash_ratio}"]:::auto
+    RHINO["load_vtk_particles.py<br/>(Rhino 시각화)"]:::user
+    ANIM["animate_run.py<br/>(GIF)"]:::auto
+    GA["Wallacei X GA<br/>(NSGA-II)"]:::fut
+
+    GH --> MESH --> STL --> XML --> GC --> DS --> PV --> FIT --> JSON
+    JSON --> GA
+    GA -.next gen.-> GH
+    JSON --> RHINO
+    PV --> ANIM
+</pre>
+</section>
+
+<!-- 2. 시스템 컴포넌트 -->
+<section id="components">
+  <h2>2. 시스템 컴포넌트 (Layer view)</h2>
+  <p>같은 정보를 layer별로 본 것. 각 layer가 어디서 동작하는지, 어떤 파일이 그 layer를 구성하는지.</p>
+<pre class="mermaid">
+flowchart TB
+    subgraph USER ["사용자 Layer (Rhino 8 안에서)"]
+        direction LR
+        U1["sculpture_design.gh<br/>(아직 미작성)"]
+        U2["9 sliders<br/>size/angle/height<br/>nozzle xyz/angle<br/>velocity/diameter"]
+        U3["GH parametric<br/>geometry"]
+    end
+    subgraph BRIDGE ["Bridge Layer (GH Script 컴포넌트)"]
+        B1["dualsphysics_eval_ghpy.py<br/>· mesh → STL writer<br/>· subprocess invoker<br/>· fitness.json parser"]
+    end
+    subgraph AUTO ["Automation Layer (system Python 3.14)"]
+        direction LR
+        A1["run_case.py<br/>· XML template render<br/>· 4 subprocess calls<br/>· result aggregation"]
+        A2["fitness.py<br/>· binary VTK parser<br/>· pond-AABB classifier<br/>· splash_ratio calc"]
+    end
+    subgraph ENGINE ["DualSPHysics CFD Engine (네이티브 exe)"]
+        direction LR
+        E1["GenCase_win64.exe"]
+        E2["DualSPHysics5.4_win64.exe<br/>-gpu (CUDA 13.2)"]
+        E3["PartVTK_win64.exe"]
+        E4["PartVTKOut_win64.exe"]
+    end
+    subgraph IO ["출력 (runs/iter_&lt;id&gt;/)"]
+        direction LR
+        O1["case.bi4<br/>(binary case)"]
+        O2["data/Part_*.bi4<br/>(per-frame state)"]
+        O3["Out/PartFluid_*.vtk<br/>(visualization)"]
+        O4["splash_out.csv<br/>(out-of-domain)"]
+        O5["fitness.json<br/>(scalar result)"]
+    end
+    subgraph VIZ ["Visualization Layer"]
+        direction LR
+        V1["load_vtk_particles.py<br/>(IronPython 2.7 in Rhino)"]
+        V2["animate_run.py<br/>(matplotlib GIF)"]
+        V3["render_keyframes.py<br/>(4-panel still)"]
+    end
+
+    U1 --> U2 --> U3 --> B1
+    B1 --> A1
+    A1 --> E1 --> O1
+    O1 --> E2 --> O2
+    O2 --> E3 --> O3
+    O2 --> E4 --> O4
+    O3 & O4 --> A2 --> O5
+    O5 --> B1
+    O3 --> V1
+    O3 --> V2 & V3
+</pre>
+</section>
+
+<!-- 3. 단일 평가 시퀀스 -->
+<section id="sequence">
+  <h2>3. 단일 평가 sequence (한 디자인을 평가하는 절차)</h2>
+  <p>슬라이더 한번 움직였을 때의 시간순 상호작용. <strong>RTX 5070 Ti에서 dp=0.015 / timemax=4.0 기준 약 138초 소요.</strong></p>
+<pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor U as 사용자
+    participant GH as Grasshopper
+    participant C as GHPython Component
+    participant RC as run_case.py
+    participant GC as GenCase
+    participant DS as DualSPHysics GPU
+    participant PV as PartVTK+Out
+    participant F as fitness.py
+    participant J as fitness.json
+
+    U->>GH: slider 조절 + run=True
+    GH->>C: mesh + 9 params
+    Note over C: mesh → ASCII STL<br/>params → JSON
+    C->>RC: subprocess(stl, params.json)
+    RC->>RC: XML 템플릿 placeholder 채움
+    RC->>GC: case_Def.xml → particles
+    GC-->>RC: case.bi4 (10-15k particles)
+    RC->>DS: -gpu case.bi4
+    Note over DS: SPH 시뮬 4초<br/>(80 timestep × 0.05s)
+    DS-->>RC: data/Part_0000~0080.bi4
+    par PartVTK
+        RC->>PV: -savevtk all fluid frames
+        PV-->>RC: PartFluid_*.vtk (binary)
+    and PartVTKOut
+        RC->>PV: -savecsv splash particles
+        PV-->>RC: splash_out.csv
+    end
+    RC->>F: compute_fitness_from_vtk(last_vtk, splash_csv)
+    F-->>RC: {splash_ratio, caught, total, ...}
+    RC->>J: write fitness.json
+    J-->>C: parse splash_ratio
+    C-->>GH: output pin: fitness = 0.825
+    GH-->>U: visual feedback
+</pre>
+</section>
+
+<!-- 4. GA loop -->
+<section id="ga-loop">
+  <h2>4. GA 최적화 루프 (다음 단계, Wallacei X)</h2>
+  <p>위 단일 평가를 GA가 자동으로 수십~수백 번 반복. <strong>현재 미구현</strong>, 사용자가 Wallacei X 설치 + GH 연결만 하면 동작.</p>
+<pre class="mermaid">
+flowchart TD
+    INIT["Wallacei 초기화<br/>· 9 genes (sliders)<br/>· objective: minimize splash_ratio<br/>· population size = 20<br/>· generations = 15"]
+    POP0["Generation 0:<br/>population 20개 랜덤 디자인"]
+    EV{"각 디자인 평가"}
+    CALL["dualsphysics_eval_ghpy.py 호출<br/>(138s × 20 = ~46분/gen)"]
+    FIT["splash_ratio 반환"]
+    DONE{"20개 모두 평가됨?"}
+    RANK["Pareto rank + crowding distance"]
+    CHECK{"gen &lt; 15?"}
+    BREED["부모 선택 (NSGA-II)<br/>→ crossover (slider 값 교차)<br/>→ mutation (랜덤 변이)<br/>→ 다음 generation 20개"]
+    PARETO["Pareto front:<br/>top 5-10 best designs"]
+    REFINE["dp = 0.005 로 재시뮬<br/>(고해상도 정밀 검증)"]
+    FINAL["최종 sculpture 디자인<br/>→ 제작"]
+
+    INIT --> POP0 --> EV
+    EV --> CALL --> FIT --> EV
+    EV --> DONE
+    DONE -->|No| CALL
+    DONE -->|Yes| RANK --> CHECK
+    CHECK -->|Yes, breed next gen| BREED --> EV
+    CHECK -->|No, 15 gen done| PARETO --> REFINE --> FINAL
+</pre>
+  <div class="card callout-amber">
+    <strong>예상 총 시간 (coarse 권장 설정):</strong> dp=0.020, timemax=2.5s 기준 약 60-90초/eval × 20 pop × 15 gen = <strong>5-7시간 (overnight 1회)</strong>.
+  </div>
+</section>
+
+<!-- 5. 사용자 조작 영역 -->
+<section id="user-controls">
+  <h2>5. 사용자가 만질 수 있는 것</h2>
+  <p>"내가 뭐를 만질 수 있는지" — 변수가 어디 살고 어디서 바꾸는지 명확히.</p>
+
+  <h3>5-1. 디자인 변수 (GA가 자동 탐색하거나 사용자가 직접 입력)</h3>
+  <table>
+    <thead>
+      <tr><th>변수</th><th>단위</th><th>기본 범위</th><th>어디서 바꾸나</th><th>의미</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>sculpture_size</code></td><td>m</td><td>0.3 - 0.8</td><td>GH slider</td><td>조형물 전체 스케일</td></tr>
+      <tr><td><code>sculpture_angle</code></td><td>deg</td><td>-30 ~ 30</td><td>GH slider</td><td>Z축 회전 (또는 표면 각도)</td></tr>
+      <tr><td><code>sculpture_height</code></td><td>m</td><td>0.5 - 1.5</td><td>GH slider</td><td>Z 위치 (연못 위 어디에)</td></tr>
+      <tr><td><code>nozzle_x</code></td><td>m</td><td>-0.3 ~ 0.3</td><td>GH slider</td><td>노즐 X 위치</td></tr>
+      <tr><td><code>nozzle_y</code></td><td>m</td><td>-0.3 ~ 0.3</td><td>GH slider</td><td>노즐 Y 위치</td></tr>
+      <tr><td><code>nozzle_angle_x</code></td><td>deg</td><td>-30 ~ 30</td><td>GH slider</td><td>X축 기울기</td></tr>
+      <tr><td><code>nozzle_angle_y</code></td><td>deg</td><td>-30 ~ 30</td><td>GH slider</td><td>Y축 기울기</td></tr>
+      <tr><td><code>flow_velocity</code></td><td>m/s</td><td>1.0 - 5.0</td><td>GH slider</td><td>유속 (유량 = velocity × inlet area)</td></tr>
+      <tr><td><code>nozzle_diameter</code></td><td>m</td><td>0.02 - 0.05</td><td>GH slider</td><td>노즐 직경</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5-2. 시뮬레이션 파라미터 (사용자가 직접 조정, 코드 안에 있음)</h3>
+  <table>
+    <thead>
+      <tr><th>파라미터</th><th>기본값</th><th>파일</th><th>변경 영향</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>dp</code> (particle 간격)</td><td>0.015 m</td><td><code>scripts/run_case.py</code> 인자</td><td>↓ 정밀 ↑ but 느림 (dp 절반 → 시간 8배)</td></tr>
+      <tr><td><code>timemax</code> (시뮬 길이)</td><td>4.0 s</td><td><code>scripts/run_case.py</code> 인자</td><td>splash 안정화에 필요한 시간</td></tr>
+      <tr><td><code>timeout</code> (저장 간격)</td><td>0.05 s</td><td><code>scripts/run_case.py</code> 인자</td><td>↓ 더 부드러운 애니메이션, 디스크 더 사용</td></tr>
+      <tr><td><code>POND_AABB</code></td><td>(-0.4, -0.4, 0.4, 0.4)</td><td><code>scripts/run_case.py</code> + <code>scripts/fitness.py</code></td><td>연못 영역 정의. fitness 분류 기준</td></tr>
+      <tr><td><code>POND_TOP_Z</code></td><td>0.32 m</td><td><code>scripts/fitness.py</code></td><td>이 z 아래 + 연못 XY 안 = "도달"</td></tr>
+      <tr><td><code>nozzle_z</code> 기본</td><td>2.5 m</td><td><code>scripts/run_case.py</code> <code>DEFAULT_NOZZLE_Z</code></td><td>노즐 높이 기본값 (GH slider로도 override)</td></tr>
+      <tr><td>도메인 크기</td><td>(-1,-1,0)~(1,1,3) m</td><td><code>scripts/run_case.py</code> <code>DEFAULT_DOMAIN</code></td><td>시뮬 box. particle이 도달할 공간</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5-3. CFD 물리 파라미터 (XML 안에 있음, 보통 안 건드림)</h3>
+  <table>
+    <thead>
+      <tr><th>파라미터</th><th>기본값</th><th>의미</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>gravity z</code></td><td>-9.81</td><td>중력</td></tr>
+      <tr><td><code>rhop0</code></td><td>1000 kg/m³</td><td>물 밀도</td></tr>
+      <tr><td><code>speedsound</code></td><td>100 m/s</td><td>음속 (높이면 더 정확, 느림)</td></tr>
+      <tr><td><code>Visco</code></td><td>0.01</td><td>인공 점성 계수</td></tr>
+      <tr><td><code>Kernel</code></td><td>2 (Wendland)</td><td>SPH kernel 함수</td></tr>
+      <tr><td><code>Boundary</code></td><td>2 (mDBC)</td><td>boundary 처리 방식. mDBC가 표준</td></tr>
+      <tr><td><code>DensityDT</code></td><td>3 (Fourtakas full)</td><td>밀도 확산 항 (안정성)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5-4. Fitness 정의 (다른 metric 원하면 여기 수정)</h3>
+  <div class="card">
+    <p>현재 fitness = <code>splash_count / (splash_count + caught_count)</code> ∈ [0, 1]</p>
+    <p><strong>다른 metric 가능 (사용자가 <code>scripts/fitness.py</code> 의 <code>compute_fitness_from_vtk()</code> 수정):</strong></p>
+    <ul>
+      <li>물 도달 시간 (얼마나 빨리 연못 채우나)</li>
+      <li>연못 안 수면 균일도 (분포 표준편차)</li>
+      <li>sculpture 표면에 묻은 물량 (체류 시간)</li>
+      <li>다목적: splash 최소 + 미적 곡률 최대 (Wallacei multi-objective)</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 6. 파일 구조 -->
+<section id="files">
+  <h2>6. 파일 구조</h2>
+  <div class="legend">
+    <span><span class="swatch" style="background:#7cc4ff"></span> 자동화 코드 (Python)</span>
+    <span><span class="swatch" style="background:#ffbc6b"></span> 사용자가 직접 작성/조정</span>
+    <span><span class="swatch" style="background:#9aa3b2"></span> 자동 생성 (gitignore)</span>
+  </div>
+  <pre class="file-tree">
+LFTH_CFD v2.0/
+├── <span class="user-edits">PLAN.md</span>                                  <span class="comment"># 계획 문서 (사용자가 검토)</span>
+├── <span class="user-edits">ARCHITECTURE.html</span>                       <span class="comment"># 이 보고서</span>
+├── .gitignore
+│
+├── templates/
+│   └── <span class="auto">case_sculpture_template.xml</span>        <span class="comment"># DualSPHysics XML 템플릿 (placeholder 포함)</span>
+│
+├── scripts/                                <span class="comment"># 시스템 Python 3.14에서 실행</span>
+│   ├── <span class="auto">run_case.py</span>                        <span class="comment"># 메인 orchestrator</span>
+│   ├── <span class="auto">fitness.py</span>                         <span class="comment"># splash 분류 + 비율 계산</span>
+│   ├── <span class="auto">smoke_test.py</span>                      <span class="comment"># DualSPHysics GPU 검증</span>
+│   ├── <span class="auto">integration_test.py</span>                <span class="comment"># 풀 파이프라인 검증 (cube STL)</span>
+│   ├── <span class="auto">animate_run.py</span>                     <span class="comment"># VTK frames → GIF</span>
+│   └── <span class="auto">render_keyframes.py</span>                <span class="comment"># 4-panel 정지 이미지</span>
+│
+├── gh/                                     <span class="comment"># Grasshopper 측 코드</span>
+│   ├── <span class="user-edits">sculpture_design.gh</span>                <span class="comment"># (사용자가 GH에서 작성)</span>
+│   └── <span class="auto">dualsphysics_eval_ghpy.py</span>          <span class="comment"># GH Script 컴포넌트에 paste</span>
+│
+├── rhino_import/                           <span class="comment"># Rhino IronPython 2.7</span>
+│   ├── <span class="auto">load_vtk_particles.py</span>              <span class="comment"># 시뮬 결과 → Rhino PointCloud</span>
+│   ├── <span class="auto">load_and_capture.py</span>                <span class="comment"># 시각화 + 자동 PNG 캡처</span>
+│   └── <span class="auto">load_with_signal.py</span>                <span class="comment"># 외부 호출용 wrapper</span>
+│
+└── runs/                                   <span class="comment"># 시뮬레이션 출력 (gitignore)</span>
+    ├── _smoke_dambreak/                    <span class="comment"># DamBreak 예제 결과</span>
+    ├── iter_cube_test/                     <span class="comment"># 통합 테스트 (28s)</span>
+    ├── iter_timing_planned/                <span class="comment"># 정밀 테스트 (138s, 81 frames)</span>
+    │   ├── case_Def.xml
+    │   ├── sculpture.stl
+    │   ├── fitness.json
+    │   ├── splash_out.csv
+    │   ├── animation.gif                   <span class="comment"># 시뮬 영상</span>
+    │   ├── keyframes.png                   <span class="comment"># 4-panel 스냅샷</span>
+    │   └── Out/
+    │       ├── data/Part_*.bi4             <span class="comment"># DualSPHysics native</span>
+    │       └── PartFluid_*.vtk             <span class="comment"># 81 frames</span>
+    ├── _rhino_capture.png                  <span class="comment"># Rhino 자동 시각화 결과</span>
+    └── _rhino_status.txt                   <span class="comment"># Rhino 실행 상태</span>
+  </pre>
+</section>
+
+<!-- 7. 진행 상태 -->
+<section id="status">
+  <h2>7. 진행 상태 + 마일스톤</h2>
+  <p>완료된 것, 진행 중인 것, 사용자 작업 대기 중인 것.</p>
+<pre class="mermaid">
+gantt
+    title 진행 상태 + 향후 일정
+    dateFormat YYYY-MM-DD
+    axisFormat %m/%d
+
+    section ✓ 완료 (Claude 자동)
+    환경 검증 (GPU, DSPH 확인)           :done, 2026-05-25, 1d
+    git repo + GitHub remote             :done, 2026-05-25, 1d
+    PLAN.md 작성                         :done, 2026-05-25, 1d
+    XML 템플릿                           :done, 2026-05-25, 1d
+    run_case 자동화                      :done, 2026-05-25, 1d
+    fitness 분류 (binary VTK 포함)        :done, 2026-05-25, 1d
+    Smoke test (DamBreak GPU)            :done, 2026-05-25, 1d
+    Integration test (cube STL)          :done, 2026-05-25, 1d
+    GHPython 컴포넌트 코드               :done, 2026-05-25, 1d
+    Rhino IronPython 시각화              :done, 2026-05-25, 1d
+    Rhino 자동 실행 + 스크린샷            :done, 2026-05-25, 1d
+    Animation GIF + keyframes            :done, 2026-05-25, 1d
+    ARCHITECTURE.html                    :done, 2026-05-26, 1d
+
+    section → 사용자 작업 대기
+    Rhino 8 + Wallacei X 설치 확인       :active, 2026-05-26, 1d
+    GH definition 작성 (sculpture geom)   :2026-05-27, 4d
+    GH ↔ dualsphysics_eval 연결          :2026-05-31, 1d
+    첫 단일 평가 (sanity check)          :2026-06-01, 1d
+
+    section 최적화
+    coarse GA run (5-7h overnight)       :2026-06-02, 1d
+    결과 분석                            :2026-06-03, 2d
+    medium GA run (10h)                  :2026-06-05, 1d
+    Pareto 상위 후보 dp=0.005 refine      :2026-06-06, 3d
+    최종 디자인 결정                     :milestone, 2026-06-09, 0d
+</pre>
+
+  <h3>현재 상태 요약</h3>
+  <table>
+    <thead><tr><th>영역</th><th>상태</th><th>위치/파일</th></tr></thead>
+    <tbody>
+      <tr><td>CFD 엔진 동작</td><td class="status-done">✓ 검증됨</td><td>67s DamBreak smoke test</td></tr>
+      <tr><td>End-to-end 파이프라인</td><td class="status-done">✓ 검증됨</td><td>138s cube STL integration</td></tr>
+      <tr><td>Fitness 계산</td><td class="status-done">✓ 검증됨</td><td>splash_ratio=0.825 (cube)</td></tr>
+      <tr><td>Rhino 시각화</td><td class="status-done">✓ 검증됨</td><td>runs/_rhino_capture.png</td></tr>
+      <tr><td>Animation GIF</td><td class="status-done">✓ 검증됨</td><td>runs/iter_timing_planned/animation.gif</td></tr>
+      <tr><td>GH definition</td><td class="status-pending">⏳ 사용자 작성 필요</td><td>gh/sculpture_design.gh (placeholder)</td></tr>
+      <tr><td>GHPython 컴포넌트 paste</td><td class="status-pending">⏳ GH 작성 후 진행</td><td>gh/dualsphysics_eval_ghpy.py</td></tr>
+      <tr><td>Wallacei GA 연결</td><td class="status-future">○ 다음 단계</td><td>—</td></tr>
+      <tr><td>첫 GA run</td><td class="status-future">○ 다음 단계</td><td>—</td></tr>
+      <tr><td>Pareto refine</td><td class="status-future">○ 다음 단계</td><td>—</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 8. 용어집 -->
+<section id="glossary">
+  <h2>8. 용어집</h2>
+  <table>
+    <thead><tr><th>용어</th><th>뜻 + 우리 프로젝트에서의 역할</th></tr></thead>
+    <tbody>
+      <tr><td><strong>SPH</strong> (Smoothed Particle Hydrodynamics)</td><td>mesh 없는 유체 시뮬레이션 방식. 물을 작은 입자 ~12K개로 표현. 자유표면(splash) 정확 — 우리 시나리오에 최적.</td></tr>
+      <tr><td><strong>DualSPHysics</strong></td><td>GPU 가속 SPH 솔버. 5070 Ti CUDA로 4초 시뮬 138초.</td></tr>
+      <tr><td><strong>dp</strong> (initial inter-particle distance)</td><td>입자 간 거리. 작을수록 정밀, 느림. 우리는 탐색 dp=0.020, 정밀 dp=0.015, refine dp=0.005.</td></tr>
+      <tr><td><strong>MK</strong></td><td>DualSPHysics가 boundary/fluid 식별하는 정수 ID. 10=pond, 20=sculpture, 0=floor, 1=fluid (XML에서 정의).</td></tr>
+      <tr><td><strong>AABB</strong> (Axis-Aligned Bounding Box)</td><td>축 정렬 박스. 우리 pond와 simulation domain을 정의.</td></tr>
+      <tr><td><strong>GenCase</strong></td><td>DualSPHysics 전처리기. XML → particle 배치 + STL 메쉬 import.</td></tr>
+      <tr><td><strong>PartVTK / PartVTKOut</strong></td><td>후처리기. DualSPHysics binary 출력 → VTK/CSV. PartVTKOut은 도메인 밖으로 evacuated된 particle만 추출.</td></tr>
+      <tr><td><strong>mDBC</strong> (modified Dynamic Boundary Conditions)</td><td>boundary 처리 방식. XML <code>Boundary=2</code>. SPH 표준.</td></tr>
+      <tr><td><strong>VTK</strong></td><td>Visualization Toolkit format. 3D 데이터 표준. 우리는 legacy binary polydata.</td></tr>
+      <tr><td><strong>Wallacei X</strong></td><td>Grasshopper용 NSGA-II 다목적 GA plugin. Galapagos보다 외부 프로세스 호환 좋음.</td></tr>
+      <tr><td><strong>NSGA-II</strong> (Non-dominated Sorting GA II)</td><td>다목적 최적화 GA. Pareto front 유지. 우리는 단일 objective (splash 최소화)지만 multi 확장 가능.</td></tr>
+      <tr><td><strong>Pareto front</strong></td><td>다목적 최적화에서 어느 objective도 더 좋게 못 만드는 design 집합. "최선의 trade-off 선택지".</td></tr>
+      <tr><td><strong>Fitness</strong></td><td>GA가 최소/최대화할 숫자. 우리 = <code>splash_ratio</code> (0~1, 작을수록 좋음).</td></tr>
+      <tr><td><strong>splash_ratio</strong></td><td><code>(연못 밖 particle 수) / (전체 fluid particle 수)</code>. 시뮬 끝 시점 측정.</td></tr>
+      <tr><td><strong>IronPython 2.7</strong></td><td>Rhino 내부 Python 런타임. <code>_-RunPythonScript</code>가 이걸 사용. Python 2 문법만 됨.</td></tr>
+      <tr><td><strong>CPython 3</strong></td><td>일반 Python. <code>scripts/</code> 코드가 사용. Rhino 8의 ScriptEditor도 CPython3 지원.</td></tr>
+      <tr><td><strong>GHPython 컴포넌트</strong></td><td>Grasshopper 안에 Python 스크립트 박는 컴포넌트. input/output 핀 자유롭게 설정.</td></tr>
+      <tr><td><strong>STL</strong></td><td>3D 삼각 메쉬 파일 포맷. GH에서 export, GenCase가 import.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<hr>
+
+<p style="color:var(--muted); font-size:13px; text-align:center; margin-top:40px;">
+  생성: Claude Opus 4.7 (1M context) · <code>ARCHITECTURE.html</code> · <a href="https://github.com/hongikarchi/LFTH_CFD-v2.0">repo</a>
+</p>
+
+</main>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: isDark ? 'dark' : 'default',
+    themeVariables: {
+      fontFamily: 'inherit',
+      fontSize: '14px',
+    },
+    flowchart: { htmlLabels: true, curve: 'basis' },
+    sequence: { useMaxWidth: true, wrap: true },
+    gantt: { useMaxWidth: true, fontSize: 11, sectionFontSize: 12 },
+  });
+</script>
+
+</body>
+</html>
