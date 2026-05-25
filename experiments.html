@@ -2756,5 +2756,684 @@
     }
   ]
 }</pre></details></td></tr>
-</table><div class="meta">Last refreshed: 2026-05-26 04:13:59</div>
+<tr><td><strong>test_31</strong></td><td class='note'>Top 4 translated to align with nozzles (+4,-4,-2). Bottom 2 stay at origin (acts as final pond-level catch).</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2]</code></td><td>19</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.063</td><td>0.669</td><td>64.1s</td><td>2026-05-26 04:15:47</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_31",
+  "note": "Top 4 translated to align with nozzles (+4,-4,-2). Bottom 2 stay at origin (acts as final pond-level catch).",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.2
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_32</strong></td><td class='note'>test_22 base + bottom 2 modules raised slightly to z+1 (so they intercept cascading water above pond floor).</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2], M4[T4,-4,0 S1.5], M5[T4,-4,0 S1.5]</code></td><td>35</td><td>300</td><td>120</td><td>420</td><td class='ratio ok'>0.117</td><td>0.631</td><td>61.9s</td><td>2026-05-26 04:17:28</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_32",
+  "note": "test_22 base + bottom 2 modules raised slightly to z+1 (so they intercept cascading water above pond floor).",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.2
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        0
+      ],
+      "scale": 1.5
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        0
+      ],
+      "scale": 1.5
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_33</strong></td><td class='note'>test_22 base + extended timemax 15s — allow more water to settle in pond.</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2], M4[T4,-4,-2], M5[T4,-4,-2]</code></td><td>35</td><td>300</td><td>120</td><td>420</td><td class='ratio ok'>0.117</td><td>0.631</td><td>91.6s</td><td>2026-05-26 04:19:29</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_33",
+  "note": "test_22 base + extended timemax 15s — allow more water to settle in pond.",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 15.0,
+    "viscobound": 0.2
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_34</strong></td><td class='note'>test_22 base + Z translation -1.5 (between -1 and -2 sweet spot).</td><td><code>M0[T4,-4,-1.5], M1[T4,-4,-1.5], M2[T4,-4,-1.5], M3[T4,-4,-1.5], M4[T4,-4,-1.5], M5[T4,-4,-1.5]</code></td><td>8</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.027</td><td>0.695</td><td>61.8s</td><td>2026-05-26 04:21:39</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_34",
+  "note": "test_22 base + Z translation -1.5 (between -1 and -2 sweet spot).",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.2
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -1.5
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -1.5
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -1.5
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -1.5
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -1.5
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -1.5
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_35</strong></td><td class='note'>Translate sculpture toward where water normally deflects (test +4, +4, -2 — opposite Y of test_22).</td><td><code>M0[T4,4,-2], M1[T4,4,-2], M2[T4,4,-2], M3[T4,4,-2], M4[T4,4,-2], M5[T4,4,-2]</code></td><td>227</td><td>300</td><td>120</td><td>420</td><td class='ratio good'>0.757</td><td>0.174</td><td>70.4s</td><td>2026-05-26 04:23:16</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_35",
+  "note": "Translate sculpture toward where water normally deflects (test +4, +4, -2 — opposite Y of test_22).",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.2
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_36</strong></td><td class='note'>Compromise: top shells just at nozzle Y edge for minimal contact while letting most water pass. (+4, -1, -2).</td><td><code>M0[T4,-1,-2], M1[T4,-1,-2], M2[T4,-1,-2], M3[T4,-1,-2], M4[T4,-1,-2], M5[T4,-1,-2]</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>40.4s</td><td>2026-05-26 04:25:14</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_36",
+  "note": "Compromise: top shells just at nozzle Y edge for minimal contact while letting most water pass. (+4, -1, -2).",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.2
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -1.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -1.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -1.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -1.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -1.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -1.0,
+        -2.0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_37</strong></td><td class='note'>Position top shells so nozzle Y is just inside their bbox: (+4, -2, -2).</td><td><code>M0[T4,-2,-2], M1[T4,-2,-2], M2[T4,-2,-2], M3[T4,-2,-2], M4[T4,-2,-2], M5[T4,-2,-2]</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>40.4s</td><td>2026-05-26 04:26:18</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_37",
+  "note": "Position top shells so nozzle Y is just inside their bbox: (+4, -2, -2).",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.2
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -2.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -2.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -2.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -2.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -2.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -2.0,
+        -2.0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+</table><div class="meta">Last refreshed: 2026-05-26 04:26:24</div>
 </body></html>
