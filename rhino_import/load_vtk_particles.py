@@ -47,30 +47,52 @@ def _find_latest_out_dir() -> Path | None:
 
 
 def parse_vtk_points(vtk_path: Path) -> list[tuple[float, float, float]]:
-    """Parse POINTS section of legacy ASCII VTK polydata. Returns list of (x,y,z)."""
-    text = vtk_path.read_text(encoding="utf-8", errors="ignore")
-    m = re.search(r"POINTS\s+(\d+)\s+\w+\s*\n", text)
+    """Parse POINTS section of legacy VTK polydata (ASCII or BINARY). Returns (x,y,z) list."""
+    if not vtk_path.exists():
+        return []
+    raw = vtk_path.read_bytes()
+    head_end = raw.find(b"POINTS")
+    if head_end < 0:
+        return []
+    is_binary = b"\nBINARY\n" in raw[:head_end]
+    line_end = raw.find(b"\n", head_end)
+    if line_end < 0:
+        return []
+    header = raw[head_end:line_end].decode("ascii", errors="ignore")
+    m = re.match(r"POINTS\s+(\d+)\s+(\w+)", header)
     if not m:
         return []
     n_pts = int(m.group(1))
-    start = m.end()
-    # Read until next non-numeric line or until n_pts*3 floats consumed
+    dtype = m.group(2).lower()
+    data_start = line_end + 1
+    if is_binary:
+        import struct
+        if dtype == "float":
+            fmt = f">{n_pts * 3}f"; itemsize = 4
+        elif dtype == "double":
+            fmt = f">{n_pts * 3}d"; itemsize = 8
+        else:
+            return []
+        need = n_pts * 3 * itemsize
+        if len(raw) < data_start + need:
+            return []
+        vals = struct.unpack(fmt, raw[data_start:data_start + need])
+        return [(vals[i], vals[i + 1], vals[i + 2]) for i in range(0, n_pts * 3, 3)]
+    text = raw[data_start:].decode("ascii", errors="ignore")
     pts: list[tuple[float, float, float]] = []
     buf: list[float] = []
-    for line in text[start:].splitlines():
+    for line in text.splitlines():
         line = line.strip()
         if not line:
             continue
-        # Stop if we hit a section header
-        if re.match(r"^[A-Z_]+(\s+\d+)?", line) and not re.match(r"^-?\d", line):
+        if re.match(r"^[A-Z_]+(\s+\d+)?\s*$", line) and not re.match(r"^-?\d", line):
             break
         try:
             buf.extend(float(t) for t in line.split())
         except ValueError:
             break
         while len(buf) >= 3 and len(pts) < n_pts:
-            x, y, z = buf[0], buf[1], buf[2]
-            pts.append((x, y, z))
+            pts.append((buf[0], buf[1], buf[2]))
             buf = buf[3:]
         if len(pts) >= n_pts:
             break

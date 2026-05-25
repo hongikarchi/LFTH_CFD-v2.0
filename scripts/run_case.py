@@ -210,22 +210,20 @@ def evaluate(params: dict,
           "-savecsv", str(splash_csv_stub),
           "-SaveResume", str(iter_dir / "_ResumeOut")],
          cwd=iter_dir, log=log_lines, label="PartVTKOut")
-    # PartVTKOut writes splash_out.csv (or .csv per part). Locate the consolidated CSV.
-    splash_csv = _find_csv(iter_dir, "splash_out")
 
-    # 6. PartVTK — fluid particles at last frame
-    fluid_csv_stub = iter_dir / "fluid_last"
+    # 6. PartVTK — fluid particles, all frames (also enables Rhino visualization)
     _run([str(PARTVTK), "-dirdata", str(data_dir),
-          "-savecsv", str(fluid_csv_stub),
-          "-onlytype:-all,+fluid",
-          "-last:1"],
+          "-savevtk", str(out_dir / "PartFluid"),
+          "-onlytype:-all,+fluid"],
          cwd=iter_dir, log=log_lines, label="PartVTK")
-    fluid_csv = _find_csv(iter_dir, "fluid_last")
 
-    # 7. Fitness
-    from fitness import compute_fitness  # local module
-    fit = compute_fitness(
-        fluid_csv=fluid_csv,
+    # 7. Fitness — parse last fluid VTK + splash CSV
+    from fitness import compute_fitness_from_vtk  # local module
+    fluid_vtks = sorted(out_dir.glob("PartFluid_*.vtk"))
+    last_fluid_vtk = fluid_vtks[-1] if fluid_vtks else None
+    splash_csv = _find_particle_csv(iter_dir, "splash_out")
+    fit = compute_fitness_from_vtk(
+        last_fluid_vtk=last_fluid_vtk,
         splash_csv=splash_csv,
         pond_aabb=(
             DEFAULT_POND["pond_xmin"],
@@ -233,7 +231,7 @@ def evaluate(params: dict,
             DEFAULT_POND["pond_xmin"] + DEFAULT_POND["pond_xsize"],
             DEFAULT_POND["pond_ymin"] + DEFAULT_POND["pond_ysize"],
         ),
-        pond_top_z=DEFAULT_POND["pond_thickness"] + 0.30,  # within 30cm above pond surface counts as "caught"
+        pond_top_z=DEFAULT_POND["pond_thickness"] + 0.30,
     )
 
     elapsed = time.time() - t0
@@ -261,14 +259,18 @@ def evaluate(params: dict,
     return result
 
 
-def _find_csv(iter_dir: Path, stem: str) -> Path:
-    """PartVTK/PartVTKOut may emit `<stem>.csv` directly or `<stem>_0001.csv` etc.
-    Return the first matching file (or the bare stem path if none)."""
-    direct = iter_dir / f"{stem}.csv"
-    if direct.exists():
-        return direct
-    matches = sorted(iter_dir.glob(f"{stem}*.csv"))
-    return matches[0] if matches else direct
+def _find_particle_csv(iter_dir: Path, stem: str) -> Path | None:
+    """Find the CSV with actual particle data (has Pos.x header), skipping stats CSVs."""
+    candidates = sorted(iter_dir.glob(f"{stem}*.csv"))
+    for c in candidates:
+        try:
+            with c.open("r", encoding="utf-8", errors="ignore") as f:
+                head = f.read(2048)
+            if "Pos.x" in head:
+                return c
+        except OSError:
+            continue
+    return candidates[0] if candidates else None
 
 
 def _run(cmd: list[str], cwd: Path, log: list[str], label: str,
