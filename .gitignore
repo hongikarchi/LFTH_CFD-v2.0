@@ -1,0 +1,27 @@
+# DualSPHysics outputs
+*.bi4
+*.vtk
+*.vtu
+*.csv
+*.out
+data/
+CaseOut/
+*_out/
+
+# Rhino/Grasshopper temp
+*.3dmbak
+*.ghx.bak
+*.rhl
+
+# Large geometry
+*.stl
+*.obj
+*.ply
+
+# OS
+Thumbs.db
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
