@@ -13,11 +13,26 @@ from animate_run import parse_vtk_points, find_latest_iter, box_edges, POND_AABB
 
 
 def main():
-    iter_dir = find_latest_iter()
+    if len(sys.argv) > 1:
+        cand = Path(__file__).resolve().parent.parent / "runs" / ("iter_" + sys.argv[1])
+        iter_dir = cand if cand.is_dir() else find_latest_iter()
+    else:
+        iter_dir = find_latest_iter()
     vtks = sorted((iter_dir / "Out").glob("PartFluid_*.vtk"))
     if not vtks:
         print("No frames")
         return
+
+    # Read XML to recover timeout (save interval) - fall back to 0.05
+    timeout = 0.05
+    try:
+        import re
+        xml_text = (iter_dir / "case_Def.xml").read_text(encoding="utf-8")
+        m = re.search(r'key="TimeOut"\s+value="([0-9.eE+-]+)"', xml_text)
+        if m:
+            timeout = float(m.group(1))
+    except Exception:
+        pass
 
     # Pick 4 keyframes
     n = len(vtks)
@@ -43,9 +58,9 @@ def main():
             if cau.size:
                 ax.scatter(cau[:, 0], cau[:, 1], cau[:, 2], s=2.0, c="#1fa336", alpha=0.9, depthshade=False)
             ratio = (len(pts) - int(in_pond.sum())) / len(pts)
-            ax.set_title(f"t={fi*0.05:.2f}s  np={len(pts)}  splash={ratio:.2f}", fontsize=9)
+            ax.set_title(f"t={fi*timeout:.2f}s  np={len(pts)}  splash={ratio:.2f}", fontsize=9)
         else:
-            ax.set_title(f"t={fi*0.05:.2f}s  (empty)", fontsize=9)
+            ax.set_title(f"t={fi*timeout:.2f}s  (empty)", fontsize=9)
 
     out = iter_dir / "keyframes.png"
     fig.tight_layout()
