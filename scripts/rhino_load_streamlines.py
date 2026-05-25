@@ -7,10 +7,14 @@ import json
 import socket
 from pathlib import Path
 
+import sys
 PROJECT = Path(__file__).resolve().parent.parent
-TRAILS = PROJECT / "runs" / "iter_streamline_v1" / "trails.json"
 GEOM = PROJECT / "runs" / "_real_geom.json"
 HOST, PORT = "127.0.0.1", 1999
+# CLI: rhino_load_streamlines.py [iter_id] [parent_layer]
+ITER_ID = sys.argv[1] if len(sys.argv) > 1 else "streamline_v1"
+PARENT_LAYER = sys.argv[2] if len(sys.argv) > 2 else ""
+TRAILS = PROJECT / "runs" / f"iter_{ITER_ID}" / "trails.json"
 
 # Distinct colors per nozzle (5 nozzles)
 NOZZLE_COLORS = [
@@ -60,23 +64,40 @@ def main():
     HEADER = [
         "import Rhino",
         "import Rhino.Geometry as rg",
+        "import System",
         "from System.Drawing import Color",
         "doc = Rhino.RhinoDoc.ActiveDoc",
-        "def ensure_layer(name, rgb):",
-        "    idx = doc.Layers.FindByFullPath(name, -1)",
+        "def ensure_layer(full_path, rgb):",
+        "    idx = doc.Layers.FindByFullPath(full_path, -1)",
         "    if idx >= 0: return idx",
-        "    i = doc.Layers.Add(); L = doc.Layers[i]",
-        "    L.Name = name; L.Color = Color.FromArgb(rgb[0], rgb[1], rgb[2])",
-        "    return L.Index",
+        "    parts = full_path.split('::')",
+        "    parent_id = System.Guid.Empty",
+        "    cur_path = ''",
+        "    for k, part in enumerate(parts):",
+        "        cur_path = part if k == 0 else cur_path + '::' + part",
+        "        ix = doc.Layers.FindByFullPath(cur_path, -1)",
+        "        if ix < 0:",
+        "            nl = Rhino.DocObjects.Layer()",
+        "            nl.Name = part",
+        "            if parent_id != System.Guid.Empty:",
+        "                nl.ParentLayerId = parent_id",
+        "            if k == len(parts) - 1:",
+        "                nl.Color = Color.FromArgb(rgb[0], rgb[1], rgb[2])",
+        "            ix = doc.Layers.Add(nl)",
+        "        parent_id = doc.Layers[ix].Id",
+        "    return ix",
     ]
     chunks = []
     cur_lines = list(HEADER)
     cur_lines.append("added = 0")
     cur_setup_layers = set()  # which nozzle layers are set up in current chunk
 
+    layer_full_path = (lambda n: f"{PARENT_LAYER}::stream_nozzle_{n}" if PARENT_LAYER else f"stream_nozzle_{n}")
+
     def setup_layer(nozzle_idx, color):
+        path = layer_full_path(nozzle_idx)
         cur_lines.append(
-            f"lid_{nozzle_idx} = ensure_layer('stream_nozzle_{nozzle_idx}', "
+            f"lid_{nozzle_idx} = ensure_layer({path!r}, "
             f"({color[0]},{color[1]},{color[2]}))"
         )
         cur_lines.append(

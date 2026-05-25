@@ -135,7 +135,8 @@ def main():
         "pond_thickness": 0.5,
     }
 
-    iter_id = "streamline_v1"
+    burst_v_override = float(sys.argv[1]) if len(sys.argv) > 1 else None
+    iter_id = sys.argv[2] if len(sys.argv) > 2 else "streamline_v1"
     iter_dir = RUNS_DIR / f"iter_{iter_id}"
     if iter_dir.exists():
         shutil.rmtree(iter_dir)
@@ -145,9 +146,10 @@ def main():
 
     # Velocity profile file: emit for 0.06s then stop
     vp_file = iter_dir / "velprof.dat"
-    burst_v = 10.0
+    burst_v = burst_v_override if burst_v_override is not None else 10.0
     burst_end = 0.06
     make_velocity_profile_file(vp_file, burst_v, burst_end)
+    print(f"[burst v_inlet = {burst_v} m/s]")
 
     # Copy STL
     stl_local = iter_dir / "sculpture.stl"
