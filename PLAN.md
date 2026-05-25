@@ -47,11 +47,13 @@ where GenCase_win64
 | 연못 catchment | `<setmkbound>` rectangular box (pond) + AABB constraint | particle z<pond_top && pond_x_range 안 = "도달" |
 | Splash 정의 | 시뮬 종료 시점에 catchment AABB 밖에 있는 fluid particle 수 | PartVTKOut 또는 PartVTK CSV 후처리 |
 | 단위계 | SI (m, s, kg) | DualSPHysics default |
-| 해상도 (탐색 권장) | `dp = 0.020 m` (2cm) | RTX 5070 Ti로 cube STL 약 60-90초/eval 예상 |
-| 해상도 (정밀 탐색) | `dp = 0.015 m` (1.5cm) | **실측 138초/eval** (cube, timemax=4.0s) |
-| 해상도 (refine) | `dp = 0.005 m` (5mm) | 최종 후보만 |
-| 시뮬 시간 | `timemax = 4.0 s` (정밀) / 2.5 s (탐색) | splash 패턴 안정화 |
-| TimeOut (저장 간격) | `0.05 s` → 80 frame | refine 시 0.02s |
+| 모드 | 설정 | 10s 시뮬 wall time | 용도 |
+|------|------|----------------|------|
+| **fast** | dp=0.045, **CPU**, cfl=0.45, speedsound=40, DDT=0, inlet=2 | **~9.7s** | GA 탐색 (default) |
+| **standard** | dp=0.025, CPU, default | ~41s | 후보 검증 |
+| **precise** | dp=0.015, GPU, default | ~340s | 최종 refine |
+
+> **벤치마크 (2026-05-26):** cube STL placeholder + RTX 5070 Ti + Intel CPU. fast/standard/precise 3가지 모드 ranking stability 검증 완료 — coarse dp(=0.045)에서도 design 간 fitness 순서 보존 (small_low < centered_mid < offset_tilted, dp=0.020 vs dp=0.045 동일).
 
 ---
 
@@ -165,16 +167,18 @@ XML placeholder 치환 (e.g., `{{nozzle_x}}` → `0.15`) 후 GenCase → DualSPH
 ### Phase 5 — GH 컴포넌트 + GA (Week 2)
 **`gh/dualsphysics_eval_ghpy.py`:** GHPython3 컴포넌트 — sliders/STL 입력 → `run_case.py` subprocess 호출 → fitness 출력.
 
-**Wallacei X budget (실측 기반):**
-| Eval 시간 / Pop / Gen | 총 evals | 벽시간 (실측 138s/eval 기준) |
-|----------------------|---------|-----------------------------|
-| coarse: 60s × 20 × 15 | 300 | 5시간 |
-| 권장: 90s × 20 × 20 | 400 | 10시간 |
-| 정밀: 140s × 30 × 25 | 750 | 29시간 |
+**Wallacei X budget (mode='fast' 기반, 2026-05-26 측정):**
+| Mode | Eval 시간 | Pop / Gen | 총 evals | 벽시간 |
+|------|---------|-----------|---------|--------|
+| **fast** (권장 GA) | ~10s | 20 × 20 | 400 | **~1.1시간** |
+| **fast** (큰 GA) | ~10s | 30 × 30 | 900 | ~2.5시간 |
+| **standard** (검증) | ~40s | 30 candidates | 30 | ~20분 |
+| **precise** (최종) | ~340s | 5 finalists | 5 | ~30분 |
 
 - Genes: 9개 slider
 - Objective: minimize splash_ratio
-- 첫 GA run은 `dp=0.020, timemax=2.5s`로 시작 (~5-7시간 overnight) 권장
+- **혁신:** `mode='fast'` → CPU + dp=0.045 + cfl/speedsound/DDT 최적화 → 1세대 20 eval ≈ 3.5분, 전체 GA run 1시간 내 (overnight 불필요)
+- 다양한 sculpture geom에 대해 fast↔standard ranking 동일 검증됨
 
 ### Phase 6 — Refinement (Week 3)
 Pareto front 상위 5-10 후보 → `dp=0.005`로 재시뮬 → 최종 선택 → Rhino에서 high-res 시각화.

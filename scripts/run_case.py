@@ -65,6 +65,53 @@ NOZZLE_THICKNESS = 0.01  # vertical thickness of inlet box
 DEFAULT_NOZZLE_Z = 2.5
 
 
+# --- mode presets -------------------------------------------------------------
+# Tuned on RTX 5070 Ti + cube STL benchmark (2026-05-26). dp=0.045 CPU
+# extreme keeps GA rank ordering vs dp=0.020 baseline while landing
+# under 10s of wall time for a 10s simulation.
+MODE_PRESETS = {
+    # GA exploration — speed prioritized, accurate ranking but loose absolute fitness
+    "fast": {
+        "dp": 0.045,
+        "timemax": 10.0,
+        "timeout": 0.10,
+        "use_gpu": False,           # CPU wins for small particle counts
+        "inlet_layers": 2,
+        "xml_patches": {
+            "cflnumber": 0.45,
+            "speedsound": 40,
+            "DensityDT": 0,
+        },
+    },
+    # Default end-to-end checks, full validation
+    "standard": {
+        "dp": 0.025,
+        "timemax": 4.0,
+        "timeout": 0.05,
+        "use_gpu": False,           # CPU still beats GPU below ~10k particles
+        "inlet_layers": 4,
+        "xml_patches": {
+            "cflnumber": 0.30,
+            "speedsound": 80,
+            "DensityDT": 3,
+        },
+    },
+    # Pareto-front refinement, slower but accurate
+    "precise": {
+        "dp": 0.015,
+        "timemax": 4.0,
+        "timeout": 0.05,
+        "use_gpu": True,
+        "inlet_layers": 4,
+        "xml_patches": {
+            "cflnumber": 0.20,
+            "speedsound": 100,
+            "DensityDT": 3,
+        },
+    },
+}
+
+
 # --- helpers ------------------------------------------------------------------
 def angles_to_velocity_vector(magnitude: float,
                               tilt_x_deg: float,
@@ -153,15 +200,42 @@ def build_mapping(params: dict, stl_path: Path, dp: float,
 
 
 # --- main evaluate ------------------------------------------------------------
+def _apply_xml_patches(text: str, patches: dict, inlet_layers: int | None) -> str:
+    """Patch <parameter key=...> and constantsdef values + inlet layer count."""
+    import re
+    out = text
+    for key, val in (patches or {}).items():
+        pat = r'(<parameter key="' + re.escape(key) + r'" value=")[^"]*(")'
+        out, n = re.subn(pat, r'\g<1>' + str(val) + r'\g<2>', out)
+        if n == 0 and key in ("speedsound", "cflnumber"):
+            pat2 = r'(<' + key + r'\s+value=")[^"]*(")'
+            out, _ = re.subn(pat2, r'\g<1>' + str(val) + r'\g<2>', out)
+    if inlet_layers is not None:
+        out = out.replace('<layers value="4"', f'<layers value="{inlet_layers}"')
+    return out
+
+
 def evaluate(params: dict,
              stl_path: str | os.PathLike,
              iter_id: str | None = None,
-             dp: float = 0.015,
-             timemax: float = 4.0,
-             timeout: float = 0.05,
-             use_gpu: bool = True,
+             dp: float | None = None,
+             timemax: float | None = None,
+             timeout: float | None = None,
+             use_gpu: bool | None = None,
+             mode: str = "fast",
              keep_outputs: bool = False) -> dict:
-    """Run one DualSPHysics simulation and return fitness."""
+    """Run one DualSPHysics simulation and return fitness.
+
+    `mode`: one of 'fast' (GA exploration, ~9s for 10s sim), 'standard',
+    or 'precise' (refinement). Explicit kwargs override the mode preset.
+    """
+    preset = MODE_PRESETS.get(mode, MODE_PRESETS["fast"])
+    if dp is None:        dp = preset["dp"]
+    if timemax is None:   timemax = preset["timemax"]
+    if timeout is None:   timeout = preset["timeout"]
+    if use_gpu is None:   use_gpu = preset["use_gpu"]
+    inlet_layers = preset["inlet_layers"]
+    xml_patches = preset["xml_patches"]
     t0 = time.time()
     if iter_id is None:
         iter_id = time.strftime("%Y%m%d_%H%M%S")
@@ -177,10 +251,11 @@ def evaluate(params: dict,
     stl_local = iter_dir / "sculpture.stl"
     shutil.copyfile(stl_src, stl_local)
 
-    # 2. Render XML template
+    # 2. Render XML template (with mode-specific patches)
     template_text = TEMPLATE_PATH.read_text(encoding="utf-8")
     mapping = build_mapping(params, stl_local, dp, timemax, timeout)
     case_xml_text = render_template(template_text, mapping)
+    case_xml_text = _apply_xml_patches(case_xml_text, xml_patches, inlet_layers)
     # GenCase expects input WITHOUT .xml AND filename must end with _Def
     case_def_xml = iter_dir / "case_Def.xml"
     case_def_xml.write_text(case_xml_text, encoding="utf-8")
@@ -314,11 +389,20 @@ def main():
     parser.add_argument("--params", required=True, help="JSON file with param dict")
     parser.add_argument("--stl", required=True, help="Path to sculpture STL")
     parser.add_argument("--iter-id", default=None)
-    parser.add_argument("--dp", type=float, default=0.015)
-    parser.add_argument("--timemax", type=float, default=4.0)
-    parser.add_argument("--timeout", type=float, default=0.05)
-    parser.add_argument("--cpu", action="store_true", help="Use CPU solver instead of GPU")
+    parser.add_argument("--mode", default="fast", choices=list(MODE_PRESETS),
+                        help="Preset: fast (GA ~9s/10s sim), standard, or precise")
+    parser.add_argument("--dp", type=float, default=None, help="Override mode preset")
+    parser.add_argument("--timemax", type=float, default=None, help="Override mode preset")
+    parser.add_argument("--timeout", type=float, default=None, help="Override mode preset")
+    parser.add_argument("--cpu", action="store_true", help="Force CPU solver")
+    parser.add_argument("--gpu", action="store_true", help="Force GPU solver")
     args = parser.parse_args()
+
+    use_gpu = None
+    if args.cpu:
+        use_gpu = False
+    elif args.gpu:
+        use_gpu = True
 
     params = json.loads(Path(args.params).read_text(encoding="utf-8"))
     result = evaluate(
@@ -328,7 +412,8 @@ def main():
         dp=args.dp,
         timemax=args.timemax,
         timeout=args.timeout,
-        use_gpu=not args.cpu,
+        use_gpu=use_gpu,
+        mode=args.mode,
     )
     print(json.dumps({k: v for k, v in result.items() if k != "log"}, indent=2))
 

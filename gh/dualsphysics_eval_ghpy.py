@@ -15,8 +15,11 @@ INPUTS (configure on the component):
     nozzle_angle_x      : float (Number)      — tilt about X (deg)
     nozzle_angle_y      : float (Number)      — tilt about Y (deg)
     flow_velocity       : float (Number)      — inlet velocity magnitude (m/s)
-    dp                  : float (Number)      — particle distance (m), default 0.015
-    timemax             : float (Number)      — sim duration (s), default 4.0
+    mode                : str (Text)           — "fast" (GA ~9s/10s sim, dp=0.045 CPU),
+                                                  "standard" (~40s, dp=0.025 CPU), or
+                                                  "precise" (~140s, dp=0.015 GPU). Default "fast"
+    dp                  : float (Number)      — override mode preset (optional)
+    timemax             : float (Number)      — override mode preset (optional)
     run                 : bool (Boolean)      — set True to trigger evaluation (default False)
 
 OUTPUTS:
@@ -133,15 +136,19 @@ else:
             params_json = iter_dir / "params.json"
             params_json.write_text(json.dumps(params, indent=2), encoding="utf-8")
 
+            mode_val = (mode if isinstance(mode, str) and mode else "fast").lower()
             cmd = [
                 PYTHON_EXE,
                 str(RUN_CASE),
                 "--params", str(params_json),
                 "--stl", str(stl_path),
                 "--iter-id", iter_id,
-                "--dp", str(float(dp) if dp is not None else 0.015),
-                "--timemax", str(float(timemax) if timemax is not None else 4.0),
+                "--mode", mode_val,
             ]
+            if dp is not None:
+                cmd += ["--dp", str(float(dp))]
+            if timemax is not None:
+                cmd += ["--timemax", str(float(timemax))]
             t0 = time.time()
             proc = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
             elapsed_s = time.time() - t0

@@ -215,6 +215,7 @@
     <li><a href="#components">2. 시스템 컴포넌트</a></li>
     <li><a href="#sequence">3. 단일 평가 sequence</a></li>
     <li><a href="#ga-loop">4. GA 최적화 (미래)</a></li>
+    <li><a href="#perf-modes">4.5. 성능 모드 (fast/standard/precise)</a></li>
     <li><a href="#user-controls">5. 사용자가 만질 수 있는 것</a></li>
     <li><a href="#files">6. 파일 구조</a></li>
     <li><a href="#status">7. 진행 상태 + 마일스톤</a></li>
@@ -257,8 +258,9 @@
       <h3 style="margin-top:0">✓ 검증된 사실</h3>
       <ul>
         <li>RTX 5070 Ti CUDA 13.2 + DualSPHysics GPU 빌드 = 정상 동작</li>
-        <li>GPU 시뮬레이션: cube STL, dp=0.015m, 4초 = <strong>138초</strong></li>
-        <li>End-to-end pipeline 12,864 particle 분류 (caught 2,253 / splash 10,611)</li>
+        <li><strong style="color:var(--green)">⚡ Fast mode: 10s 시뮬 = ~9.7s wall time</strong> (CPU + dp=0.045, GA용)</li>
+        <li>Fast ↔ Standard ranking 보존 검증 (GA 탐색 안전)</li>
+        <li>Precise mode: dp=0.015 GPU, 4s 시뮬 = 138s (최종 refine용)</li>
         <li>Rhino headless 자동 실행 + PointCloud import + viewport capture 가능</li>
       </ul>
     </div>
@@ -266,9 +268,9 @@
       <h3 style="margin-top:0">→ 다음에 할 일</h3>
       <ul>
         <li>Grasshopper definition (sculpture parametric geometry + STL export)</li>
-        <li>Wallacei X 설치 + GA 연결</li>
-        <li>첫 coarse GA run (dp=0.020, timemax=2.5s, ~5-7시간)</li>
-        <li>Pareto front 상위 후보 dp=0.005로 refine</li>
+        <li>Wallacei X 설치 + GA 연결 (mode='fast' input pin 사용)</li>
+        <li>첫 GA run: fast mode 20×20 = ~1.1시간</li>
+        <li>상위 후보 standard mode 검증 → 최종 precise mode refine</li>
       </ul>
     </div>
   </div>
@@ -440,6 +442,73 @@ flowchart TD
   <div class="card callout-amber">
     <strong>예상 총 시간 (coarse 권장 설정):</strong> dp=0.020, timemax=2.5s 기준 약 60-90초/eval × 20 pop × 15 gen = <strong>5-7시간 (overnight 1회)</strong>.
   </div>
+</section>
+
+<!-- 4.5 성능 모드 -->
+<section id="perf-modes">
+  <h2>4.5. 성능 모드 (fast / standard / precise)</h2>
+  <p>벤치마크 결과 (2026-05-26, RTX 5070 Ti + Intel CPU, cube STL). 사용자 goal "10s sim &lt; 10s wall" 달성.</p>
+
+  <div class="card callout-green">
+    <strong>핵심 발견:</strong> 우리 규모(particle 600~10K개)에서는 <strong>CPU가 GPU보다 빠름</strong>. GPU는 kernel launch overhead가 작은 문제를 압도. 12K+ particle부터 GPU 유리.
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Mode</th><th>dp (m)</th><th>Solver</th><th>CFL</th><th>SpeedSound</th><th>DDT</th><th>Inlet</th><th>10s sim wall</th><th>N particles</th><th>용도</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="status-done"><strong>fast</strong></td><td>0.045</td><td><strong>CPU</strong></td><td>0.45</td><td>40</td><td>0 (off)</td><td>2 layer</td><td><strong>~9.7s</strong></td><td>~2,700</td><td>GA 탐색 (기본)</td></tr>
+      <tr><td><strong>standard</strong></td><td>0.025</td><td>CPU</td><td>0.30</td><td>80</td><td>3 (Fourtakas)</td><td>4 layer</td><td>~41s</td><td>~10,800</td><td>후보 검증</td></tr>
+      <tr><td><strong>precise</strong></td><td>0.015</td><td>GPU</td><td>0.20</td><td>100</td><td>3 (Fourtakas)</td><td>4 layer</td><td>~340s</td><td>~32,000</td><td>최종 refine</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Ranking 안정성 검증</h3>
+  <p>fast mode가 정확도를 희생하지만 <strong>GA에 필요한 design 간 fitness ORDER는 보존</strong>되는지 확인 (3 design variants × 2 dp).</p>
+  <table>
+    <thead><tr><th>Design variant</th><th>dp=0.020 splash</th><th>dp=0.045 splash</th></tr></thead>
+    <tbody>
+      <tr><td>small_low (작은 sculpture 낮은 위치)</td><td>0.849</td><td>0.951</td></tr>
+      <tr><td>centered_mid (중간 baseline)</td><td>0.886</td><td>0.968</td></tr>
+      <tr><td>offset_tilted (offset + 기울어진)</td><td>0.972</td><td>0.984</td></tr>
+    </tbody>
+  </table>
+  <div class="card">
+    <p><strong>두 dp 모두 동일 순서:</strong> <code>small_low &lt; centered_mid &lt; offset_tilted</code></p>
+    <p>→ fast mode로 GA 탐색해도 <em>최적 영역으로 수렴 방향</em>은 정확. 절대값만 다름.</p>
+  </div>
+
+  <h3>속도 비교 (10s 시뮬 wall time)</h3>
+<pre class="mermaid">
+xychart-beta
+    title "10s 시뮬 wall time (낮을수록 좋음)"
+    x-axis ["fast<br/>dp=0.045", "standard<br/>dp=0.025", "dp=0.020", "precise<br/>dp=0.015", "previous default<br/>(4s sim baseline)"]
+    y-axis "Wall time (s)" 0 --> 350
+    bar [9.7, 41, 102, 340, 138]
+</pre>
+
+  <h3>모드별 GA budget</h3>
+  <table>
+    <thead><tr><th>Mode</th><th>Pop × Gen</th><th>총 evals</th><th>벽시간</th></tr></thead>
+    <tbody>
+      <tr><td>fast</td><td>20 × 20</td><td>400</td><td><strong>~1.1시간</strong></td></tr>
+      <tr><td>fast (large)</td><td>30 × 30</td><td>900</td><td>~2.5시간</td></tr>
+      <tr><td>standard 검증</td><td>30 candidates</td><td>30</td><td>~20분</td></tr>
+      <tr><td>precise refine</td><td>5 finalists</td><td>5</td><td>~30분</td></tr>
+    </tbody>
+  </table>
+
+  <h3>코드 사용법</h3>
+  <pre><code># CLI
+python scripts/run_case.py --params p.json --stl s.stl --mode fast
+
+# Python
+from run_case import evaluate
+result = evaluate(params, stl_path, mode="fast")
+
+# Grasshopper component input pin
+mode = "fast"   # 또는 "standard", "precise"</code></pre>
 </section>
 
 <!-- 5. 사용자 조작 영역 -->
