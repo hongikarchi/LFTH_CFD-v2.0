@@ -1,0 +1,18 @@
+{
+  "test_id": "test_04",
+  "note": "All 6 modules scaled to 0.5 — test if smaller shells let water through",
+  "global": {
+    "v_inlet": 2.0,
+    "dp": 0.10,
+    "timemax": 10.0,
+    "viscobound": 1.0
+  },
+  "modules": [
+    {"index": 0, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 0.5},
+    {"index": 1, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 0.5},
+    {"index": 2, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 0.5},
+    {"index": 3, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 0.5},
+    {"index": 4, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 0.5},
+    {"index": 5, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 0.5}
+  ]
+}

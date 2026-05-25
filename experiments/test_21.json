@@ -1,0 +1,13 @@
+{
+  "test_id": "test_21",
+  "note": "Tune Z translation between best test_19 (-2) and worse test_20 (-4). Try Z -3.",
+  "global": {"v_inlet": 2.0, "burst_end": 0.5, "dp": 0.10, "timemax": 10.0, "viscobound": 0.5},
+  "modules": [
+    {"index": 0, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -4.0, -3.0], "scale": 1.0},
+    {"index": 1, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -4.0, -3.0], "scale": 1.0},
+    {"index": 2, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -4.0, -3.0], "scale": 1.0},
+    {"index": 3, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -4.0, -3.0], "scale": 1.0},
+    {"index": 4, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -4.0, -3.0], "scale": 1.0},
+    {"index": 5, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -4.0, -3.0], "scale": 1.0}
+  ]
+}

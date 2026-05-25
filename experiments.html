@@ -44,5 +44,2135 @@
   <a href="PLAN.md">Plan</a>
   <a href="https://github.com/hongikarchi/LFTH_CFD-v2.0">GitHub</a>
 </div>
-<p class='note'>No experiments yet. Run <code>python scripts/experiment_runner.py experiments/test_03.json</code> to add one.</p><div class="meta">Last refreshed: 2026-05-26 03:23:44</div>
+<table>
+<tr><th>Test</th><th>Note</th><th>Modules changed</th><th>Caught</th><th>Moved</th><th>Stuck</th><th>Total</th><th>Catch rate (moved)</th><th>Splash ratio</th><th>Wall</th><th>Date</th><th>Details</th></tr>
+<tr><td><strong>test_03</strong></td><td class='note'>Baseline with new protocol (timemax=10s, no module transforms)</td><td><code>identity</code></td><td>0</td><td>—</td><td>—</td><td>150</td><td class='ratio bad'>0.000</td><td>1.000</td><td>40.3s</td><td>2026-05-26 03:29:04</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_03",
+  "note": "Baseline with new protocol (timemax=10s, no module transforms)",
+  "global": {
+    "v_inlet": 2.0,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 1.0
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_04</strong></td><td class='note'>All 6 modules scaled to 0.5 — test if smaller shells let water through</td><td><code>M0[S0.5], M1[S0.5], M2[S0.5], M3[S0.5], M4[S0.5], M5[S0.5]</code></td><td>6</td><td>—</td><td>—</td><td>150</td><td class='ratio bad'>0.000</td><td>0.960</td><td>37.9s</td><td>2026-05-26 03:30:17</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_04",
+  "note": "All 6 modules scaled to 0.5 — test if smaller shells let water through",
+  "global": {
+    "v_inlet": 2.0,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 1.0
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 0.5
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 0.5
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 0.5
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 0.5
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 0.5
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 0.5
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_05</strong></td><td class='note'>Top 4 modules tilted -15° about Y (channel water inward toward pond center). All scales >= 0.9 so water still contacts.</td><td><code>M0[R0,-15,0 S0.9], M1[R0,-15,0 S0.9], M2[R0,-15,0 S0.9], M3[R0,-15,0 S0.9]</code></td><td>0</td><td>—</td><td>—</td><td>150</td><td class='ratio bad'>0.000</td><td>1.000</td><td>38.6s</td><td>2026-05-26 03:32:55</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_05",
+  "note": "Top 4 modules tilted -15° about Y (channel water inward toward pond center). All scales >= 0.9 so water still contacts.",
+  "global": {
+    "v_inlet": 2.0,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 1.0
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        -15,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 0.9
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        -15,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 0.9
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        -15,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 0.9
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        -15,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 0.9
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_06</strong></td><td class='note'>Top 4 modules tilted +15° about Y (opposite of test_05). Scale 1.0 keeps all contact.</td><td><code>M0[R0,15,0], M1[R0,15,0], M2[R0,15,0], M3[R0,15,0]</code></td><td>0</td><td>—</td><td>—</td><td>150</td><td class='ratio bad'>0.000</td><td>1.000</td><td>38.6s</td><td>2026-05-26 03:34:17</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_06",
+  "note": "Top 4 modules tilted +15° about Y (opposite of test_05). Scale 1.0 keeps all contact.",
+  "global": {
+    "v_inlet": 2.0,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 1.0
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        15,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        15,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        15,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        15,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_07</strong></td><td class='note'>Top 4 unchanged (scale 1.0, full contact). Bottom 2 scaled up to 1.5x to widen pond-level catchment.</td><td><code>M4[S1.5], M5[S1.5]</code></td><td>0</td><td>—</td><td>—</td><td>150</td><td class='ratio bad'>0.000</td><td>1.000</td><td>41.6s</td><td>2026-05-26 03:36:42</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_07",
+  "note": "Top 4 unchanged (scale 1.0, full contact). Bottom 2 scaled up to 1.5x to widen pond-level catchment.",
+  "global": {
+    "v_inlet": 2.0,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 1.0
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.5
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.5
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_08</strong></td><td class='note'>Extended timemax 20s + top 4 at scale 0.8 (still contact) + bottom 2 at 1.3 (wider catch).</td><td><code>M0[S0.8], M1[S0.8], M2[S0.8], M3[S0.8], M4[S1.3], M5[S1.3]</code></td><td>0</td><td>—</td><td>—</td><td>150</td><td class='ratio bad'>0.000</td><td>1.000</td><td>70.7s</td><td>2026-05-26 03:38:20</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_08",
+  "note": "Extended timemax 20s + top 4 at scale 0.8 (still contact) + bottom 2 at 1.3 (wider catch).",
+  "global": {
+    "v_inlet": 2.0,
+    "dp": 0.1,
+    "timemax": 20.0,
+    "viscobound": 1.0
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 0.8
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 0.8
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 0.8
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 0.8
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.3
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.3
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_09</strong></td><td class='note'>Re-baseline with fixed inlet (burst_end=0.5s, default in DEFAULTS). Identity transforms.</td><td><code>identity</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>42.5s</td><td>2026-05-26 03:42:19</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_09",
+  "note": "Re-baseline with fixed inlet (burst_end=0.5s, default in DEFAULTS). Identity transforms.",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 1.0
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_10</strong></td><td class='note'>Same as test_09 (identity geom) but viscobound=0.3 — slippery surfaces, water slides off shells instead of pooling.</td><td><code>identity</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>52.5s</td><td>2026-05-26 03:43:37</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_10",
+  "note": "Same as test_09 (identity geom) but viscobound=0.3 — slippery surfaces, water slides off shells instead of pooling.",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.3
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_11</strong></td><td class='note'>Translate all 6 modules by (+4, -3, 0) m to align sculpture under nozzles (avg nozzle XY = +4.1, -3.2). Water cascades closer to pond center.</td><td><code>M0[T4,-3,0], M1[T4,-3,0], M2[T4,-3,0], M3[T4,-3,0], M4[T4,-3,0], M5[T4,-3,0]</code></td><td>7</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.023</td><td>0.698</td><td>49.6s</td><td>2026-05-26 03:45:37</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_11",
+  "note": "Translate all 6 modules by (+4, -3, 0) m to align sculpture under nozzles (avg nozzle XY = +4.1, -3.2). Water cascades closer to pond center.",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.5
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_12</strong></td><td class='note'>Best so far (test_11 translation) + bottom 2 modules scaled to 1.5x to act as catch basin.</td><td><code>M0[T4,-3,0], M1[T4,-3,0], M2[T4,-3,0], M3[T4,-3,0], M4[T4,-3,0 S1.5], M5[T4,-3,0 S1.5]</code></td><td>7</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.023</td><td>0.698</td><td>50.7s</td><td>2026-05-26 03:47:15</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_12",
+  "note": "Best so far (test_11 translation) + bottom 2 modules scaled to 1.5x to act as catch basin.",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.5
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.5
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.5
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_13</strong></td><td class='note'>test_11 translation + top 4 scaled to 0.7 (less deflection but still contact).</td><td><code>M0[T4,-3,0 S0.7], M1[T4,-3,0 S0.7], M2[T4,-3,0 S0.7], M3[T4,-3,0 S0.7], M4[T4,-3,0], M5[T4,-3,0]</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>37.4s</td><td>2026-05-26 03:48:28</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_13",
+  "note": "test_11 translation + top 4 scaled to 0.7 (less deflection but still contact).",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.5
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -3.0,
+        0
+      ],
+      "scale": 0.7
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -3.0,
+        0
+      ],
+      "scale": 0.7
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -3.0,
+        0
+      ],
+      "scale": 0.7
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -3.0,
+        0
+      ],
+      "scale": 0.7
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_14</strong></td><td class='note'>Moderate translation (+2, -2, 0). Keeps modules within pond XY. Scale 1.0 all.</td><td><code>M0[T2,-2,0], M1[T2,-2,0], M2[T2,-2,0], M3[T2,-2,0], M4[T2,-2,0], M5[T2,-2,0]</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>54.3s</td><td>2026-05-26 03:50:20</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_14",
+  "note": "Moderate translation (+2, -2, 0). Keeps modules within pond XY. Scale 1.0 all.",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.5
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        2.0,
+        -2.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        2.0,
+        -2.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        2.0,
+        -2.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        2.0,
+        -2.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        2.0,
+        -2.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        2.0,
+        -2.0,
+        0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_15</strong></td><td class='note'>Stronger translation (+5, -4, 0). Push sculpture further to nozzle column.</td><td><code>M0[T5,-4,0], M1[T5,-4,0], M2[T5,-4,0], M3[T5,-4,0], M4[T5,-4,0], M5[T5,-4,0]</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>39.8s</td><td>2026-05-26 03:51:21</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_15",
+  "note": "Stronger translation (+5, -4, 0). Push sculpture further to nozzle column.",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.5
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        5.0,
+        -4.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        5.0,
+        -4.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        5.0,
+        -4.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        5.0,
+        -4.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        5.0,
+        -4.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        5.0,
+        -4.0,
+        0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_16</strong></td><td class='note'>Neighborhood of test_11: translation (+3, -3, 0).</td><td><code>M0[T3,-3,0], M1[T3,-3,0], M2[T3,-3,0], M3[T3,-3,0], M4[T3,-3,0], M5[T3,-3,0]</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>60.2s</td><td>2026-05-26 03:52:50</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_16",
+  "note": "Neighborhood of test_11: translation (+3, -3, 0).",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.5
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        3.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        3.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        3.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        3.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        3.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        3.0,
+        -3.0,
+        0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_17</strong></td><td class='note'>Neighborhood of test_11: translation (+4, -4, 0). Same X, more Y push.</td><td><code>M0[T4,-4,0], M1[T4,-4,0], M2[T4,-4,0], M3[T4,-4,0], M4[T4,-4,0], M5[T4,-4,0]</code></td><td>10</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.033</td><td>0.690</td><td>65.2s</td><td>2026-05-26 03:54:01</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_17",
+  "note": "Neighborhood of test_11: translation (+4, -4, 0). Same X, more Y push.",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.5
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_18</strong></td><td class='note'>Refine near test_17: translation (+4, -4.5, 0).</td><td><code>M0[T4,-4.5,0], M1[T4,-4.5,0], M2[T4,-4.5,0], M3[T4,-4.5,0], M4[T4,-4.5,0], M5[T4,-4.5,0]</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>40.7s</td><td>2026-05-26 03:55:08</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_18",
+  "note": "Refine near test_17: translation (+4, -4.5, 0).",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.5
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.5,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.5,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.5,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.5,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.5,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.5,
+        0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_19</strong></td><td class='note'>test_17 best (+4, -4) + lower sculpture by Z -2m to give water more vertical fall room.</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2], M4[T4,-4,-2], M5[T4,-4,-2]</code></td><td>16</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.053</td><td>0.676</td><td>56.8s</td><td>2026-05-26 03:56:40</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_19",
+  "note": "test_17 best (+4, -4) + lower sculpture by Z -2m to give water more vertical fall room.",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.5
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_20</strong></td><td class='note'>test_19 best + lower sculpture more by Z -4m (was -2).</td><td><code>M0[T4,-4,-4], M1[T4,-4,-4], M2[T4,-4,-4], M3[T4,-4,-4], M4[T4,-4,-4], M5[T4,-4,-4]</code></td><td>8</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.027</td><td>0.695</td><td>62.3s</td><td>2026-05-26 03:58:07</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_20",
+  "note": "test_19 best + lower sculpture more by Z -4m (was -2).",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.5
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -4.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -4.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -4.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -4.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -4.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -4.0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_21</strong></td><td class='note'>Tune Z translation between best test_19 (-2) and worse test_20 (-4). Try Z -3.</td><td><code>M0[T4,-4,-3], M1[T4,-4,-3], M2[T4,-4,-3], M3[T4,-4,-3], M4[T4,-4,-3], M5[T4,-4,-3]</code></td><td>13</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.043</td><td>0.683</td><td>63.4s</td><td>2026-05-26 03:59:36</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_21",
+  "note": "Tune Z translation between best test_19 (-2) and worse test_20 (-4). Try Z -3.",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.5
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -3.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -3.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -3.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -3.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -3.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -3.0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_22</strong></td><td class='note'>test_19 best params + viscobound 0.2 (more slippery). Hypothesis: less surface pooling.</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2], M4[T4,-4,-2], M5[T4,-4,-2]</code></td><td>35</td><td>300</td><td>120</td><td>420</td><td class='ratio ok'>0.117</td><td>0.631</td><td>59.4s</td><td>2026-05-26 04:01:14</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_22",
+  "note": "test_19 best params + viscobound 0.2 (more slippery). Hypothesis: less surface pooling.",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.2
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_23</strong></td><td class='note'>test_22 + even more slippery: viscobound 0.1.</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2], M4[T4,-4,-2], M5[T4,-4,-2]</code></td><td>16</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.053</td><td>0.676</td><td>68.4s</td><td>2026-05-26 04:02:45</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_23",
+  "note": "test_22 + even more slippery: viscobound 0.1.",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.1
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_24</strong></td><td class='note'>test_22 (best so far, 35 caught) + small Z rotation 15° on all modules to redirect deflection.</td><td><code>M0[R0,0,15 T4,-4,-2], M1[R0,0,15 T4,-4,-2], M2[R0,0,15 T4,-4,-2], M3[R0,0,15 T4,-4,-2], M4[R0,0,15 T4,-4,-2], M5[R0,0,15 T4,-4,-2]</code></td><td>5</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.017</td><td>0.702</td><td>62.8s</td><td>2026-05-26 04:04:12</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_24",
+  "note": "test_22 (best so far, 35 caught) + small Z rotation 15° on all modules to redirect deflection.",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.2
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        15
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        15
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        15
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        15
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        15
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        15
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+</table><div class="meta">Last refreshed: 2026-05-26 04:04:17</div>
 </body></html>

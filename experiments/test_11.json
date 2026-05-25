@@ -1,0 +1,19 @@
+{
+  "test_id": "test_11",
+  "note": "Translate all 6 modules by (+4, -3, 0) m to align sculpture under nozzles (avg nozzle XY = +4.1, -3.2). Water cascades closer to pond center.",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.10,
+    "timemax": 10.0,
+    "viscobound": 0.5
+  },
+  "modules": [
+    {"index": 0, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -3.0, 0], "scale": 1.0},
+    {"index": 1, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -3.0, 0], "scale": 1.0},
+    {"index": 2, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -3.0, 0], "scale": 1.0},
+    {"index": 3, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -3.0, 0], "scale": 1.0},
+    {"index": 4, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -3.0, 0], "scale": 1.0},
+    {"index": 5, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -3.0, 0], "scale": 1.0}
+  ]
+}

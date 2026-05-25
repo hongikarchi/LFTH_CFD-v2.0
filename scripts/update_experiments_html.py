@@ -102,13 +102,14 @@ def regenerate():
     body = ['<table>']
     body.append("<tr>"
                 "<th>Test</th><th>Note</th><th>Modules changed</th>"
-                "<th>Caught</th><th>Splash</th><th>Total</th>"
-                "<th>Splash ratio</th><th>Wall</th><th>Date</th>"
-                "<th>Details</th></tr>")
+                "<th>Caught</th><th>Moved</th><th>Stuck</th><th>Total</th>"
+                "<th>Catch rate (moved)</th><th>Splash ratio</th>"
+                "<th>Wall</th><th>Date</th><th>Details</th></tr>")
     for name, r, p in rows:
         tid = r.get("test_id", name)
         ratio = r.get("splash_ratio", 1.0)
-        cls = ratio_class(ratio)
+        catch = r.get("catch_rate_moved", 0.0)
+        cls = "good" if catch >= 0.3 else ("ok" if catch >= 0.1 else "bad")
         note = p.get("note", "")
         modules = p.get("modules", [])
         body.append(
@@ -117,9 +118,11 @@ def regenerate():
             f"<td class='note'>{note}</td>"
             f"<td><code>{module_summary(modules)}</code></td>"
             f"<td>{r.get('caught', 0)}</td>"
-            f"<td>{r.get('splash', 0)}</td>"
+            f"<td>{r.get('moved', '—')}</td>"
+            f"<td>{r.get('stuck', '—')}</td>"
             f"<td>{r.get('total', 0)}</td>"
-            f"<td class='ratio {cls}'>{ratio:.3f}</td>"
+            f"<td class='ratio {cls}'>{catch:.3f}</td>"
+            f"<td>{ratio:.3f}</td>"
             f"<td>{r.get('wall_time_s', '—')}s</td>"
             f"<td>{r.get('timestamp', '—')}</td>"
             f"<td><details><summary>params</summary>"

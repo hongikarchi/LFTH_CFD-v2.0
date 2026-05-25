@@ -1,0 +1,19 @@
+{
+  "test_id": "test_13",
+  "note": "test_11 translation + top 4 scaled to 0.7 (less deflection but still contact).",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.10,
+    "timemax": 10.0,
+    "viscobound": 0.5
+  },
+  "modules": [
+    {"index": 0, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -3.0, 0], "scale": 0.7},
+    {"index": 1, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -3.0, 0], "scale": 0.7},
+    {"index": 2, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -3.0, 0], "scale": 0.7},
+    {"index": 3, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -3.0, 0], "scale": 0.7},
+    {"index": 4, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -3.0, 0], "scale": 1.0},
+    {"index": 5, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -3.0, 0], "scale": 1.0}
+  ]
+}

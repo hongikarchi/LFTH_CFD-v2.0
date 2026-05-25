@@ -47,7 +47,7 @@ EXPERIMENTS_DIR = PROJECT / "experiments"
 # --- defaults -----------------------------------------------------------------
 DEFAULTS = {
     "v_inlet": 2.0,
-    "burst_end": 0.06,
+    "burst_end": 0.5,          # widened from 0.06 — particles must clear inlet zone
     "dp": 0.10,
     "timemax": 10.0,
     "timeout": 0.10,
@@ -438,28 +438,38 @@ def main():
     iter_dir_trails.write_text(json.dumps({str(k): v for k, v in trails.items()}),
                                 encoding="utf-8")
 
-    # Fitness — classify each trail's LAST position
+    # Fitness — classify each trail's LAST position. Only count particles that
+    # actually descended (>1m drop) so inlet residue does not inflate splash.
     px0, py0 = pond_override["pond_xmin"], pond_override["pond_ymin"]
     px1 = px0 + pond_override["pond_xsize"]
     py1 = py0 + pond_override["pond_ysize"]
     pond_top_z = pond_override["pond_thickness"] + 3 * glob["dp"]
-    caught = 0; splash = 0; total = 0
+    caught = 0; splash = 0; total = 0; moved = 0; stuck = 0
     for idp, pts in trails.items():
         if not pts: continue
+        x0, y0, z0 = pts[0]
         x, y, z = pts[-1]
         total += 1
+        z_drop = z0 - z
+        if z_drop < 1.0:
+            stuck += 1
+            continue
+        moved += 1
         in_pond = (px0 <= x <= px1 and py0 <= y <= py1 and z <= pond_top_z)
         if in_pond: caught += 1
         else: splash += 1
 
+    catch_rate = (caught / moved) if moved else 0.0
     result = {
         "test_id": test_id,
         "n_modules_transformed": sum(1 for m in transforms.values()
                                      if any(m.get("rotation_deg", [0]*3)) or
                                         any(m.get("translation_m", [0]*3)) or
                                         m.get("scale", 1.0) != 1.0),
-        "caught": caught, "splash": splash, "total": total,
+        "caught": caught, "splash": splash, "moved": moved, "stuck": stuck,
+        "total": total,
         "splash_ratio": (splash / total) if total else 1.0,
+        "catch_rate_moved": round(catch_rate, 4),
         "wall_time_s": round(t_sim, 1),
         "stl_triangles": n_tri,
         "params": params,
@@ -471,7 +481,8 @@ def main():
 
     print()
     print(f"=== {test_id} RESULT ===")
-    print(f"  caught={caught}  splash={splash}  total={total}  splash_ratio={result['splash_ratio']:.3f}")
+    print(f"  caught={caught}  splash={splash}  moved={moved}  stuck={stuck}  total={total}")
+    print(f"  splash_ratio={result['splash_ratio']:.3f}   catch_rate(moved)={catch_rate:.3f}")
     print(f"  wall_time={result['wall_time_s']}s   stl_triangles={n_tri}")
 
     # ---- step 8/9: push to Rhino ----

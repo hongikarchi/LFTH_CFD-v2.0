@@ -1,0 +1,18 @@
+{
+  "test_id": "test_08",
+  "note": "Extended timemax 20s + top 4 at scale 0.8 (still contact) + bottom 2 at 1.3 (wider catch).",
+  "global": {
+    "v_inlet": 2.0,
+    "dp": 0.10,
+    "timemax": 20.0,
+    "viscobound": 1.0
+  },
+  "modules": [
+    {"index": 0, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 0.8},
+    {"index": 1, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 0.8},
+    {"index": 2, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 0.8},
+    {"index": 3, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 0.8},
+    {"index": 4, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 1.3},
+    {"index": 5, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 1.3}
+  ]
+}

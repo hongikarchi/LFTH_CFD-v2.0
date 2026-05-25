@@ -1,0 +1,18 @@
+{
+  "test_id": "test_07",
+  "note": "Top 4 unchanged (scale 1.0, full contact). Bottom 2 scaled up to 1.5x to widen pond-level catchment.",
+  "global": {
+    "v_inlet": 2.0,
+    "dp": 0.10,
+    "timemax": 10.0,
+    "viscobound": 1.0
+  },
+  "modules": [
+    {"index": 0, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 1.0},
+    {"index": 1, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 1.0},
+    {"index": 2, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 1.0},
+    {"index": 3, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 1.0},
+    {"index": 4, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 1.5},
+    {"index": 5, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 1.5}
+  ]
+}
