@@ -56,52 +56,59 @@ def main():
                 d_best = d; n_best = i
         trail_groups[n_best].append((idp, pts))
 
-    # Build Rhino code — chunked to keep payload reasonable
-    chunks = []
-    chunk_lines = [
+    # Build chunked code; each chunk self-contained (own layer + attr setup).
+    HEADER = [
         "import Rhino",
         "import Rhino.Geometry as rg",
         "from System.Drawing import Color",
         "doc = Rhino.RhinoDoc.ActiveDoc",
-        "",
         "def ensure_layer(name, rgb):",
         "    idx = doc.Layers.FindByFullPath(name, -1)",
         "    if idx >= 0: return idx",
         "    i = doc.Layers.Add(); L = doc.Layers[i]",
         "    L.Name = name; L.Color = Color.FromArgb(rgb[0], rgb[1], rgb[2])",
         "    return L.Index",
-        "",
-        "total = 0",
     ]
+    chunks = []
+    cur_lines = list(HEADER)
+    cur_lines.append("added = 0")
+    cur_setup_layers = set()  # which nozzle layers are set up in current chunk
+
+    def setup_layer(nozzle_idx, color):
+        cur_lines.append(
+            f"lid_{nozzle_idx} = ensure_layer('stream_nozzle_{nozzle_idx}', "
+            f"({color[0]},{color[1]},{color[2]}))"
+        )
+        cur_lines.append(
+            f"att_{nozzle_idx} = Rhino.DocObjects.ObjectAttributes(); att_{nozzle_idx}.LayerIndex = lid_{nozzle_idx}"
+        )
+
     for ni, group in trail_groups.items():
         if not group:
             continue
         color = NOZZLE_COLORS[ni % len(NOZZLE_COLORS)]
-        layer_name = f"stream_nozzle_{ni}"
-        chunk_lines.append(f"lid_{ni} = ensure_layer('{layer_name}', ({color[0]},{color[1]},{color[2]}))")
-        chunk_lines.append(f"att_{ni} = Rhino.DocObjects.ObjectAttributes(); att_{ni}.LayerIndex = lid_{ni}")
         for idp, pts in group:
-            # mm conversion
-            mm_pts = [(p[0]*1000, p[1]*1000, p[2]*1000) for p in pts]
-            # Skip overly short tracks (need >=2 points for polyline)
-            if len(mm_pts) < 2:
+            if len(pts) < 2:
                 continue
-            # Compose Polyline literal
+            mm_pts = [(p[0]*1000, p[1]*1000, p[2]*1000) for p in pts]
             pts_args = ",".join(f"rg.Point3d({x:.2f},{y:.2f},{z:.2f})" for x, y, z in mm_pts)
-            chunk_lines.append(f"pl = rg.Polyline([{pts_args}])")
-            chunk_lines.append(f"doc.Objects.AddPolyline(pl, att_{ni})")
-            chunk_lines.append("total += 1")
-        # Send chunk if getting too big
-        approx = sum(len(x) for x in chunk_lines)
-        if approx > 80_000:
-            chunks.append("\n".join(chunk_lines))
-            chunk_lines = ["import Rhino", "import Rhino.Geometry as rg",
-                           "from System.Drawing import Color",
-                           "doc = Rhino.RhinoDoc.ActiveDoc",
-                           "total = 0"]
-    chunk_lines.append("doc.Views.Redraw()")
-    chunk_lines.append("print('chunk total polylines:', total)")
-    chunks.append("\n".join(chunk_lines))
+            # Ensure layer/attr defined in current chunk
+            if ni not in cur_setup_layers:
+                setup_layer(ni, color)
+                cur_setup_layers.add(ni)
+            cur_lines.append(f"pl = rg.Polyline([{pts_args}])")
+            cur_lines.append(f"doc.Objects.AddPolyline(pl, att_{ni})")
+            cur_lines.append("added += 1")
+            # Roll over chunk if too big
+            if sum(len(x) for x in cur_lines) > 70_000:
+                cur_lines.append("print('chunk added:', added)")
+                chunks.append("\n".join(cur_lines))
+                cur_lines = list(HEADER)
+                cur_lines.append("added = 0")
+                cur_setup_layers = set()
+    cur_lines.append("doc.Views.Redraw()")
+    cur_lines.append("print('chunk added:', added)")
+    chunks.append("\n".join(cur_lines))
 
     for ci, code in enumerate(chunks, 1):
         print(f"sending chunk {ci}/{len(chunks)} ({len(code)} bytes)...")

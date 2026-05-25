@@ -80,27 +80,41 @@ if start_objs:
         if sb is None: sb = Rhino.Geometry.BoundingBox(b.Min, b.Max)
         else: sb.Union(b)
     N = %N%
-    # arrange N holes in a roughly square grid that fits inside the bbox
-    import math
-    side = int(math.ceil(math.sqrt(N)))
-    holes = []
     dx_full = sb.Max.X - sb.Min.X
     dy_full = sb.Max.Y - sb.Min.Y
-    # Inset 20% so holes are not on the very edge
-    inset = 0.20
+    inset = 0.15
     x0 = sb.Min.X + dx_full * inset
     x1 = sb.Max.X - dx_full * inset
     y0 = sb.Min.Y + dy_full * inset
     y1 = sb.Max.Y - dy_full * inset
     z = sb.Center.Z
-    for i in range(N):
-        if side == 1:
-            hx, hy = (x0+x1)/2.0, (y0+y1)/2.0
-        else:
-            r = i // side
-            c = i % side
-            hx = x0 + (x1 - x0) * (c / float(side - 1)) if side > 1 else (x0+x1)/2.0
-            hy = y0 + (y1 - y0) * (r / float(side - 1)) if side > 1 else (y0+y1)/2.0
+    # Even spread patterns. For N=5 use a dice-5 (4 corners + center).
+    norm_uv = None
+    if N == 1:
+        norm_uv = [(0.5, 0.5)]
+    elif N == 2:
+        norm_uv = [(0.25, 0.5), (0.75, 0.5)]
+    elif N == 3:
+        norm_uv = [(0.5, 0.15), (0.15, 0.85), (0.85, 0.85)]
+    elif N == 4:
+        norm_uv = [(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0)]
+    elif N == 5:
+        norm_uv = [(0.0, 0.0), (1.0, 0.0), (0.5, 0.5), (0.0, 1.0), (1.0, 1.0)]
+    elif N == 9:
+        norm_uv = [(u, v) for u in (0.0, 0.5, 1.0) for v in (0.0, 0.5, 1.0)]
+    else:
+        import math
+        side = int(math.ceil(math.sqrt(N)))
+        norm_uv = []
+        for k in range(N):
+            r = k // side; c = k % side
+            u = c / float(max(1, side - 1))
+            v = r / float(max(1, side - 1))
+            norm_uv.append((u, v))
+    holes = []
+    for u, v in norm_uv:
+        hx = x0 + (x1 - x0) * u
+        hy = y0 + (y1 - y0) * v
         holes.append([hx*mm_to_m, hy*mm_to_m, z*mm_to_m])
     out["nozzle_holes_m"] = holes[:N]
 
