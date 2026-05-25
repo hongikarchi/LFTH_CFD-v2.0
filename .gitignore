@@ -1,4 +1,5 @@
-# DualSPHysics outputs
+# DualSPHysics outputs and runtime simulation data
+runs/
 *.bi4
 *.vtk
 *.vtu
@@ -25,3 +26,8 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
