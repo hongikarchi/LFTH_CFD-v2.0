@@ -255,13 +255,21 @@ Remote: `https://github.com/hongikarchi/LFTH_CFD-v2.0` (`main` branch)
 ## 10. 다음 액션 (사용자 측)
 
 ### 즉시 Rhino에서 시뮬 결과 확인 (GH 없이)
+**검증 완료 (2026-05-25):** `runs/_rhino_capture.png` 참조 — pond box(파랑), caught(녹색), splash(주황) 시각화 작동 확인됨.
+
 1. Rhino 8 실행
-2. 명령 `_RunPythonScript` 또는 `_EditPythonScript`
-3. `C:\Users\user\Documents\LFTH_CFD v2.0\rhino_import\load_vtk_particles.py` 열기/실행
+2. 명령 `_RunPythonScript`
+3. `rhino_import/load_vtk_particles.py` 실행 (IronPython 2.7 호환)
 4. `iter_timing_planned/Out/PartFluid_*.vtk` 81 frame이 layer별로 import됨
    - 마지막 frame은 caught(녹색) / splash(빨강) 분리됨
    - `pond_AABB` layer에 연못 박스 시각화
 5. Layer panel에서 frame toggle로 애니메이션 확인
+
+**자동화 (선택):** Rhino를 commandline에서 실행하려면:
+```
+"C:\Program Files\Rhino 8\System\Rhino.exe" /nosplash /runscript="_-RunPythonScript C:\Users\user\AppData\Local\Temp\rhinoload\bridge.py"
+```
+(bridge.py는 `execfile()`로 load_and_capture.py 호출)
 
 ### GH 통합 (다음 작업 세션)
 1. **Rhino 8 + Wallacei X 설치 확인** (없으면 설치)
