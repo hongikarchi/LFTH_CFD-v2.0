@@ -2174,5 +2174,587 @@
     }
   ]
 }</pre></details></td></tr>
-</table><div class="meta">Last refreshed: 2026-05-26 04:04:17</div>
+<tr><td><strong>test_25</strong></td><td class='note'>Per-module gradient translation: top under nozzles, bottom shifting toward pond center.</td><td><code>M0[T4,-4,-2], M1[T3.5,-3.5,-2], M2[T3,-3,-2], M3[T2.5,-2.5,-2], M4[T2,-2,-2], M5[T2,-2,-2]</code></td><td>7</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.023</td><td>0.698</td><td>65.8s</td><td>2026-05-26 04:06:25</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_25",
+  "note": "Per-module gradient translation: top under nozzles, bottom shifting toward pond center.",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.2
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        3.5,
+        -3.5,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        3.0,
+        -3.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        2.5,
+        -2.5,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        2.0,
+        -2.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        2.0,
+        -2.0,
+        -2.0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_26</strong></td><td class='note'>test_22 except scale bottom modules to 1.5 to widen catch zone at pond.</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2], M4[T4,-4,-2 S1.5], M5[T4,-4,-2 S1.5]</code></td><td>35</td><td>300</td><td>120</td><td>420</td><td class='ratio ok'>0.117</td><td>0.631</td><td>60.0s</td><td>2026-05-26 04:08:01</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_26",
+  "note": "test_22 except scale bottom modules to 1.5 to widen catch zone at pond.",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.2
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.5
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.5
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_27</strong></td><td class='note'>test_22 base + raise bottom modules by Z+3 (lift them above pond top to act as final catchment).</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2], M4[T4,-4,1], M5[T4,-4,1]</code></td><td>29</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.097</td><td>0.645</td><td>61.2s</td><td>2026-05-26 04:09:25</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_27",
+  "note": "test_22 base + raise bottom modules by Z+3 (lift them above pond top to act as final catchment).",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.2
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        1.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        1.0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_28</strong></td><td class='note'>test_22 base + viscobound 0.15 (between 0.1 and 0.2).</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2], M4[T4,-4,-2], M5[T4,-4,-2]</code></td><td>15</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.050</td><td>0.679</td><td>63.7s</td><td>2026-05-26 04:10:52</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_28",
+  "note": "test_22 base + viscobound 0.15 (between 0.1 and 0.2).",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.15
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_29</strong></td><td class='note'>test_22 base + viscobound 0.25 (slightly more sticky than 0.2).</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2], M4[T4,-4,-2], M5[T4,-4,-2]</code></td><td>3</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.010</td><td>0.707</td><td>58.4s</td><td>2026-05-26 04:12:11</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_29",
+  "note": "test_22 base + viscobound 0.25 (slightly more sticky than 0.2).",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.25
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_30</strong></td><td class='note'>test_22 base + X axis tilt 10deg on all modules.</td><td><code>M0[R10,0,0 T4,-4,-2], M1[R10,0,0 T4,-4,-2], M2[R10,0,0 T4,-4,-2], M3[R10,0,0 T4,-4,-2], M4[R10,0,0 T4,-4,-2], M5[R10,0,0 T4,-4,-2]</code></td><td>31</td><td>300</td><td>120</td><td>420</td><td class='ratio ok'>0.103</td><td>0.640</td><td>70.8s</td><td>2026-05-26 04:13:53</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_30",
+  "note": "test_22 base + X axis tilt 10deg on all modules.",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.2
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        10,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        10,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        10,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        10,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        10,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        10,
+        0,
+        0
+      ],
+      "translation_m": [
+        4.0,
+        -4.0,
+        -2.0
+      ],
+      "scale": 1.0
+    }
+  ]
+}</pre></details></td></tr>
+</table><div class="meta">Last refreshed: 2026-05-26 04:13:59</div>
 </body></html>
