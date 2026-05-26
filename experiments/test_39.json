@@ -1,0 +1,97 @@
+{
+  "test_id": "test_39",
+  "note": "GA stage0 module0 tx=-4.13 ty=-0.78 tz=-2.82 R=(-16.9,0.3,-28.4) s=0.76",
+  "global": {
+    "v_inlet": 2.0,
+    "burst_end": 0.5,
+    "dp": 0.1,
+    "timemax": 10.0,
+    "viscobound": 0.2
+  },
+  "modules": [
+    {
+      "index": 0,
+      "rotation_deg": [
+        -16.881721511783798,
+        0.3213172862017437,
+        -28.407841818968183
+      ],
+      "translation_m": [
+        -4.130611673705839,
+        -0.7807818031472955,
+        -2.8212166833715777
+      ],
+      "scale": 0.7590701205493188
+    },
+    {
+      "index": 1,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 2,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 3,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 4,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    },
+    {
+      "index": 5,
+      "rotation_deg": [
+        0,
+        0,
+        0
+      ],
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "scale": 1.0
+    }
+  ]
+}

@@ -245,6 +245,12 @@ def evaluate(ind, stage_module_idx, prior_bests, modules_info, ga_state):
         "fitness": fit["fitness"],
     })
     STATE_FILE.write_text(json.dumps(ga_state, indent=2), encoding="utf-8")
+    # Regenerate GA dashboard (best effort)
+    try:
+        subprocess.run([sys.executable, str(PROJECT / "scripts" / "update_ga_dashboard.py")],
+                        capture_output=True, timeout=30)
+    except Exception:
+        pass
     print(f"fit={fit['fitness']:.3f} n_pass={fit['n_passing']} ({dt:.0f}s)")
     return (fit["fitness"],)
 
