@@ -235,10 +235,19 @@ def run_experiment(test_id: str,
         raise FileNotFoundError(f"{exe} missing. Run scripts/build_fluidx3d.py to build it.")
     mode_tag = "INTERACTIVE" if interactive else "PNG"
     print(f"[{test_id}] FluidX3D launching ({mode_tag} mode, dp={cfg['dp_m']} timemax={cfg['timemax_s']} side_walls={cfg['side_walls']})")
+    # PNG mode: suppress console window (fully background); INTERACTIVE: keep window
+    creation_flags = 0
+    startup_info = None
+    if not interactive and sys.platform == "win32":
+        creation_flags = subprocess.CREATE_NO_WINDOW
+        startup_info = subprocess.STARTUPINFO()
+        startup_info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startup_info.wShowWindow = 0  # SW_HIDE
     t0 = time.time()
     proc = subprocess.run([str(exe)],
                           cwd=str(iter_dir),
-                          capture_output=True, text=True, timeout=timeout_s)
+                          capture_output=True, text=True, timeout=timeout_s,
+                          creationflags=creation_flags, startupinfo=startup_info)
     wall = time.time() - t0
     (iter_dir / "fx3d_stdout.log").write_text(proc.stdout, encoding="utf-8")
     (iter_dir / "fx3d_stderr.log").write_text(proc.stderr or "", encoding="utf-8")

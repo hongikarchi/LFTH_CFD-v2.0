@@ -34,25 +34,22 @@ VELOCITY_OPTIONS = {"D2Q9", "D3Q15", "D3Q19", "D3Q27"}
 
 def patch_macro_bool(content: str, name: str, enable: bool) -> str:
     """Toggle `#define <name>` between active and commented (//#define name)."""
-    pat = re.compile(r"^[ \t]*//?\s*#define\s+" + re.escape(name) + r"\b.*$", re.MULTILINE)
+    pat = re.compile(r"^[ \t]*(?://)?\s*#define\s+" + re.escape(name) + r"\b.*$", re.MULTILINE)
     repl = f"#define {name}" if enable else f"//#define {name}"
     if not pat.search(content):
-        # add at end
         return content + "\n" + repl + "\n"
     return pat.sub(repl, content)
 
 
 def patch_macro_num(content: str, name: str, value: str) -> str:
-    """Set `#define <name> <value>` (preserves trailing comment if any)."""
-    # Match the macro line, optional comment trailing
+    """Set `#define <name> <value>` (replaces the whole line including any trailing comment)."""
     pat = re.compile(
-        r"^([ \t]*)//?\s*#define\s+" + re.escape(name) + r"\b[^\n/]*(//.*)?$",
+        r"^([ \t]*)(?://)?\s*#define\s+" + re.escape(name) + r"\b[^\n]*$",
         re.MULTILINE,
     )
     def _sub(m):
         indent = m.group(1) or ""
-        comment = m.group(2) or ""
-        return f"{indent}#define {name} {value}" + ((" " + comment) if comment else "")
+        return f"{indent}#define {name} {value}"
     if not pat.search(content):
         return content + f"\n#define {name} {value}\n"
     return pat.sub(_sub, content)
@@ -97,23 +94,38 @@ def patch_defines(cfg: dict, interactive: bool) -> str:
 
 
 def msbuild_once(out_name: str) -> Path:
+    """Build and rename the output to <out_name>. Always renames so subsequent
+    builds (also producing FluidX3D.exe) cannot overwrite this one."""
     BIN_DIR.mkdir(parents=True, exist_ok=True)
-    print(f"  msbuild ({out_name}) ...")
+    # Wipe object cache so defines.hpp changes actually trigger recompile.
+    temp_dir = FLUIDX3D_DIR / "temp"
+    if temp_dir.exists():
+        shutil.rmtree(temp_dir, ignore_errors=True)
+    src_exe = BIN_DIR / "FluidX3D.exe"
+    if src_exe.exists():
+        src_exe.unlink()
+    dst_exe = BIN_DIR / out_name
+    if dst_exe.exists():
+        dst_exe.unlink()
+    print(f"  msbuild ({out_name}) [clean rebuild]...")
     proc = subprocess.run(
         [str(MSBUILD), str(VCXPROJ), "/p:Configuration=Release", "/p:Platform=x64",
-         "/m", "/verbosity:minimal"],
+         "/t:Rebuild", "/m", "/verbosity:minimal"],
         capture_output=True, text=True, encoding="utf-8", errors="replace",
         cwd=str(FLUIDX3D_DIR),
     )
     if proc.returncode != 0:
         last = "\n".join((proc.stdout + proc.stderr).splitlines()[-25:])
         raise RuntimeError(f"msbuild FAILED:\n{last}")
-    src_exe = BIN_DIR / "FluidX3D.exe"
-    dst_exe = BIN_DIR / out_name
     if not src_exe.exists():
         raise RuntimeError(f"build said success but {src_exe} missing")
-    if out_name != "FluidX3D.exe":
-        shutil.copy(src_exe, dst_exe)
+    # MOVE (not copy) so the next build can't clobber this artifact via its own
+    # FluidX3D.exe output.
+    if out_name == "FluidX3D.exe":
+        # Build target same as output -> leave in place.
+        pass
+    else:
+        shutil.move(str(src_exe), str(dst_exe))
     return dst_exe
 
 
@@ -129,14 +141,15 @@ def main() -> int:
 
     baseline = DEFINES_HPP.read_text(encoding="utf-8")
     try:
-        # 1) PNG build
-        print("[1/2] PNG build (GRAPHICS only)")
-        DEFINES_HPP.write_text(patch_defines(cfg, interactive=False), encoding="utf-8")
-        png_exe = msbuild_once("FluidX3D.exe")
-        # 2) Interactive build
-        print("[2/2] INTERACTIVE build (GRAPHICS + INTERACTIVE_GRAPHICS)")
+        # 1) Interactive build first so its FluidX3D.exe can be renamed before
+        #    the PNG build produces its own FluidX3D.exe.
+        print("[1/2] INTERACTIVE build (GRAPHICS + INTERACTIVE_GRAPHICS)")
         DEFINES_HPP.write_text(patch_defines(cfg, interactive=True), encoding="utf-8")
         int_exe = msbuild_once("FluidX3D_interactive.exe")
+        # 2) PNG build keeps the canonical FluidX3D.exe name.
+        print("[2/2] PNG build (GRAPHICS only)")
+        DEFINES_HPP.write_text(patch_defines(cfg, interactive=False), encoding="utf-8")
+        png_exe = msbuild_once("FluidX3D.exe")
     finally:
         # Restore baseline so the file in repo stays canonical
         DEFINES_HPP.write_text(baseline, encoding="utf-8")
