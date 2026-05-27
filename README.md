@@ -21,21 +21,25 @@ python scripts/thicken_collider.py 0.20
 ## 일반 실행 사이클
 
 ```powershell
-# 1. config/case.json 편집 (dp, timemax, side_walls, nozzle_LPM 등)
-# 2. 실행
+# (대시보드에서) Settings 탭 → 슬라이더 조정 → "Save + Run" 버튼
+# 또는 CLI 직접
 python scripts/fx3d_run.py --test-id myrun
 # → runs/iter_myrun/ 에 case.txt+nozzles.txt 자동 생성 + FluidX3D 실행 + result.json
-# → runs/_settings_log.jsonl 한 줄 append
-# → settings_compare.html 자동 새로고침
+# → runs/_settings_log.jsonl 한 줄 append → 대시보드 History 탭에 즉시 반영
 ```
 
-## Dashboard
+## Dashboard (Flask, 포트 8080)
 
 ```powershell
-# 정적 HTML 새로 생성 (FluidX3D 안 돌리고 DB만 reload)
-python scripts/update_settings_compare.py
-# settings_compare.html 브라우저에서 열기
+pip install flask    # 한 번만
+python scripts/dashboard_server.py   # 브라우저 자동 오픈
 ```
+
+4 탭:
+- **Settings**: config/case.json 슬라이더 편집 + Save / Save&Run / Re-thicken 버튼
+- **History**: 모든 실험 정렬·필터 테이블 + 최선 score 강조 + PNG 썸네일
+- **Charts**: dp/timemax/LPM/thicken vs score scatter
+- **Files**: 프로젝트 파일 구조 + 각 파일의 역할
 
 ## GA 최적화 (현재 비활성, 추후 활성화)
 

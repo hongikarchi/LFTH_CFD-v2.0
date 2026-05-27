@@ -250,12 +250,7 @@ def run_experiment(test_id: str,
                    "_total_Q_m3ps": len(nozzles_m) * cfg["nozzle_LPM"] * 1e-3 / 60.0}
     append_settings_log(test_id, case, result, iter_dir, wall, stl_path, cfg_for_log)
 
-    # Dashboard refresh (best-effort)
-    try:
-        subprocess.run([sys.executable, str(PROJECT / "scripts" / "update_settings_compare.py")],
-                       capture_output=True, timeout=30)
-    except Exception:
-        pass
+    # Dashboard (Flask) serves DB live -- no static refresh needed.
 
     # Rhino push
     if push_rhino:

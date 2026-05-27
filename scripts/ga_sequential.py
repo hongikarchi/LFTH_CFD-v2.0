@@ -315,12 +315,6 @@ def evaluate(ind, stage_module_idx, prior_bests, modules_info, ga_state,
         "fitness": total_fit,
     })
     STATE_FILE.write_text(json.dumps(ga_state, indent=2), encoding="utf-8")
-    try:
-        subprocess.run([sys.executable,
-                        str(PROJECT / "scripts" / "update_settings_compare.py")],
-                        capture_output=True, timeout=30)
-    except Exception:
-        pass
     print(f"score={score:.4f}  in_pos={in_positive} in_neg={in_negative} "
           f"in_col={in_column} splash={splash} total={total} ({dt:.0f}s)")
     return (total_fit,)
