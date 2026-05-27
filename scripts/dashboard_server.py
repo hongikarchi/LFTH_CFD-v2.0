@@ -61,9 +61,9 @@ FIELD_GROUPS = [
             {"key": "lbm_u_ref", "label": "LBM u_ref", "unit": "lattice", "step": 0.005, "type": "number",
              "desc": "LBM 속도 스케일 → relaxation time 결정. 크면 빠름·불안정, 작으면 느림·정체 위험."},
             {"key": "side_walls", "label": "side walls", "unit": "", "type": "select", "options": ["E", "S"],
-             "desc": "도메인 측벽. E = 흡수 (escape), S = 반사. S면 물이 도메인 안에 갇혀 진짜 cascade 확인 가능."},
+             "desc": "시뮬 박스의 옆 4면 (xy 경계). E = 닿은 물 사라짐 (열림). S = 벽처럼 반사 (물 가둠). S여야 진짜 cascade 끝까지 보임."},
             {"key": "floor_type", "label": "floor", "unit": "", "type": "select", "options": ["S", "E"],
-             "desc": "도메인 바닥 (z=0). S = 반사 (pond 역할), E = 흡수."},
+             "desc": "시뮬 박스의 바닥 (z=0). S = pond 역할 (반사). E = 흡수 (도메인 아래로 빠짐)."},
         ],
     },
     {
