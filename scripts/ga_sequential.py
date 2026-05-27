@@ -412,12 +412,18 @@ def run_stage(stage_module_idx, prior_bests, modules_info, ga_state):
 
 # --- main ---------------------------------------------------------------------
 def main():
+    global POP, N_GEN
     ap = argparse.ArgumentParser()
     ap.add_argument("--stages", default="0,1,2,3",
                      help="comma-sep module indices to run sequentially")
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--pop", type=int, default=POP, help=f"pop size per gen (default {POP})")
+    ap.add_argument("--n_gen", type=int, default=N_GEN, help=f"generations per stage (default {N_GEN})")
     args = ap.parse_args()
     random.seed(args.seed)
+    POP = args.pop
+    N_GEN = args.n_gen
+    print(f"GA config: POP={POP} N_GEN={N_GEN} stages={args.stages} seed={args.seed}")
 
     modules_info = json.loads(MODULES_JSON.read_text(encoding="utf-8"))["modules"]
 
