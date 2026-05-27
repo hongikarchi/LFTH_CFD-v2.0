@@ -447,7 +447,7 @@ def build_modules_combined_stl(
     F = np.vstack(combined_faces)
     big = trimesh.Trimesh(vertices=V, faces=F, process=False)
     big.fix_normals()
-    big.export(stl_out, file_type="stl_ascii")
+    big.export(stl_out, file_type="stl")  # binary STL (FluidX3D requires binary)
 
     out = {
         "stl_path": str(stl_out),
