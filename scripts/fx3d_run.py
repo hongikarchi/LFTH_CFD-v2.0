@@ -181,7 +181,7 @@ def run_experiment(test_id: str,
         raise RuntimeError(
             f"STL {stl_path} is empty/corrupt ({local_stl.stat().st_size} bytes). "
             "Regenerate via extract_targets.py + thicken_collider.py, or "
-            "make_hemisphere.py, or build parametric STL via module_geometry.")
+            "build parametric STL via module_geometry.")
     loaded = trimesh.load(local_stl, force="mesh")
     if not isinstance(loaded, trimesh.Trimesh) or loaded.vertices is None or len(loaded.vertices) == 0:
         raise RuntimeError(f"STL {stl_path} did not load as a usable mesh "
