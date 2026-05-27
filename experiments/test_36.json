@@ -1,13 +1,67 @@
 {
   "test_id": "test_36",
-  "note": "Compromise: top shells just at nozzle Y edge for minimal contact while letting most water pass. (+4, -1, -2).",
-  "global": {"v_inlet": 2.0, "burst_end": 0.5, "dp": 0.10, "timemax": 10.0, "viscobound": 0.2},
+  "note": "grid sweep gen_05-var_03",
+  "global": {
+    "v_inlet": 0.0,
+    "dp": 0.2,
+    "timemax": 10.0,
+    "viscobound": 1.2,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
+  },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 5,
+    "var": 3
+  },
+  "batch_layer": "test_05",
   "modules": [
-    {"index": 0, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -1.0, -2.0], "scale": 1.0},
-    {"index": 1, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -1.0, -2.0], "scale": 1.0},
-    {"index": 2, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -1.0, -2.0], "scale": 1.0},
-    {"index": 3, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -1.0, -2.0], "scale": 1.0},
-    {"index": 4, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -1.0, -2.0], "scale": 1.0},
-    {"index": 5, "rotation_deg": [0, 0, 0], "translation_m": [4.0, -1.0, -2.0], "scale": 1.0}
+    {
+      "index": 0,
+      "radius": 5930.616912391356,
+      "move_z": 3930.616912391356,
+      "rotation_x": 17.168205448823837,
+      "rotation_z": 190.27769839509716,
+      "offset_dist": 1015.9718081535568,
+      "tx": 160.61164931219707,
+      "ty": -857.6558825152097,
+      "tz": -41.9176000905897
+    },
+    {
+      "index": 1,
+      "radius": 2328.4834917004473,
+      "move_z": 1528.4834917004473,
+      "rotation_x": 6.375335994268745,
+      "rotation_z": 174.5019841183449,
+      "offset_dist": 896.085776701597,
+      "tx": 3820.057127550649,
+      "ty": -2684.557333765444,
+      "tz": 42.92230417429482
+    },
+    {
+      "index": 2,
+      "radius": 6850.186068026595,
+      "move_z": 6050.186068026595,
+      "rotation_x": 3.542027976497469,
+      "rotation_z": 149.77321005645524,
+      "offset_dist": 884.0720621919545,
+      "tx": 4570.031567527416,
+      "ty": -4397.11540622111,
+      "tz": -189.70009532436566
+    },
+    {
+      "index": 3,
+      "radius": 7563.904475225744,
+      "move_z": 6578.535648773695,
+      "rotation_x": 5.846244731046652,
+      "rotation_z": 141.5658590374643,
+      "offset_dist": 1215.762638018069,
+      "tx": 5357.272623709728,
+      "ty": -1589.7018105814657,
+      "tz": 91.68996925942594
+    }
   ]
 }

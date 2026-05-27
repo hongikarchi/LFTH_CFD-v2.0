@@ -45,5141 +45,2686 @@
   <a href="https://github.com/hongikarchi/LFTH_CFD-v2.0">GitHub</a>
 </div>
 <table>
-<tr><th>Test</th><th>Note</th><th>Modules changed</th><th>Caught</th><th>Moved</th><th>Stuck</th><th>Total</th><th>Catch rate (moved)</th><th>Splash ratio</th><th>Wall</th><th>Date</th><th>Details</th></tr>
-<tr><td><strong>test_03</strong></td><td class='note'>Baseline with new protocol (timemax=10s, no module transforms)</td><td><code>identity</code></td><td>0</td><td>—</td><td>—</td><td>150</td><td class='ratio bad'>0.000</td><td>1.000</td><td>40.3s</td><td>2026-05-26 03:29:04</td><td><details><summary>params</summary><pre>{
+<tr><th>Test</th><th>Note</th><th>Modules</th><th>Caught</th><th>Moved</th><th>Stuck</th><th>Catch rate</th><th>Touch all</th><th>Per-slab touch</th><th>Wall</th><th>Date</th><th>Details</th></tr>
+<tr><td><strong>test_02</strong></td><td class='note'>grid sweep gen_01-var_01</td><td><code>M0[r=2020 mz=1220 rx=7 rz=254 off=1286 T=(-61,-961,-181)] | M1[r=7531 mz=6731 rx=3 rz=111 off=1314 T=(3754,-2653,185)] | M2[r=2476 mz=1676 rx=6 rz=324 off=1354 T=(4365,-4400,109)] | M3[r=4963 mz=2963 rx=19 rz=329 off=890 T=(5129,-1561,187)]</code></td><td>0</td><td>54</td><td>566</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>85/126/43/368</code></td><td>22.3s</td><td>2026-05-27 01:46:09</td><td><details><summary>params</summary><pre>{
+  "test_id": "test_02",
+  "note": "grid sweep gen_01-var_01",
+  "global": {
+    "v_inlet": 0.0,
+    "dp": 0.2,
+    "timemax": 10.0,
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
+  },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 1,
+    "var": 1
+  },
+  "batch_layer": "test_01",
+  "modules": [
+    {
+      "index": 0,
+      "radius": 2019.6847857289122,
+      "move_z": 1219.6847857289122,
+      "rotation_x": 6.92732604964103,
+      "rotation_z": 253.98476169625008,
+      "offset_dist": 1285.5671784266046,
+      "tx": -61.33027449291578,
+      "ty": -961.4259712898447,
+      "tz": -180.84499341602333
+    },
+    {
+      "index": 1,
+      "radius": 7530.736800525354,
+      "move_z": 6730.736800525354,
+      "rotation_x": 3.371007724140427,
+      "rotation_z": 111.3861344904123,
+      "offset_dist": 1314.4145189960643,
+      "tx": 3754.358672168891,
+      "ty": -2653.321516484306,
+      "tz": 185.32631348034528
+    },
+    {
+      "index": 2,
+      "radius": 2475.837944607951,
+      "move_z": 1675.8379446079512,
+      "rotation_x": 6.154622721930729,
+      "rotation_z": 324.4147354754612,
+      "offset_dist": 1354.4145546859445,
+      "tx": 4365.2780515350805,
+      "ty": -4400.34029163894,
+      "tz": 109.40028086751238
+    },
+    {
+      "index": 3,
+      "radius": 4963.103951050201,
+      "move_z": 2963.1039510502014,
+      "rotation_x": 18.932321937710796,
+      "rotation_z": 328.9596632097222,
+      "offset_dist": 889.7800503381633,
+      "tx": 5128.778625139144,
+      "ty": -1560.6275284535411,
+      "tz": 187.40959779160517
+    }
+  ]
+}</pre></details></td></tr>
+<tr><td><strong>test_03</strong></td><td class='note'>grid sweep gen_01-var_02</td><td><code>M0[r=5264 mz=4464 rx=4 rz=183 off=932 T=(403,-1017,-7)] | M1[r=6331 mz=5531 rx=4 rz=235 off=902 T=(4006,-2721,-3)] | M2[r=5079 mz=3079 rx=19 rz=310 off=832 T=(4392,-4280,-112)] | M3[r=3169 mz=2369 rx=5 rz=270 off=1155 T=(5169,-1578,88)]</code></td><td>0</td><td>54</td><td>614</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>146/102/364/420</code></td><td>22.2s</td><td>2026-05-27 01:46:40</td><td><details><summary>params</summary><pre>{
   "test_id": "test_03",
-  "note": "Baseline with new protocol (timemax=10s, no module transforms)",
+  "note": "grid sweep gen_01-var_02",
   "global": {
-    "v_inlet": 2.0,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 1.0
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 1,
+    "var": 2
+  },
+  "batch_layer": "test_01",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 5263.701623153954,
+      "move_z": 4463.701623153954,
+      "rotation_x": 4.069786562225094,
+      "rotation_z": 182.56069345041809,
+      "offset_dist": 931.8842392549561,
+      "tx": 403.0804933900233,
+      "ty": -1017.1941851504062,
+      "tz": -6.574444765638674
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 6330.511327338237,
+      "move_z": 5530.511327338237,
+      "rotation_x": 3.6917078743811533,
+      "rotation_z": 234.54242375794806,
+      "offset_dist": 902.0263328540127,
+      "tx": 4006.3307448201563,
+      "ty": -2720.9671166627754,
+      "tz": -2.607229645014371
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 5078.791579451208,
+      "move_z": 3078.7915794512082,
+      "rotation_x": 18.692296529337785,
+      "rotation_z": 310.0827821912839,
+      "offset_dist": 831.7636671935668,
+      "tx": 4392.323194987274,
+      "ty": -4280.431879515648,
+      "tz": -112.34134767675074
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 3169.0105249853154,
+      "move_z": 2369.0105249853154,
+      "rotation_x": 5.35684599055479,
+      "rotation_z": 269.5496724680335,
+      "offset_dist": 1154.570742590572,
+      "tx": 5168.506509066041,
+      "ty": -1577.8285734799156,
+      "tz": 88.04252325197302
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_04</strong></td><td class='note'>All 6 modules scaled to 0.5 — test if smaller shells let water through</td><td><code>M0[S0.5], M1[S0.5], M2[S0.5], M3[S0.5], M4[S0.5], M5[S0.5]</code></td><td>6</td><td>—</td><td>—</td><td>150</td><td class='ratio bad'>0.000</td><td>0.960</td><td>37.9s</td><td>2026-05-26 03:30:17</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_04</strong></td><td class='note'>grid sweep gen_01-var_03</td><td><code>M0[r=2464 mz=1664 rx=6 rz=144 off=1271 T=(218,-814,-136)] | M1[r=6591 mz=5791 rx=4 rz=71 off=899 T=(3620,-2989,178)] | M2[r=3814 mz=3014 rx=5 rz=124 off=1063 T=(4449,-4512,-35)] | M3[r=7512 mz=5881 rx=12 rz=144 off=908 T=(5287,-1730,-91)]</code></td><td>0</td><td>60</td><td>571</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>100/117/57/357</code></td><td>23.8s</td><td>2026-05-27 01:47:13</td><td><details><summary>params</summary><pre>{
   "test_id": "test_04",
-  "note": "All 6 modules scaled to 0.5 — test if smaller shells let water through",
+  "note": "grid sweep gen_01-var_03",
   "global": {
-    "v_inlet": 2.0,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 1.0
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 1,
+    "var": 3
+  },
+  "batch_layer": "test_01",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 0.5
+      "radius": 2464.0197106271958,
+      "move_z": 1664.0197106271958,
+      "rotation_x": 6.1714844679977325,
+      "rotation_z": 144.21941134446092,
+      "offset_dist": 1270.5672332733657,
+      "tx": 217.63020218343655,
+      "ty": -814.4928976716525,
+      "tz": -135.54917857236728
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 0.5
+      "radius": 6591.277028002835,
+      "move_z": 5791.277028002835,
+      "rotation_x": 3.6142784133662333,
+      "rotation_z": 71.32391256283871,
+      "offset_dist": 899.0355679837994,
+      "tx": 3619.9619666079248,
+      "ty": -2989.034243146517,
+      "tz": 178.33268860945088
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 0.5
+      "radius": 3814.151423111514,
+      "move_z": 3014.151423111514,
+      "rotation_x": 4.838735232251153,
+      "rotation_z": 123.71948369121097,
+      "offset_dist": 1063.374355576148,
+      "tx": 4449.089462306447,
+      "ty": -4512.441412822781,
+      "tz": -34.91170085247256
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 0.5
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 0.5
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 0.5
+      "radius": 7512.455880633512,
+      "move_z": 5880.892108536396,
+      "rotation_x": 12.279894814356243,
+      "rotation_z": 144.28276021449028,
+      "offset_dist": 908.3785345656696,
+      "tx": 5287.134793992707,
+      "ty": -1730.1542235590903,
+      "tz": -91.49046302899713
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_05</strong></td><td class='note'>Top 4 modules tilted -15° about Y (channel water inward toward pond center). All scales >= 0.9 so water still contacts.</td><td><code>M0[R0,-15,0 S0.9], M1[R0,-15,0 S0.9], M2[R0,-15,0 S0.9], M3[R0,-15,0 S0.9]</code></td><td>0</td><td>—</td><td>—</td><td>150</td><td class='ratio bad'>0.000</td><td>1.000</td><td>38.6s</td><td>2026-05-26 03:32:55</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_05</strong></td><td class='note'>grid sweep gen_01-var_04</td><td><code>M0[r=3131 mz=2331 rx=5 rz=201 off=886 T=(276,-859,141)] | M1[r=6747 mz=4747 rx=16 rz=160 off=1283 T=(3917,-2818,120)] | M2[r=2006 mz=1206 rx=0 rz=265 off=1263 T=(4630,-4510,-136)] | M3[r=6897 mz=5446 rx=11 rz=225 off=1206 T=(5119,-1713,145)]</code></td><td>0</td><td>86</td><td>907</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>110/510/120/273</code></td><td>25.2s</td><td>2026-05-27 01:47:47</td><td><details><summary>params</summary><pre>{
   "test_id": "test_05",
-  "note": "Top 4 modules tilted -15° about Y (channel water inward toward pond center). All scales >= 0.9 so water still contacts.",
+  "note": "grid sweep gen_01-var_04",
   "global": {
-    "v_inlet": 2.0,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 1.0
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 1,
+    "var": 4
+  },
+  "batch_layer": "test_01",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        -15,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 0.9
+      "radius": 3131.2640478031763,
+      "move_z": 2331.2640478031763,
+      "rotation_x": 5.392558323206042,
+      "rotation_z": 201.0299946816748,
+      "offset_dist": 885.5822229543625,
+      "tx": 276.2421540407114,
+      "ty": -859.1767359594803,
+      "tz": 141.33253421436712
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        -15,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 0.9
+      "radius": 6747.360900760936,
+      "move_z": 4747.360900760936,
+      "rotation_x": 16.01017567577207,
+      "rotation_z": 159.95885083177527,
+      "offset_dist": 1282.566534104219,
+      "tx": 3916.738781072553,
+      "ty": -2817.6352436412462,
+      "tz": 120.29961214621034
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        -15,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 0.9
+      "radius": 2005.551748816611,
+      "move_z": 1205.551748816611,
+      "rotation_x": 0.28977894346125743,
+      "rotation_z": 264.67543426837295,
+      "offset_dist": 1262.7721507536555,
+      "tx": 4629.882756776216,
+      "ty": -4510.103411328234,
+      "tz": -135.60608148254823
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        -15,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 0.9
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 6897.124216225052,
+      "move_z": 5446.3925310802415,
+      "rotation_x": 11.215054451032831,
+      "rotation_z": 225.15114638734013,
+      "offset_dist": 1206.3646778234545,
+      "tx": 5119.436562789212,
+      "ty": -1712.5206925121408,
+      "tz": 145.2768448331433
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_06</strong></td><td class='note'>Top 4 modules tilted +15° about Y (opposite of test_05). Scale 1.0 keeps all contact.</td><td><code>M0[R0,15,0], M1[R0,15,0], M2[R0,15,0], M3[R0,15,0]</code></td><td>0</td><td>—</td><td>—</td><td>150</td><td class='ratio bad'>0.000</td><td>1.000</td><td>38.6s</td><td>2026-05-26 03:34:17</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_06</strong></td><td class='note'>grid sweep gen_01-var_05</td><td><code>M0[r=5053 mz=3053 rx=19 rz=165 off=1267 T=(155,-1223,-138)] | M1[r=1744 mz=944 rx=8 rz=34 off=1153 T=(3897,-2927,180)] | M2[r=6157 mz=4157 rx=17 rz=37 off=1367 T=(4832,-4089,-87)] | M3[r=6169 mz=5369 rx=4 rz=13 off=711 T=(5431,-1862,-9)]</code></td><td>0</td><td>97</td><td>941</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>467/105/430/540</code></td><td>23.9s</td><td>2026-05-27 01:48:21</td><td><details><summary>params</summary><pre>{
   "test_id": "test_06",
-  "note": "Top 4 modules tilted +15° about Y (opposite of test_05). Scale 1.0 keeps all contact.",
+  "note": "grid sweep gen_01-var_05",
   "global": {
-    "v_inlet": 2.0,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 1.0
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 1,
+    "var": 5
+  },
+  "batch_layer": "test_01",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        15,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 5053.290764338419,
+      "move_z": 3053.2907643384187,
+      "rotation_x": 18.744417406486708,
+      "rotation_z": 165.02177353799857,
+      "offset_dist": 1266.6134736028234,
+      "tx": 155.49760988098114,
+      "ty": -1223.0013588457825,
+      "tz": -138.2749930601599
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        15,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 1743.5520799702867,
+      "move_z": 943.5520799702867,
+      "rotation_x": 7.565480434922065,
+      "rotation_z": 34.36901777841448,
+      "offset_dist": 1153.3282270241682,
+      "tx": 3896.6774682818427,
+      "ty": -2926.993097950883,
+      "tz": 179.9393575135668
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        15,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 6156.911231278195,
+      "move_z": 4156.911231278195,
+      "rotation_x": 16.822378142045604,
+      "rotation_z": 37.48914057361694,
+      "offset_dist": 1366.9749467634547,
+      "tx": 4832.305768779295,
+      "ty": -4088.876263488745,
+      "tz": -87.38851181607714
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        15,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 6168.788912758319,
+      "move_z": 5368.788912758319,
+      "rotation_x": 3.742304099411796,
+      "rotation_z": 12.609885107087774,
+      "offset_dist": 711.3565637161105,
+      "tx": 5431.377373919939,
+      "ty": -1861.731990687389,
+      "tz": -8.76826837619933
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_07</strong></td><td class='note'>Top 4 unchanged (scale 1.0, full contact). Bottom 2 scaled up to 1.5x to widen pond-level catchment.</td><td><code>M4[S1.5], M5[S1.5]</code></td><td>0</td><td>—</td><td>—</td><td>150</td><td class='ratio bad'>0.000</td><td>1.000</td><td>41.6s</td><td>2026-05-26 03:36:42</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_07</strong></td><td class='note'>grid sweep gen_01-var_06</td><td><code>M0[r=4574 mz=2574 rx=4 rz=325 off=1382 T=(468,-775,75)] | M1[r=1277 mz=500 rx=8 rz=355 off=709 T=(3726,-2845,153)] | M2[r=5874 mz=5074 rx=4 rz=32 off=975 T=(4790,-4589,-74)] | M3[r=2426 mz=1626 rx=6 rz=160 off=1305 T=(5498,-1386,-183)]</code></td><td>0</td><td>276</td><td>2400</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>2525/204/90/40</code></td><td>25.5s</td><td>2026-05-27 01:49:00</td><td><details><summary>params</summary><pre>{
   "test_id": "test_07",
-  "note": "Top 4 unchanged (scale 1.0, full contact). Bottom 2 scaled up to 1.5x to widen pond-level catchment.",
+  "note": "grid sweep gen_01-var_06",
   "global": {
-    "v_inlet": 2.0,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 1.0
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 1,
+    "var": 6
+  },
+  "batch_layer": "test_01",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 4574.361446069466,
+      "move_z": 2574.361446069466,
+      "rotation_x": 4.276366501865821,
+      "rotation_z": 325.0904452922712,
+      "offset_dist": 1381.9537789003425,
+      "tx": 468.36843748813146,
+      "ty": -774.7670188597965,
+      "tz": 75.40745789944344
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 1277.0780066350771,
+      "move_z": 500.0,
+      "rotation_x": 8.26860970809413,
+      "rotation_z": 355.14584727684485,
+      "offset_dist": 708.7557441820416,
+      "tx": 3726.189807920259,
+      "ty": -2845.2721957779086,
+      "tz": 152.65774985289937
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 5873.5841144870255,
+      "move_z": 5073.5841144870255,
+      "rotation_x": 3.8402873021657657,
+      "rotation_z": 31.776546361902138,
+      "offset_dist": 974.6043479253447,
+      "tx": 4789.609650208974,
+      "ty": -4588.510428418579,
+      "tz": -73.9615273361168
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.5
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.5
+      "radius": 2425.984130808464,
+      "move_z": 1625.9841308084642,
+      "rotation_x": 6.226708224701715,
+      "rotation_z": 159.71703331969258,
+      "offset_dist": 1305.2645260394247,
+      "tx": 5498.403925199553,
+      "ty": -1386.3733946040306,
+      "tz": -183.1317906575606
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_08</strong></td><td class='note'>Extended timemax 20s + top 4 at scale 0.8 (still contact) + bottom 2 at 1.3 (wider catch).</td><td><code>M0[S0.8], M1[S0.8], M2[S0.8], M3[S0.8], M4[S1.3], M5[S1.3]</code></td><td>0</td><td>—</td><td>—</td><td>150</td><td class='ratio bad'>0.000</td><td>1.000</td><td>70.7s</td><td>2026-05-26 03:38:20</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_08</strong></td><td class='note'>grid sweep gen_01-var_07</td><td><code>M0[r=4797 mz=3997 rx=1 rz=179 off=1040 T=(50,-1104,-82)] | M1[r=7313 mz=6513 rx=3 rz=10 off=913 T=(3602,-2818,-132)] | M2[r=5315 mz=3832 rx=13 rz=187 off=1023 T=(4661,-4045,116)] | M3[r=3489 mz=2689 rx=5 rz=209 off=1160 T=(5248,-1342,95)]</code></td><td>0</td><td>55</td><td>678</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>304/130/243/107</code></td><td>21.8s</td><td>2026-05-27 01:49:30</td><td><details><summary>params</summary><pre>{
   "test_id": "test_08",
-  "note": "Extended timemax 20s + top 4 at scale 0.8 (still contact) + bottom 2 at 1.3 (wider catch).",
+  "note": "grid sweep gen_01-var_07",
   "global": {
-    "v_inlet": 2.0,
-    "dp": 0.1,
-    "timemax": 20.0,
-    "viscobound": 1.0
+    "v_inlet": 0.0,
+    "dp": 0.2,
+    "timemax": 10.0,
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 1,
+    "var": 7
+  },
+  "batch_layer": "test_01",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 0.8
+      "radius": 4796.530456025612,
+      "move_z": 3996.530456025612,
+      "rotation_x": 0.6582932731666857,
+      "rotation_z": 178.982587321598,
+      "offset_dist": 1040.23329012639,
+      "tx": 50.152906849698155,
+      "ty": -1104.4834456821047,
+      "tz": -82.4298012247132
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 0.8
+      "radius": 7312.8201839886115,
+      "move_z": 6512.8201839886115,
+      "rotation_x": 3.4230477949283373,
+      "rotation_z": 9.908444149893704,
+      "offset_dist": 912.9003121903002,
+      "tx": 3601.8636382037193,
+      "ty": -2817.6658151301426,
+      "tz": -132.19633463768457
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 0.8
+      "radius": 5315.070780416381,
+      "move_z": 3832.3291534545274,
+      "rotation_x": 13.237795918833342,
+      "rotation_z": 186.54666934818135,
+      "offset_dist": 1023.0151709845403,
+      "tx": 4661.238519561451,
+      "ty": -4044.943145137737,
+      "tz": 116.23831711489925
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 0.8
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.3
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.3
+      "radius": 3488.6703214841887,
+      "move_z": 2688.6703214841887,
+      "rotation_x": 5.080392671149898,
+      "rotation_z": 209.3533403040538,
+      "offset_dist": 1160.2594472078442,
+      "tx": 5247.535899290592,
+      "ty": -1341.753701133417,
+      "tz": 95.17426545507317
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_09</strong></td><td class='note'>Re-baseline with fixed inlet (burst_end=0.5s, default in DEFAULTS). Identity transforms.</td><td><code>identity</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>42.5s</td><td>2026-05-26 03:42:19</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_09</strong></td><td class='note'>grid sweep gen_01-var_08</td><td><code>M0[r=3379 mz=2579 rx=5 rz=89 off=1099 T=(-61,-866,132)] | M1[r=6843 mz=4843 rx=16 rz=121 off=1253 T=(4081,-2612,4)] | M2[r=7030 mz=6230 rx=3 rz=352 off=1023 T=(4683,-4187,78)] | M3[r=1690 mz=890 rx=8 rz=348 off=1083 T=(5576,-1867,74)]</code></td><td>0</td><td>54</td><td>710</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>114/498/121/31</code></td><td>19.7s</td><td>2026-05-27 01:49:58</td><td><details><summary>params</summary><pre>{
   "test_id": "test_09",
-  "note": "Re-baseline with fixed inlet (burst_end=0.5s, default in DEFAULTS). Identity transforms.",
+  "note": "grid sweep gen_01-var_08",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 1.0
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 1,
+    "var": 8
+  },
+  "batch_layer": "test_01",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 3379.3108869561615,
+      "move_z": 2579.3108869561615,
+      "rotation_x": 5.170094966508457,
+      "rotation_z": 88.88148065825243,
+      "offset_dist": 1099.2780372183463,
+      "tx": -60.97387470839203,
+      "ty": -865.6995653279819,
+      "tz": 131.95687019790535
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 6842.688354683511,
+      "move_z": 4842.688354683511,
+      "rotation_x": 15.88978220824386,
+      "rotation_z": 120.59314568633934,
+      "offset_dist": 1253.087699684153,
+      "tx": 4080.6725925278743,
+      "ty": -2611.544762538721,
+      "tz": 3.6473014589143133
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 7029.93923635682,
+      "move_z": 6229.93923635682,
+      "rotation_x": 3.494341388857441,
+      "rotation_z": 352.438636154171,
+      "offset_dist": 1022.7316226623203,
+      "tx": 4683.098286650905,
+      "ty": -4187.426724066978,
+      "tz": 78.4058805545219
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 1690.4458982343508,
+      "move_z": 890.4458982343508,
+      "rotation_x": 7.709741141699116,
+      "rotation_z": 347.53470968382715,
+      "offset_dist": 1083.3122762024584,
+      "tx": 5576.34208973862,
+      "ty": -1867.3441162699344,
+      "tz": 73.77550193577218
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_10</strong></td><td class='note'>Same as test_09 (identity geom) but viscobound=0.3 — slippery surfaces, water slides off shells instead of pooling.</td><td><code>identity</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>52.5s</td><td>2026-05-26 03:43:37</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_10</strong></td><td class='note'>grid sweep gen_02-var_01</td><td><code>M0[r=7851 mz=7051 rx=3 rz=131 off=779 T=(332,-1108,189)] | M1[r=2577 mz=917 rx=23 rz=162 off=755 T=(3570,-3021,179)] | M2[r=7757 mz=6105 rx=4 rz=52 off=810 T=(4380,-4478,-16)] | M3[r=4630 mz=3830 rx=4 rz=288 off=778 T=(5065,-1300,77)]</code></td><td>0</td><td>59</td><td>2328</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>177/152/1979/211</code></td><td>27.2s</td><td>2026-05-27 01:56:30</td><td><details><summary>params</summary><pre>{
   "test_id": "test_10",
-  "note": "Same as test_09 (identity geom) but viscobound=0.3 — slippery surfaces, water slides off shells instead of pooling.",
+  "note": "grid sweep gen_02-var_01",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.3
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 2,
+    "var": 1
+  },
+  "batch_layer": "test_02",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 7851.444416460357,
+      "move_z": 7051.444416460357,
+      "rotation_x": 3.298562400284383,
+      "rotation_z": 130.78036024549525,
+      "offset_dist": 779.1187181697459,
+      "tx": 331.9389918096096,
+      "ty": -1107.8098876564438,
+      "tz": 188.7239708868903
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 2577.146040501553,
+      "move_z": 917.4683451326899,
+      "rotation_x": 22.734756654238115,
+      "rotation_z": 161.54447847531964,
+      "offset_dist": 754.8995719946031,
+      "tx": 3569.979496811115,
+      "ty": -3020.969168579028,
+      "tz": 179.45649579260999
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 7756.703861828362,
+      "move_z": 6104.916343055644,
+      "rotation_x": 4.462638742432551,
+      "rotation_z": 51.70228991395878,
+      "offset_dist": 809.7175863199787,
+      "tx": 4379.674324785479,
+      "ty": -4478.32107041053,
+      "tz": -16.153920970524382
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 4630.226434516864,
+      "move_z": 3830.226434516864,
+      "rotation_x": 4.357906752057992,
+      "rotation_z": 287.90185695677974,
+      "offset_dist": 778.3235993416712,
+      "tx": 5065.403306536016,
+      "ty": -1299.922664137417,
+      "tz": 77.17137660279587
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_11</strong></td><td class='note'>Translate all 6 modules by (+4, -3, 0) m to align sculpture under nozzles (avg nozzle XY = +4.1, -3.2). Water cascades closer to pond center.</td><td><code>M0[T4,-3,0], M1[T4,-3,0], M2[T4,-3,0], M3[T4,-3,0], M4[T4,-3,0], M5[T4,-3,0]</code></td><td>7</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.023</td><td>0.698</td><td>49.6s</td><td>2026-05-26 03:45:37</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_11</strong></td><td class='note'>grid sweep gen_02-var_02</td><td><code>M0[r=2343 mz=1543 rx=6 rz=298 off=731 T=(412,-1089,110)] | M1[r=3887 mz=3087 rx=5 rz=86 off=1267 T=(3854,-3005,178)] | M2[r=6378 mz=4521 rx=15 rz=276 off=726 T=(4768,-4540,-144)] | M3[r=3657 mz=2857 rx=2 rz=343 off=1175 T=(5313,-1860,-39)]</code></td><td>0</td><td>58</td><td>695</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>98/70/451/584</code></td><td>24.2s</td><td>2026-05-27 01:57:03</td><td><details><summary>params</summary><pre>{
   "test_id": "test_11",
-  "note": "Translate all 6 modules by (+4, -3, 0) m to align sculpture under nozzles (avg nozzle XY = +4.1, -3.2). Water cascades closer to pond center.",
+  "note": "grid sweep gen_02-var_02",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.5
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 2,
+    "var": 2
+  },
+  "batch_layer": "test_02",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 2343.202499104326,
+      "move_z": 1543.2024991043259,
+      "rotation_x": 6.352214894224361,
+      "rotation_z": 297.5464917614378,
+      "offset_dist": 731.4153254015248,
+      "tx": 412.3805962382203,
+      "ty": -1088.9680701293896,
+      "tz": 109.79688220997326
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 3886.7622956616065,
+      "move_z": 3086.7622956616065,
+      "rotation_x": 4.789376559036347,
+      "rotation_z": 86.1481030671315,
+      "offset_dist": 1266.6470929242073,
+      "tx": 3853.7472327372043,
+      "ty": -3004.917393747337,
+      "tz": 177.90426535418374
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 6377.501068336261,
+      "move_z": 4520.873111565037,
+      "rotation_x": 15.345776497331189,
+      "rotation_z": 275.6624669857102,
+      "offset_dist": 725.6714401898355,
+      "tx": 4767.807755122101,
+      "ty": -4540.438780040309,
+      "tz": -144.4226492101772
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 3656.6284570036914,
+      "move_z": 2856.6284570036914,
+      "rotation_x": 1.73145840931063,
+      "rotation_z": 343.38405084440427,
+      "offset_dist": 1174.6284573376342,
+      "tx": 5313.423920978024,
+      "ty": -1859.9234898425807,
+      "tz": -39.38306526847458
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_12</strong></td><td class='note'>Best so far (test_11 translation) + bottom 2 modules scaled to 1.5x to act as catch basin.</td><td><code>M0[T4,-3,0], M1[T4,-3,0], M2[T4,-3,0], M3[T4,-3,0], M4[T4,-3,0 S1.5], M5[T4,-3,0 S1.5]</code></td><td>7</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.023</td><td>0.698</td><td>50.7s</td><td>2026-05-26 03:47:15</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_12</strong></td><td class='note'>grid sweep gen_02-var_03</td><td><code>M0[r=7474 mz=6674 rx=3 rz=140 off=1391 T=(-21,-1015,-34)] | M1[r=6547 mz=5747 rx=4 rz=295 off=1089 T=(3747,-2931,107)] | M2[r=5593 mz=4036 rx=14 rz=248 off=1469 T=(4928,-4203,16)] | M3[r=7706 mz=6906 rx=3 rz=250 off=1345 T=(5351,-1641,34)]</code></td><td>0</td><td>69</td><td>595</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>171/103/262/145</code></td><td>22.9s</td><td>2026-05-27 01:57:35</td><td><details><summary>params</summary><pre>{
   "test_id": "test_12",
-  "note": "Best so far (test_11 translation) + bottom 2 modules scaled to 1.5x to act as catch basin.",
+  "note": "grid sweep gen_02-var_03",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.5
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 2,
+    "var": 3
+  },
+  "batch_layer": "test_02",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 7473.7763825742095,
+      "move_z": 6673.7763825742095,
+      "rotation_x": 3.3843808092587397,
+      "rotation_z": 140.1594504174761,
+      "offset_dist": 1391.066754907229,
+      "tx": -20.696304906478417,
+      "ty": -1015.3993075461349,
+      "tz": -33.88141441613857
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 6546.890845141481,
+      "move_z": 5746.890845141481,
+      "rotation_x": 3.627114344849088,
+      "rotation_z": 294.8242157817649,
+      "offset_dist": 1089.0083577403445,
+      "tx": 3746.7981635592623,
+      "ty": -2931.3147130832817,
+      "tz": 106.65433520997988
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 5592.946961450093,
+      "move_z": 4036.0308544475374,
+      "rotation_x": 13.639097778975508,
+      "rotation_z": 247.62766935725062,
+      "offset_dist": 1468.8606653594584,
+      "tx": 4927.982248199072,
+      "ty": -4203.333715302222,
+      "tz": 15.5035953325675
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.5
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.5
+      "radius": 7705.712920781433,
+      "move_z": 6905.712920781433,
+      "rotation_x": 3.330897702281556,
+      "rotation_z": 249.59759778152,
+      "offset_dist": 1345.3750370141897,
+      "tx": 5350.515698442637,
+      "ty": -1640.999450218439,
+      "tz": 33.50336066622316
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_13</strong></td><td class='note'>test_11 translation + top 4 scaled to 0.7 (less deflection but still contact).</td><td><code>M0[T4,-3,0 S0.7], M1[T4,-3,0 S0.7], M2[T4,-3,0 S0.7], M3[T4,-3,0 S0.7], M4[T4,-3,0], M5[T4,-3,0]</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>37.4s</td><td>2026-05-26 03:48:28</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_13</strong></td><td class='note'>grid sweep gen_02-var_04</td><td><code>M0[r=6655 mz=5855 rx=4 rz=176 off=959 T=(254,-638,143)] | M1[r=6268 mz=5468 rx=4 rz=183 off=959 T=(4031,-2666,-25)] | M2[r=7120 mz=6295 rx=4 rz=154 off=1236 T=(4745,-4466,-139)] | M3[r=7225 mz=5906 rx=10 rz=334 off=1051 T=(5578,-1499,103)]</code></td><td>0</td><td>59</td><td>569</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>178/112/117/229</code></td><td>24.1s</td><td>2026-05-27 01:58:08</td><td><details><summary>params</summary><pre>{
   "test_id": "test_13",
-  "note": "test_11 translation + top 4 scaled to 0.7 (less deflection but still contact).",
+  "note": "grid sweep gen_02-var_04",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.5
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 2,
+    "var": 4
+  },
+  "batch_layer": "test_02",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -3.0,
-        0
-      ],
-      "scale": 0.7
+      "radius": 6655.36235351361,
+      "move_z": 5855.36235351361,
+      "rotation_x": 3.595983858899478,
+      "rotation_z": 176.22408484277386,
+      "offset_dist": 959.0929510795478,
+      "tx": 253.84463115696872,
+      "ty": -638.1049851944632,
+      "tz": 143.01884096405018
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -3.0,
-        0
-      ],
-      "scale": 0.7
+      "radius": 6267.577553713138,
+      "move_z": 5467.577553713138,
+      "rotation_x": 3.711152267309895,
+      "rotation_z": 183.2565777929929,
+      "offset_dist": 958.6853203027902,
+      "tx": 4030.6841317698922,
+      "ty": -2666.2946316534926,
+      "tz": -25.2703592316156
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -3.0,
-        0
-      ],
-      "scale": 0.7
+      "radius": 7120.341190275583,
+      "move_z": 6295.49880999219,
+      "rotation_x": 3.8435612479687014,
+      "rotation_z": 154.19220346759445,
+      "offset_dist": 1236.496123737807,
+      "tx": 4745.3736539550855,
+      "ty": -4466.192005388329,
+      "tz": -139.00614637366155
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -3.0,
-        0
-      ],
-      "scale": 0.7
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 7224.780489887382,
+      "move_z": 5906.120325831441,
+      "rotation_x": 9.682743762063957,
+      "rotation_z": 333.78727529614093,
+      "offset_dist": 1051.1736319888187,
+      "tx": 5577.515275121584,
+      "ty": -1498.585037292768,
+      "tz": 102.60013110891958
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_14</strong></td><td class='note'>Moderate translation (+2, -2, 0). Keeps modules within pond XY. Scale 1.0 all.</td><td><code>M0[T2,-2,0], M1[T2,-2,0], M2[T2,-2,0], M3[T2,-2,0], M4[T2,-2,0], M5[T2,-2,0]</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>54.3s</td><td>2026-05-26 03:50:20</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_14</strong></td><td class='note'>grid sweep gen_02-var_05</td><td><code>M0[r=5629 mz=4829 rx=4 rz=146 off=1056 T=(25,-960,16)] | M1[r=1623 mz=823 rx=8 rz=61 off=1066 T=(3911,-2872,-131)] | M2[r=2824 mz=2024 rx=6 rz=184 off=1148 T=(4600,-4419,-141)] | M3[r=7743 mz=5743 rx=15 rz=66 off=1088 T=(5550,-1295,-78)]</code></td><td>0</td><td>66</td><td>719</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>146/25/48/566</code></td><td>25.9s</td><td>2026-05-27 01:58:43</td><td><details><summary>params</summary><pre>{
   "test_id": "test_14",
-  "note": "Moderate translation (+2, -2, 0). Keeps modules within pond XY. Scale 1.0 all.",
+  "note": "grid sweep gen_02-var_05",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.5
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 2,
+    "var": 5
+  },
+  "batch_layer": "test_02",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        2.0,
-        -2.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 5628.9417195542765,
+      "move_z": 4828.9417195542765,
+      "rotation_x": 3.927595054399766,
+      "rotation_z": 145.81840340275133,
+      "offset_dist": 1056.1965049849275,
+      "tx": 24.532575519632843,
+      "ty": -959.6117576196868,
+      "tz": 16.054950608800482
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        2.0,
-        -2.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 1623.1049509260492,
+      "move_z": 823.1049509260492,
+      "rotation_x": 7.905137249560454,
+      "rotation_z": 60.631096553013904,
+      "offset_dist": 1065.7641482175386,
+      "tx": 3911.413623786403,
+      "ty": -2872.4499896535312,
+      "tz": -130.86449838529467
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        2.0,
-        -2.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 2824.1601193464035,
+      "move_z": 2024.1601193464035,
+      "rotation_x": 5.7123941266535185,
+      "rotation_z": 184.13987206592537,
+      "offset_dist": 1148.2683212244692,
+      "tx": 4600.499864499958,
+      "ty": -4419.1446503079815,
+      "tz": -141.1159571765431
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        2.0,
-        -2.0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        2.0,
-        -2.0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        2.0,
-        -2.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 7743.038507227556,
+      "move_z": 5743.038507227556,
+      "rotation_x": 14.872456165284401,
+      "rotation_z": 65.81199789183889,
+      "offset_dist": 1087.6435334230482,
+      "tx": 5549.646029131205,
+      "ty": -1295.2388554541044,
+      "tz": -78.04475389903831
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_15</strong></td><td class='note'>Stronger translation (+5, -4, 0). Push sculpture further to nozzle column.</td><td><code>M0[T5,-4,0], M1[T5,-4,0], M2[T5,-4,0], M3[T5,-4,0], M4[T5,-4,0], M5[T5,-4,0]</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>39.8s</td><td>2026-05-26 03:51:21</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_15</strong></td><td class='note'>grid sweep gen_02-var_06</td><td><code>M0[r=4043 mz=3243 rx=5 rz=312 off=1126 T=(201,-1150,40)] | M1[r=3999 mz=1999 rx=21 rz=343 off=1078 T=(3928,-3004,39)] | M2[r=6621 mz=4621 rx=16 rz=345 off=764 T=(4843,-4581,37)] | M3[r=5226 mz=4426 rx=4 rz=260 off=1242 T=(5071,-1486,1)]</code></td><td>0</td><td>67</td><td>988</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>119/331/514/605</code></td><td>24.7s</td><td>2026-05-27 01:59:18</td><td><details><summary>params</summary><pre>{
   "test_id": "test_15",
-  "note": "Stronger translation (+5, -4, 0). Push sculpture further to nozzle column.",
+  "note": "grid sweep gen_02-var_06",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.5
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 2,
+    "var": 6
+  },
+  "batch_layer": "test_02",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        5.0,
-        -4.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 4043.431272365375,
+      "move_z": 3243.431272365375,
+      "rotation_x": 4.687826310251397,
+      "rotation_z": 311.6188772618795,
+      "offset_dist": 1125.633857954212,
+      "tx": 201.212513246706,
+      "ty": -1149.6355633322764,
+      "tz": 40.48753020914373
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        5.0,
-        -4.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 3999.480216242607,
+      "move_z": 1999.4802162426072,
+      "rotation_x": 21.374658115560152,
+      "rotation_z": 342.5506494272398,
+      "offset_dist": 1077.6707423361406,
+      "tx": 3928.3981681164323,
+      "ty": -3004.4838307613363,
+      "tz": 38.974428246309856
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        5.0,
-        -4.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 6621.200637231932,
+      "move_z": 4621.200637231932,
+      "rotation_x": 16.173807586705387,
+      "rotation_z": 344.7326445380478,
+      "offset_dist": 764.4086550746476,
+      "tx": 4843.247043295212,
+      "ty": -4581.454885911399,
+      "tz": 36.90106295700494
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        5.0,
-        -4.0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        5.0,
-        -4.0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        5.0,
-        -4.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 5225.848996177799,
+      "move_z": 4425.848996177799,
+      "rotation_x": 4.085422614523636,
+      "rotation_z": 260.276366514284,
+      "offset_dist": 1242.3479482473745,
+      "tx": 5070.653248209915,
+      "ty": -1486.0165295635948,
+      "tz": 1.1940561128821798
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_16</strong></td><td class='note'>Neighborhood of test_11: translation (+3, -3, 0).</td><td><code>M0[T3,-3,0], M1[T3,-3,0], M2[T3,-3,0], M3[T3,-3,0], M4[T3,-3,0], M5[T3,-3,0]</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>60.2s</td><td>2026-05-26 03:52:50</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_16</strong></td><td class='note'>grid sweep gen_02-var_07</td><td><code>M0[r=7569 mz=5569 rx=15 rz=243 off=1006 T=(408,-654,-86)] | M1[r=2968 mz=980 rx=25 rz=359 off=1026 T=(4054,-2608,129)] | M2[r=7073 mz=5073 rx=16 rz=339 off=1360 T=(4668,-4544,80)] | M3[r=6738 mz=4738 rx=3 rz=184 off=1404 T=(5119,-1349,-17)]</code></td><td>0</td><td>720</td><td>5392</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>607/298/538/5247</code></td><td>29.8s</td><td>2026-05-27 02:00:08</td><td><details><summary>params</summary><pre>{
   "test_id": "test_16",
-  "note": "Neighborhood of test_11: translation (+3, -3, 0).",
+  "note": "grid sweep gen_02-var_07",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.5
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 2,
+    "var": 7
+  },
+  "batch_layer": "test_02",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        3.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 7568.962422666516,
+      "move_z": 5568.962422666516,
+      "rotation_x": 15.053908229667586,
+      "rotation_z": 243.22540069178936,
+      "offset_dist": 1006.185921487704,
+      "tx": 408.1434458684879,
+      "ty": -654.4802743869316,
+      "tz": -86.02257971190106
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        3.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 2967.950672394879,
+      "move_z": 979.7856951686723,
+      "rotation_x": 25.3033131159589,
+      "rotation_z": 359.3154531578733,
+      "offset_dist": 1026.0061109731485,
+      "tx": 4053.938475490457,
+      "ty": -2608.441058895803,
+      "tz": 129.37331143750754
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        3.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 7072.636659446135,
+      "move_z": 5072.636659446135,
+      "rotation_x": 15.610212066936015,
+      "rotation_z": 338.5733862379052,
+      "offset_dist": 1359.9980689102408,
+      "tx": 4667.716136891265,
+      "ty": -4543.792706724883,
+      "tz": 79.77881571640916
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        3.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        3.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        3.0,
-        -3.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 6738.174594378129,
+      "move_z": 4738.174594378129,
+      "rotation_x": 2.569254237846649,
+      "rotation_z": 183.7148385406851,
+      "offset_dist": 1403.5163097485029,
+      "tx": 5118.508273003319,
+      "ty": -1348.841535370379,
+      "tz": -17.26568013971749
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_17</strong></td><td class='note'>Neighborhood of test_11: translation (+4, -4, 0). Same X, more Y push.</td><td><code>M0[T4,-4,0], M1[T4,-4,0], M2[T4,-4,0], M3[T4,-4,0], M4[T4,-4,0], M5[T4,-4,0]</code></td><td>10</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.033</td><td>0.690</td><td>65.2s</td><td>2026-05-26 03:54:01</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_17</strong></td><td class='note'>grid sweep gen_02-var_08</td><td><code>M0[r=7005 mz=5005 rx=16 rz=124 off=1260 T=(-85,-1196,15)] | M1[r=7028 mz=6228 rx=3 rz=139 off=1164 T=(3617,-2919,173)] | M2[r=6605 mz=5805 rx=4 rz=143 off=1238 T=(4721,-4215,196)] | M3[r=5751 mz=4951 rx=4 rz=232 off=1300 T=(5274,-1841,-58)]</code></td><td>0</td><td>93</td><td>766</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>562/163/99/94</code></td><td>25.5s</td><td>2026-05-27 02:00:43</td><td><details><summary>params</summary><pre>{
   "test_id": "test_17",
-  "note": "Neighborhood of test_11: translation (+4, -4, 0). Same X, more Y push.",
+  "note": "grid sweep gen_02-var_08",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.5
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 2,
+    "var": 8
+  },
+  "batch_layer": "test_02",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 7004.9644843110445,
+      "move_z": 5004.9644843110445,
+      "rotation_x": 15.69094842682274,
+      "rotation_z": 123.56894529489317,
+      "offset_dist": 1259.8482034622202,
+      "tx": -84.98215281201539,
+      "ty": -1195.7207865525586,
+      "tz": 15.355361512142224
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 7027.94739563176,
+      "move_z": 6227.94739563176,
+      "rotation_x": 3.4948592941308663,
+      "rotation_z": 138.5840782218902,
+      "offset_dist": 1163.662181540491,
+      "tx": 3616.843594976105,
+      "ty": -2918.5827776614083,
+      "tz": 173.45577561956577
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 6605.03771629176,
+      "move_z": 5805.03771629176,
+      "rotation_x": 3.6103265853680955,
+      "rotation_z": 143.32110876411582,
+      "offset_dist": 1238.08526634517,
+      "tx": 4721.285976591249,
+      "ty": -4214.692412570896,
+      "tz": 196.25089249144855
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 5751.165040056168,
+      "move_z": 4951.165040056168,
+      "rotation_x": 3.883240111549419,
+      "rotation_z": 232.1441472828458,
+      "offset_dist": 1300.4649162949158,
+      "tx": 5273.5602404978845,
+      "ty": -1840.7571198293838,
+      "tz": -57.703543092419864
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_18</strong></td><td class='note'>Refine near test_17: translation (+4, -4.5, 0).</td><td><code>M0[T4,-4.5,0], M1[T4,-4.5,0], M2[T4,-4.5,0], M3[T4,-4.5,0], M4[T4,-4.5,0], M5[T4,-4.5,0]</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>40.7s</td><td>2026-05-26 03:55:08</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_18</strong></td><td class='note'>grid sweep gen_03-var_01</td><td><code>M0[r=2376 mz=1576 rx=6 rz=330 off=774 T=(-79,-860,3)] | M1[r=2930 mz=2130 rx=6 rz=121 off=1302 T=(3615,-2771,-120)] | M2[r=5863 mz=3863 rx=17 rz=49 off=762 T=(4659,-4628,-67)] | M3[r=7813 mz=7013 rx=3 rz=53 off=797 T=(5109,-1842,2)]</code></td><td>0</td><td>58</td><td>616</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>95/48/418/533</code></td><td>25.2s</td><td>2026-05-27 02:02:13</td><td><details><summary>params</summary><pre>{
   "test_id": "test_18",
-  "note": "Refine near test_17: translation (+4, -4.5, 0).",
+  "note": "grid sweep gen_03-var_01",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.5
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 3,
+    "var": 1
+  },
+  "batch_layer": "test_03",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.5,
-        0
-      ],
-      "scale": 1.0
+      "radius": 2376.0917026409397,
+      "move_z": 1576.0917026409397,
+      "rotation_x": 6.3014478650872086,
+      "rotation_z": 329.67310153520685,
+      "offset_dist": 773.6084795639396,
+      "tx": -79.14448133001127,
+      "ty": -860.0276798184348,
+      "tz": 3.3517426578014806
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.5,
-        0
-      ],
-      "scale": 1.0
+      "radius": 2930.094181743013,
+      "move_z": 2130.094181743013,
+      "rotation_x": 5.595730264548596,
+      "rotation_z": 120.90204404405061,
+      "offset_dist": 1302.2402934099405,
+      "tx": 3615.1771625571005,
+      "ty": -2770.5011500475025,
+      "tz": -120.166747710774
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.5,
-        0
-      ],
-      "scale": 1.0
+      "radius": 5862.507075924332,
+      "move_z": 3862.5070759243317,
+      "rotation_x": 17.276551380927295,
+      "rotation_z": 49.03640591492134,
+      "offset_dist": 761.5027095149902,
+      "tx": 4658.891133303631,
+      "ty": -4628.239823721747,
+      "tz": -67.01608668950394
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.5,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.5,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.5,
-        0
-      ],
-      "scale": 1.0
+      "radius": 7813.354519687561,
+      "move_z": 7013.354519687561,
+      "rotation_x": 3.3069228966031123,
+      "rotation_z": 52.59800749315695,
+      "offset_dist": 796.6219632367304,
+      "tx": 5109.384763691961,
+      "ty": -1842.4611458584004,
+      "tz": 2.334762431536774
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_19</strong></td><td class='note'>test_17 best (+4, -4) + lower sculpture by Z -2m to give water more vertical fall room.</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2], M4[T4,-4,-2], M5[T4,-4,-2]</code></td><td>16</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.053</td><td>0.676</td><td>56.8s</td><td>2026-05-26 03:56:40</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_19</strong></td><td class='note'>grid sweep gen_03-var_02</td><td><code>M0[r=2966 mz=2166 rx=6 rz=347 off=894 T=(178,-1210,178)] | M1[r=5730 mz=4930 rx=4 rz=227 off=771 T=(4099,-2598,132)] | M2[r=4454 mz=2454 rx=20 rz=288 off=1434 T=(4427,-4068,137)] | M3[r=2579 mz=1779 rx=6 rz=144 off=1208 T=(5586,-1424,144)]</code></td><td>0</td><td>90</td><td>502</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>104/85/365/402</code></td><td>24.0s</td><td>2026-05-27 02:02:46</td><td><details><summary>params</summary><pre>{
   "test_id": "test_19",
-  "note": "test_17 best (+4, -4) + lower sculpture by Z -2m to give water more vertical fall room.",
+  "note": "grid sweep gen_03-var_02",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.5
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 3,
+    "var": 2
+  },
+  "batch_layer": "test_03",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 2966.283015755965,
+      "move_z": 2166.283015755965,
+      "rotation_x": 5.557484859097804,
+      "rotation_z": 347.22688203608857,
+      "offset_dist": 894.1831959357013,
+      "tx": 177.70651591230472,
+      "ty": -1210.2936091361976,
+      "tz": 177.9559668777909
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 5730.228843876336,
+      "move_z": 4930.228843876336,
+      "rotation_x": 3.890731266549428,
+      "rotation_z": 226.53106621483232,
+      "offset_dist": 771.105510494751,
+      "tx": 4098.553276825778,
+      "ty": -2597.690013503259,
+      "tz": 131.57968644762184
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 4454.386811498125,
+      "move_z": 2454.386811498125,
+      "rotation_x": 20.11012041533346,
+      "rotation_z": 288.0835057801599,
+      "offset_dist": 1434.090100957134,
+      "tx": 4426.625786242138,
+      "ty": -4068.2582420136387,
+      "tz": 137.01530307082373
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 2578.9279126211245,
+      "move_z": 1778.9279126211245,
+      "rotation_x": 6.013173840081165,
+      "rotation_z": 144.22760673516515,
+      "offset_dist": 1207.7293169276693,
+      "tx": 5585.579650220597,
+      "ty": -1424.4997082972493,
+      "tz": 143.62819994957744
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_20</strong></td><td class='note'>test_19 best + lower sculpture more by Z -4m (was -2).</td><td><code>M0[T4,-4,-4], M1[T4,-4,-4], M2[T4,-4,-4], M3[T4,-4,-4], M4[T4,-4,-4], M5[T4,-4,-4]</code></td><td>8</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.027</td><td>0.695</td><td>62.3s</td><td>2026-05-26 03:58:07</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_20</strong></td><td class='note'>grid sweep gen_03-var_03</td><td><code>M0[r=2880 mz=2080 rx=6 rz=340 off=732 T=(175,-884,117)] | M1[r=4051 mz=3251 rx=5 rz=328 off=1191 T=(3825,-2453,123)] | M2[r=1819 mz=1019 rx=7 rz=87 off=938 T=(4893,-4200,-83)] | M3[r=3089 mz=2289 rx=5 rz=52 off=1062 T=(5151,-1566,115)]</code></td><td>0</td><td>58</td><td>197</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>108/64/35/48</code></td><td>21.4s</td><td>2026-05-27 02:03:15</td><td><details><summary>params</summary><pre>{
   "test_id": "test_20",
-  "note": "test_19 best + lower sculpture more by Z -4m (was -2).",
+  "note": "grid sweep gen_03-var_03",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.5
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 3,
+    "var": 3
+  },
+  "batch_layer": "test_03",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -4.0
-      ],
-      "scale": 1.0
+      "radius": 2880.0196367500357,
+      "move_z": 2080.0196367500357,
+      "rotation_x": 5.64997727914781,
+      "rotation_z": 340.40295964698424,
+      "offset_dist": 732.066041342569,
+      "tx": 174.8289902958586,
+      "ty": -883.8180187888049,
+      "tz": 116.85198251716366
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -4.0
-      ],
-      "scale": 1.0
+      "radius": 4051.218456906022,
+      "move_z": 3251.218456906022,
+      "rotation_x": 4.682945849708928,
+      "rotation_z": 328.3865962759574,
+      "offset_dist": 1191.1041262659885,
+      "tx": 3825.1997869086,
+      "ty": -2452.694269827051,
+      "tz": 123.31232917195922
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -4.0
-      ],
-      "scale": 1.0
+      "radius": 1818.8727120219096,
+      "move_z": 1018.8727120219096,
+      "rotation_x": 7.374112378418884,
+      "rotation_z": 86.75468791358689,
+      "offset_dist": 938.268293838602,
+      "tx": 4892.522806041303,
+      "ty": -4200.041248176831,
+      "tz": -82.83140942112284
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -4.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -4.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -4.0
-      ],
-      "scale": 1.0
+      "radius": 3089.2939857723723,
+      "move_z": 2289.2939857723723,
+      "rotation_x": 5.43311792474564,
+      "rotation_z": 51.785872026002416,
+      "offset_dist": 1062.3285234610785,
+      "tx": 5151.254094497832,
+      "ty": -1565.761011691425,
+      "tz": 115.32161355058457
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_21</strong></td><td class='note'>Tune Z translation between best test_19 (-2) and worse test_20 (-4). Try Z -3.</td><td><code>M0[T4,-4,-3], M1[T4,-4,-3], M2[T4,-4,-3], M3[T4,-4,-3], M4[T4,-4,-3], M5[T4,-4,-3]</code></td><td>13</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.043</td><td>0.683</td><td>63.4s</td><td>2026-05-26 03:59:36</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_21</strong></td><td class='note'>grid sweep gen_03-var_04</td><td><code>M0[r=6579 mz=4579 rx=16 rz=151 off=1020 T=(456,-758,-70)] | M1[r=1517 mz=717 rx=3 rz=200 off=1182 T=(3872,-2758,-16)] | M2[r=7751 mz=5751 rx=15 rz=72 off=1049 T=(4749,-4055,-152)] | M3[r=2784 mz=1984 rx=6 rz=65 off=1248 T=(5279,-1688,-74)]</code></td><td>0</td><td>55</td><td>1166</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>531/109/585/631</code></td><td>26.5s</td><td>2026-05-27 02:03:50</td><td><details><summary>params</summary><pre>{
   "test_id": "test_21",
-  "note": "Tune Z translation between best test_19 (-2) and worse test_20 (-4). Try Z -3.",
+  "note": "grid sweep gen_03-var_04",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.5
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 3,
+    "var": 4
+  },
+  "batch_layer": "test_03",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -3.0
-      ],
-      "scale": 1.0
+      "radius": 6579.247311730698,
+      "move_z": 4579.247311730698,
+      "rotation_x": 16.229345709802086,
+      "rotation_z": 151.0951029653335,
+      "offset_dist": 1019.7315979018381,
+      "tx": 455.8604942036202,
+      "ty": -757.9827442522326,
+      "tz": -70.3657108065936
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -3.0
-      ],
-      "scale": 1.0
+      "radius": 1516.7744747575548,
+      "move_z": 716.7744747575548,
+      "rotation_x": 2.546961757105448,
+      "rotation_z": 200.23957731494926,
+      "offset_dist": 1182.2457614295347,
+      "tx": 3872.0528278658126,
+      "ty": -2758.1186175462267,
+      "tz": -16.49947668367392
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -3.0
-      ],
-      "scale": 1.0
+      "radius": 7750.860349981331,
+      "move_z": 5750.860349981331,
+      "rotation_x": 14.8644563858965,
+      "rotation_z": 71.69480345122973,
+      "offset_dist": 1049.3335534690552,
+      "tx": 4748.713665643374,
+      "ty": -4054.709698524489,
+      "tz": -152.30778186584723
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -3.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -3.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -3.0
-      ],
-      "scale": 1.0
+      "radius": 2783.519245364356,
+      "move_z": 1983.5192453643558,
+      "rotation_x": 5.759128975418652,
+      "rotation_z": 64.96835696860843,
+      "offset_dist": 1248.3530740874573,
+      "tx": 5279.083211693536,
+      "ty": -1687.850758605156,
+      "tz": -73.75800226074941
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_22</strong></td><td class='note'>test_19 best params + viscobound 0.2 (more slippery). Hypothesis: less surface pooling.</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2], M4[T4,-4,-2], M5[T4,-4,-2]</code></td><td>35</td><td>300</td><td>120</td><td>420</td><td class='ratio ok'>0.117</td><td>0.631</td><td>59.4s</td><td>2026-05-26 04:01:14</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_22</strong></td><td class='note'>grid sweep gen_03-var_05</td><td><code>M0[r=1839 mz=1039 rx=3 rz=191 off=1276 T=(346,-946,50)] | M1[r=2857 mz=2057 rx=6 rz=146 off=1281 T=(3927,-2915,20)] | M2[r=6335 mz=4335 rx=3 rz=49 off=713 T=(4842,-4187,-195)] | M3[r=7640 mz=5943 rx=13 rz=353 off=1359 T=(5298,-1709,-50)]</code></td><td>0</td><td>82</td><td>4096</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>127/47/3559/1203</code></td><td>27.7s</td><td>2026-05-27 02:04:34</td><td><details><summary>params</summary><pre>{
   "test_id": "test_22",
-  "note": "test_19 best params + viscobound 0.2 (more slippery). Hypothesis: less surface pooling.",
+  "note": "grid sweep gen_03-var_05",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.2
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 3,
+    "var": 5
+  },
+  "batch_layer": "test_03",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 1838.7806833826876,
+      "move_z": 1038.7806833826876,
+      "rotation_x": 2.6471297058210985,
+      "rotation_z": 191.23755741084724,
+      "offset_dist": 1276.371748703914,
+      "tx": 345.9782989636132,
+      "ty": -945.8266039803044,
+      "tz": 50.3164894169918
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 2857.0973483481366,
+      "move_z": 2057.0973483481366,
+      "rotation_x": 5.67534183163676,
+      "rotation_z": 146.1142324568216,
+      "offset_dist": 1281.417487313321,
+      "tx": 3927.2701152540126,
+      "ty": -2915.0004080827093,
+      "tz": 20.409539306090977
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 6335.302555521104,
+      "move_z": 4335.302555521104,
+      "rotation_x": 3.1962416960144067,
+      "rotation_z": 48.98824588276638,
+      "offset_dist": 712.5596870439131,
+      "tx": 4842.099534287986,
+      "ty": -4187.001629183536,
+      "tz": -194.96963819862754
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 7640.198170292305,
+      "move_z": 5942.95423147381,
+      "rotation_x": 12.701580626085661,
+      "rotation_z": 353.4162145615092,
+      "offset_dist": 1358.7962202179237,
+      "tx": 5298.1762656161145,
+      "ty": -1709.1922284745233,
+      "tz": -49.52567428192816
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_23</strong></td><td class='note'>test_22 + even more slippery: viscobound 0.1.</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2], M4[T4,-4,-2], M5[T4,-4,-2]</code></td><td>16</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.053</td><td>0.676</td><td>68.4s</td><td>2026-05-26 04:02:45</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_23</strong></td><td class='note'>grid sweep gen_03-var_06</td><td><code>M0[r=7276 mz=6476 rx=3 rz=128 off=1012 T=(278,-832,-92)] | M1[r=3706 mz=2906 rx=5 rz=291 off=1089 T=(3972,-2630,-155)] | M2[r=7251 mz=5251 rx=15 rz=80 off=967 T=(4443,-4624,-177)] | M3[r=7801 mz=7001 rx=3 rz=6 off=1274 T=(5470,-1526,-30)]</code></td><td>0</td><td>60</td><td>901</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>182/64/577/715</code></td><td>27.4s</td><td>2026-05-27 02:05:12</td><td><details><summary>params</summary><pre>{
   "test_id": "test_23",
-  "note": "test_22 + even more slippery: viscobound 0.1.",
+  "note": "grid sweep gen_03-var_06",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.1
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 3,
+    "var": 6
+  },
+  "batch_layer": "test_03",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 7275.951269630593,
+      "move_z": 6475.951269630593,
+      "rotation_x": 3.432093028822234,
+      "rotation_z": 128.02974320105278,
+      "offset_dist": 1011.7447641556936,
+      "tx": 278.4054480957455,
+      "ty": -831.6705061567636,
+      "tz": -91.86577525505885
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 3706.3633187062555,
+      "move_z": 2906.3633187062555,
+      "rotation_x": 4.81339676692698,
+      "rotation_z": 290.605873362404,
+      "offset_dist": 1089.3640043586781,
+      "tx": 3971.947844461818,
+      "ty": -2629.570443412425,
+      "tz": -155.08967979180488
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 7250.8758790722395,
+      "move_z": 5250.8758790722395,
+      "rotation_x": 15.403395669342629,
+      "rotation_z": 80.40606020490452,
+      "offset_dist": 966.8735358094343,
+      "tx": 4443.306085913829,
+      "ty": -4624.287949074889,
+      "tz": -176.6582036248297
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 7801.013819536721,
+      "move_z": 7001.013819536721,
+      "rotation_x": 3.309645269363752,
+      "rotation_z": 6.169061682686685,
+      "offset_dist": 1274.2099462019787,
+      "tx": 5469.818188617143,
+      "ty": -1526.1718333734912,
+      "tz": -29.62360429436606
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_24</strong></td><td class='note'>test_22 (best so far, 35 caught) + small Z rotation 15° on all modules to redirect deflection.</td><td><code>M0[R0,0,15 T4,-4,-2], M1[R0,0,15 T4,-4,-2], M2[R0,0,15 T4,-4,-2], M3[R0,0,15 T4,-4,-2], M4[R0,0,15 T4,-4,-2], M5[R0,0,15 T4,-4,-2]</code></td><td>5</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.017</td><td>0.702</td><td>62.8s</td><td>2026-05-26 04:04:12</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_24</strong></td><td class='note'>grid sweep gen_03-var_07</td><td><code>M0[r=5474 mz=3474 rx=18 rz=61 off=870 T=(327,-936,98)] | M1[r=4142 mz=3342 rx=3 rz=230 off=1021 T=(3814,-2528,110)] | M2[r=3636 mz=1710 rx=22 rz=105 off=1066 T=(4646,-4592,-45)] | M3[r=7007 mz=6207 rx=4 rz=146 off=1407 T=(5111,-1588,88)]</code></td><td>0</td><td>57</td><td>895</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>462/105/282/385</code></td><td>24.6s</td><td>2026-05-27 02:05:46</td><td><details><summary>params</summary><pre>{
   "test_id": "test_24",
-  "note": "test_22 (best so far, 35 caught) + small Z rotation 15° on all modules to redirect deflection.",
+  "note": "grid sweep gen_03-var_07",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.2
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 3,
+    "var": 7
+  },
+  "batch_layer": "test_03",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        15
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 5473.778139125463,
+      "move_z": 3473.778139125463,
+      "rotation_x": 17.936917196299333,
+      "rotation_z": 60.6433695339739,
+      "offset_dist": 870.3611912556019,
+      "tx": 326.7780564492165,
+      "ty": -936.44029604978,
+      "tz": 97.99299413340617
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        15
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 4141.612705342985,
+      "move_z": 3341.6127053429846,
+      "rotation_x": 2.721515487264894,
+      "rotation_z": 229.97149737044626,
+      "offset_dist": 1020.5764907336925,
+      "tx": 3813.7845548028886,
+      "ty": -2528.175405118734,
+      "tz": 109.61173554151384
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        15
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 3636.3574923993297,
+      "move_z": 1709.9333651742652,
+      "rotation_x": 21.75113591095341,
+      "rotation_z": 105.25723167568971,
+      "offset_dist": 1066.1921075619705,
+      "tx": 4646.2203182603525,
+      "ty": -4592.468303960737,
+      "tz": -44.72403002058388
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        15
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        15
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        15
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 7007.235212854687,
+      "move_z": 6207.235212854687,
+      "rotation_x": 3.5002584230233027,
+      "rotation_z": 145.86343916652893,
+      "offset_dist": 1406.935179231974,
+      "tx": 5110.855226496239,
+      "ty": -1588.1434757754614,
+      "tz": 87.74888997453434
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_25</strong></td><td class='note'>Per-module gradient translation: top under nozzles, bottom shifting toward pond center.</td><td><code>M0[T4,-4,-2], M1[T3.5,-3.5,-2], M2[T3,-3,-2], M3[T2.5,-2.5,-2], M4[T2,-2,-2], M5[T2,-2,-2]</code></td><td>7</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.023</td><td>0.698</td><td>65.8s</td><td>2026-05-26 04:06:25</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_25</strong></td><td class='note'>grid sweep gen_03-var_08</td><td><code>M0[r=1617 mz=817 rx=8 rz=283 off=1172 T=(375,-993,-36)] | M1[r=4920 mz=4120 rx=4 rz=319 off=888 T=(3676,-2713,185)] | M2[r=3500 mz=2700 rx=5 rz=239 off=1262 T=(4858,-4089,153)] | M3[r=5342 mz=4542 rx=4 rz=217 off=718 T=(5084,-1516,24)]</code></td><td>0</td><td>54</td><td>231</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.018</td><td><code>82/80/58/80</code></td><td>23.6s</td><td>2026-05-27 02:06:18</td><td><details><summary>params</summary><pre>{
   "test_id": "test_25",
-  "note": "Per-module gradient translation: top under nozzles, bottom shifting toward pond center.",
+  "note": "grid sweep gen_03-var_08",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.2
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 3,
+    "var": 8
+  },
+  "batch_layer": "test_03",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 1616.5102180994377,
+      "move_z": 816.5102180994377,
+      "rotation_x": 7.92508251509257,
+      "rotation_z": 283.27221106371553,
+      "offset_dist": 1171.6336464179926,
+      "tx": 374.5601869225293,
+      "ty": -992.624970367275,
+      "tz": -35.981098013152746
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        3.5,
-        -3.5,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 4920.164142114727,
+      "move_z": 4120.164142114727,
+      "rotation_x": 4.21866988066382,
+      "rotation_z": 318.7779467087645,
+      "offset_dist": 887.5129470593195,
+      "tx": 3676.0511035137656,
+      "ty": -2713.031539084762,
+      "tz": 184.91960090500828
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        3.0,
-        -3.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 3499.788890456172,
+      "move_z": 2699.788890456172,
+      "rotation_x": 5.071531923046331,
+      "rotation_z": 239.20394061836936,
+      "offset_dist": 1261.925528645033,
+      "tx": 4857.716568871458,
+      "ty": -4088.7309642289615,
+      "tz": 152.80633220805407
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        2.5,
-        -2.5,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        2.0,
-        -2.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        2.0,
-        -2.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 5341.515928310616,
+      "move_z": 4541.515928310616,
+      "rotation_x": 4.038199199105236,
+      "rotation_z": 216.83611235462882,
+      "offset_dist": 718.2430300635014,
+      "tx": 5083.564046263595,
+      "ty": -1516.229092912566,
+      "tz": 23.67410942403953
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_26</strong></td><td class='note'>test_22 except scale bottom modules to 1.5 to widen catch zone at pond.</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2], M4[T4,-4,-2 S1.5], M5[T4,-4,-2 S1.5]</code></td><td>35</td><td>300</td><td>120</td><td>420</td><td class='ratio ok'>0.117</td><td>0.631</td><td>60.0s</td><td>2026-05-26 04:08:01</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_26</strong></td><td class='note'>grid sweep gen_04-var_01</td><td><code>M0[r=1769 mz=969 rx=7 rz=94 off=854 T=(474,-1010,18)] | M1[r=1048 mz=500 rx=0 rz=85 off=1104 T=(3846,-2676,10)] | M2[r=4155 mz=3355 rx=5 rz=71 off=721 T=(4490,-4562,-72)] | M3[r=6087 mz=4087 rx=17 rz=147 off=1129 T=(5171,-1404,-42)]</code></td><td>0</td><td>60</td><td>556</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>92/9/70/445</code></td><td>25.9s</td><td>2026-05-27 02:07:38</td><td><details><summary>params</summary><pre>{
   "test_id": "test_26",
-  "note": "test_22 except scale bottom modules to 1.5 to widen catch zone at pond.",
+  "note": "grid sweep gen_04-var_01",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.2
+    "viscobound": 1.2,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 4,
+    "var": 1
+  },
+  "batch_layer": "test_04",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 1769.452817146207,
+      "move_z": 969.452817146207,
+      "rotation_x": 7.498001885591725,
+      "rotation_z": 93.73140042799159,
+      "offset_dist": 854.1831333673903,
+      "tx": 473.7646962392945,
+      "ty": -1010.3371019613431,
+      "tz": 17.739323519002824
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 1048.229622696364,
+      "move_z": 500.0,
+      "rotation_x": 0.0,
+      "rotation_z": 84.68179539654487,
+      "offset_dist": 1103.6562350004506,
+      "tx": 3845.738034762767,
+      "ty": -2675.515932959473,
+      "tz": 10.433416914230207
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 4154.759759943279,
+      "move_z": 3354.7597599432793,
+      "rotation_x": 4.619469338660481,
+      "rotation_z": 70.66012044552379,
+      "offset_dist": 721.1539559875071,
+      "tx": 4490.490359344628,
+      "ty": -4561.703685451038,
+      "tz": -71.86541096578915
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.5
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.5
+      "radius": 6086.606686962142,
+      "move_z": 4086.606686962142,
+      "rotation_x": 16.92756763805235,
+      "rotation_z": 147.07389614622295,
+      "offset_dist": 1129.2130481534368,
+      "tx": 5171.022273539618,
+      "ty": -1404.067326473651,
+      "tz": -42.32018623727245
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_27</strong></td><td class='note'>test_22 base + raise bottom modules by Z+3 (lift them above pond top to act as final catchment).</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2], M4[T4,-4,1], M5[T4,-4,1]</code></td><td>29</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.097</td><td>0.645</td><td>61.2s</td><td>2026-05-26 04:09:25</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_27</strong></td><td class='note'>grid sweep gen_04-var_02</td><td><code>M0[r=3932 mz=3132 rx=5 rz=306 off=1411 T=(398,-667,-130)] | M1[r=2879 mz=2079 rx=6 rz=140 off=1384 T=(3843,-2675,-59)] | M2[r=3076 mz=2276 rx=5 rz=72 off=1339 T=(4949,-4479,-67)] | M3[r=2318 mz=1518 rx=6 rz=147 off=1259 T=(5263,-1310,14)]</code></td><td>2</td><td>60</td><td>194</td><td class='ratio bad'>0.033</td><td class='ratio bad'>0.035</td><td><code>119/54/59/49</code></td><td>25.7s</td><td>2026-05-27 02:08:11</td><td><details><summary>params</summary><pre>{
   "test_id": "test_27",
-  "note": "test_22 base + raise bottom modules by Z+3 (lift them above pond top to act as final catchment).",
+  "note": "grid sweep gen_04-var_02",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.2
+    "viscobound": 1.2,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 4,
+    "var": 2
+  },
+  "batch_layer": "test_04",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 3931.7157481637587,
+      "move_z": 3131.7157481637587,
+      "rotation_x": 4.759565359176396,
+      "rotation_z": 305.8080930833898,
+      "offset_dist": 1411.3109491897826,
+      "tx": 397.5204173954488,
+      "ty": -667.1214343354246,
+      "tz": -130.26142589864588
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 2879.005332570193,
+      "move_z": 2079.005332570193,
+      "rotation_x": 5.6510924669961335,
+      "rotation_z": 140.18092799274677,
+      "offset_dist": 1384.1368139640736,
+      "tx": 3843.1688124285643,
+      "ty": -2674.9391326267482,
+      "tz": -59.14346023472078
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 3076.085048998001,
+      "move_z": 2276.085048998001,
+      "rotation_x": 5.4460735917909355,
+      "rotation_z": 71.56174195913947,
+      "offset_dist": 1338.6956188090967,
+      "tx": 4949.201882916266,
+      "ty": -4479.446116574831,
+      "tz": -66.84800332627026
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        1.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        1.0
-      ],
-      "scale": 1.0
+      "radius": 2317.83468089102,
+      "move_z": 1517.83468089102,
+      "rotation_x": 6.392221885414034,
+      "rotation_z": 147.466119841129,
+      "offset_dist": 1258.839288894484,
+      "tx": 5262.621729075782,
+      "ty": -1309.6322281340342,
+      "tz": 13.983387167202295
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_28</strong></td><td class='note'>test_22 base + viscobound 0.15 (between 0.1 and 0.2).</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2], M4[T4,-4,-2], M5[T4,-4,-2]</code></td><td>15</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.050</td><td>0.679</td><td>63.7s</td><td>2026-05-26 04:10:52</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_28</strong></td><td class='note'>grid sweep gen_04-var_03</td><td><code>M0[r=5579 mz=3579 rx=18 rz=5 off=1272 T=(198,-934,81)] | M1[r=5266 mz=4466 rx=4 rz=309 off=1391 T=(3846,-3017,184)] | M2[r=2794 mz=1994 rx=6 rz=48 off=1287 T=(4636,-4387,16)] | M3[r=4500 mz=3700 rx=4 rz=180 off=1444 T=(5608,-1453,170)]</code></td><td>0</td><td>71</td><td>628</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.001</td><td><code>497/111/44/83</code></td><td>26.0s</td><td>2026-05-27 02:08:44</td><td><details><summary>params</summary><pre>{
   "test_id": "test_28",
-  "note": "test_22 base + viscobound 0.15 (between 0.1 and 0.2).",
+  "note": "grid sweep gen_04-var_03",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.15
+    "viscobound": 1.2,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 4,
+    "var": 3
+  },
+  "batch_layer": "test_04",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 5578.790531921188,
+      "move_z": 3578.7905319211877,
+      "rotation_x": 17.751072654903187,
+      "rotation_z": 4.840070843942366,
+      "offset_dist": 1271.5174779992283,
+      "tx": 197.97491761015067,
+      "ty": -934.03210726118,
+      "tz": 81.35754119214715
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 5265.776668128548,
+      "move_z": 4465.776668128548,
+      "rotation_x": 4.068934591438478,
+      "rotation_z": 309.0896953670108,
+      "offset_dist": 1390.743644605243,
+      "tx": 3846.4035369093694,
+      "ty": -3016.815093466354,
+      "tz": 184.28428856717682
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 2793.8893533523933,
+      "move_z": 1993.8893533523933,
+      "rotation_x": 5.747094936879183,
+      "rotation_z": 47.93206603786276,
+      "offset_dist": 1287.4240843097762,
+      "tx": 4636.039479490539,
+      "ty": -4387.385324298825,
+      "tz": 16.440784862647916
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 4500.052576639511,
+      "move_z": 3700.0525766395112,
+      "rotation_x": 4.425071152975958,
+      "rotation_z": 180.0270604995118,
+      "offset_dist": 1443.6392113313864,
+      "tx": 5608.306944030141,
+      "ty": -1452.5981532063072,
+      "tz": 169.81278949285598
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_29</strong></td><td class='note'>test_22 base + viscobound 0.25 (slightly more sticky than 0.2).</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2], M4[T4,-4,-2], M5[T4,-4,-2]</code></td><td>3</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.010</td><td>0.707</td><td>58.4s</td><td>2026-05-26 04:12:11</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_29</strong></td><td class='note'>grid sweep gen_04-var_04</td><td><code>M0[r=3493 mz=2693 rx=2 rz=207 off=716 T=(206,-645,164)] | M1[r=1439 mz=639 rx=9 rz=76 off=701 T=(3572,-2666,15)] | M2[r=6686 mz=4686 rx=16 rz=187 off=1495 T=(4566,-4205,79)] | M3[r=7510 mz=6710 rx=3 rz=88 off=975 T=(5553,-1354,-159)]</code></td><td>0</td><td>158</td><td>711</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>180/24/532/417</code></td><td>26.7s</td><td>2026-05-27 02:09:21</td><td><details><summary>params</summary><pre>{
   "test_id": "test_29",
-  "note": "test_22 base + viscobound 0.25 (slightly more sticky than 0.2).",
+  "note": "grid sweep gen_04-var_04",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.25
+    "viscobound": 1.2,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 4,
+    "var": 4
+  },
+  "batch_layer": "test_04",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 3492.953316586788,
+      "move_z": 2692.953316586788,
+      "rotation_x": 1.7995414881526617,
+      "rotation_z": 206.80895176319953,
+      "offset_dist": 716.2197332818546,
+      "tx": 205.85813748981775,
+      "ty": -644.6220738891275,
+      "tz": 163.96027318057224
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 1439.3405955645342,
+      "move_z": 639.3405955645342,
+      "rotation_x": 8.52485982498476,
+      "rotation_z": 76.25614898017257,
+      "offset_dist": 700.9724791711682,
+      "tx": 3572.2911757775346,
+      "ty": -2666.1775114932007,
+      "tz": 14.699842389990124
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 6686.066912718699,
+      "move_z": 4686.066912718699,
+      "rotation_x": 16.089050489653925,
+      "rotation_z": 186.87585188699694,
+      "offset_dist": 1495.0625940452132,
+      "tx": 4565.829564830064,
+      "ty": -4204.781185245782,
+      "tz": 79.3790207684126
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 7509.857098327004,
+      "move_z": 6709.857098327004,
+      "rotation_x": 3.37589140487094,
+      "rotation_z": 87.79492477467214,
+      "offset_dist": 975.2543409748872,
+      "tx": 5552.69581760352,
+      "ty": -1354.1811812828769,
+      "tz": -159.19301547657864
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_30</strong></td><td class='note'>test_22 base + X axis tilt 10deg on all modules.</td><td><code>M0[R10,0,0 T4,-4,-2], M1[R10,0,0 T4,-4,-2], M2[R10,0,0 T4,-4,-2], M3[R10,0,0 T4,-4,-2], M4[R10,0,0 T4,-4,-2], M5[R10,0,0 T4,-4,-2]</code></td><td>31</td><td>300</td><td>120</td><td>420</td><td class='ratio ok'>0.103</td><td>0.640</td><td>70.8s</td><td>2026-05-26 04:13:53</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_30</strong></td><td class='note'>grid sweep gen_04-var_05</td><td><code>M0[r=5882 mz=3882 rx=17 rz=346 off=1448 T=(91,-957,-169)] | M1[r=3801 mz=3001 rx=5 rz=170 off=972 T=(4020,-2538,-181)] | M2[r=5429 mz=3429 rx=18 rz=279 off=1379 T=(4692,-4544,-200)] | M3[r=7065 mz=5065 rx=16 rz=177 off=1137 T=(5506,-1696,-137)]</code></td><td>0</td><td>148</td><td>1441</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>519/112/437/1006</code></td><td>26.8s</td><td>2026-05-27 02:09:59</td><td><details><summary>params</summary><pre>{
   "test_id": "test_30",
-  "note": "test_22 base + X axis tilt 10deg on all modules.",
+  "note": "grid sweep gen_04-var_05",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.2
+    "viscobound": 1.2,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 4,
+    "var": 5
+  },
+  "batch_layer": "test_04",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        10,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 5881.978867031621,
+      "move_z": 3881.978867031621,
+      "rotation_x": 17.245366843850196,
+      "rotation_z": 345.65579646804713,
+      "offset_dist": 1447.7371306316409,
+      "tx": 91.46256276240686,
+      "ty": -956.6710403711037,
+      "tz": -168.59729844903072
     },
     {
       "index": 1,
-      "rotation_deg": [
-        10,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 3801.1094507693747,
+      "move_z": 3001.1094507693747,
+      "rotation_x": 4.847763530827809,
+      "rotation_z": 169.98301016184058,
+      "offset_dist": 972.3849188761233,
+      "tx": 4020.114615937621,
+      "ty": -2537.5826455571887,
+      "tz": -181.26545861388394
     },
     {
       "index": 2,
-      "rotation_deg": [
-        10,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 5428.961610396444,
+      "move_z": 3428.9616103964436,
+      "rotation_x": 18.018032916183014,
+      "rotation_z": 279.2514735435571,
+      "offset_dist": 1378.7679669078595,
+      "tx": 4692.442386082455,
+      "ty": -4544.463791943006,
+      "tz": -199.75169631337417
     },
     {
       "index": 3,
-      "rotation_deg": [
-        10,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        10,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        10,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 7065.226405839745,
+      "move_z": 5065.226405839745,
+      "rotation_x": 15.618992060380748,
+      "rotation_z": 177.26408213130765,
+      "offset_dist": 1136.8026471905312,
+      "tx": 5505.833642231667,
+      "ty": -1695.7734751029666,
+      "tz": -137.3322140695408
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_31</strong></td><td class='note'>Top 4 translated to align with nozzles (+4,-4,-2). Bottom 2 stay at origin (acts as final pond-level catch).</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2]</code></td><td>19</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.063</td><td>0.669</td><td>64.1s</td><td>2026-05-26 04:15:47</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_31</strong></td><td class='note'>grid sweep gen_04-var_06</td><td><code>M0[r=5368 mz=4568 rx=4 rz=194 off=1131 T=(6,-900,113)] | M1[r=3059 mz=2259 rx=5 rz=174 off=1321 T=(3840,-2616,142)] | M2[r=2631 mz=1831 rx=6 rz=278 off=1351 T=(4859,-4279,126)] | M3[r=7160 mz=6360 rx=3 rz=244 off=1462 T=(5501,-1510,-25)]</code></td><td>0</td><td>67</td><td>294</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>148/56/47/110</code></td><td>22.9s</td><td>2026-05-27 02:10:31</td><td><details><summary>params</summary><pre>{
   "test_id": "test_31",
-  "note": "Top 4 translated to align with nozzles (+4,-4,-2). Bottom 2 stay at origin (acts as final pond-level catch).",
+  "note": "grid sweep gen_04-var_06",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.2
+    "viscobound": 1.2,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 4,
+    "var": 6
+  },
+  "batch_layer": "test_04",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 5368.002209148169,
+      "move_z": 4568.002209148169,
+      "rotation_x": 4.027614183980849,
+      "rotation_z": 194.04768727667542,
+      "offset_dist": 1131.2857496136355,
+      "tx": 5.839042320707563,
+      "ty": -900.0420700052131,
+      "tz": 113.31010818957901
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 3059.1951186182932,
+      "move_z": 2259.1951186182932,
+      "rotation_x": 5.4627755388356025,
+      "rotation_z": 174.07676514604995,
+      "offset_dist": 1320.6954662811704,
+      "tx": 3840.1807165095743,
+      "ty": -2616.3430029959627,
+      "tz": 141.65754057758141
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 2630.85938201528,
+      "move_z": 1830.85938201528,
+      "rotation_x": 5.945517716602272,
+      "rotation_z": 277.98049237093716,
+      "offset_dist": 1350.6895222360656,
+      "tx": 4858.886886231972,
+      "ty": -4278.578369037679,
+      "tz": 125.9840604848759
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 7159.52619639134,
+      "move_z": 6359.52619639134,
+      "rotation_x": 3.4611339944393413,
+      "rotation_z": 244.17024168031077,
+      "offset_dist": 1461.9268176996093,
+      "tx": 5500.809385977263,
+      "ty": -1510.3496683099409,
+      "tz": -25.389687597435994
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_32</strong></td><td class='note'>test_22 base + bottom 2 modules raised slightly to z+1 (so they intercept cascading water above pond floor).</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2], M4[T4,-4,0 S1.5], M5[T4,-4,0 S1.5]</code></td><td>35</td><td>300</td><td>120</td><td>420</td><td class='ratio ok'>0.117</td><td>0.631</td><td>61.9s</td><td>2026-05-26 04:17:28</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_32</strong></td><td class='note'>grid sweep gen_04-var_07</td><td><code>M0[r=4018 mz=2018 rx=21 rz=38 off=1104 T=(456,-1105,-2)] | M1[r=6652 mz=4652 rx=16 rz=70 off=896 T=(3667,-2540,66)] | M2[r=1967 mz=1167 rx=7 rz=10 off=1429 T=(4618,-4398,185)] | M3[r=7372 mz=6572 rx=3 rz=121 off=834 T=(5460,-1421,198)]</code></td><td>0</td><td>67</td><td>963</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>378/558/36/120</code></td><td>21.3s</td><td>2026-05-27 02:10:59</td><td><details><summary>params</summary><pre>{
   "test_id": "test_32",
-  "note": "test_22 base + bottom 2 modules raised slightly to z+1 (so they intercept cascading water above pond floor).",
+  "note": "grid sweep gen_04-var_07",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.2
+    "viscobound": 1.2,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 4,
+    "var": 7
+  },
+  "batch_layer": "test_04",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 4017.7053633521173,
+      "move_z": 2017.7053633521173,
+      "rotation_x": 21.319305634037097,
+      "rotation_z": 37.994528626032576,
+      "offset_dist": 1104.3719748389963,
+      "tx": 455.7182266979488,
+      "ty": -1104.9677497359892,
+      "tz": -1.7323272123332174
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 6651.5662299331925,
+      "move_z": 4651.5662299331925,
+      "rotation_x": 16.133963898497257,
+      "rotation_z": 70.42817702085458,
+      "offset_dist": 895.8855747600775,
+      "tx": 3666.7095883279862,
+      "ty": -2539.796290369618,
+      "tz": 65.69296483816953
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 1967.014799549872,
+      "move_z": 1167.014799549872,
+      "rotation_x": 7.036601528057471,
+      "rotation_z": 10.174665309156513,
+      "offset_dist": 1428.5772967664252,
+      "tx": 4617.827045018383,
+      "ty": -4397.733228684053,
+      "tz": 185.39473910133563
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        0
-      ],
-      "scale": 1.5
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        0
-      ],
-      "scale": 1.5
+      "radius": 7372.468263950956,
+      "move_z": 6572.468263950956,
+      "rotation_x": 3.4085642874986584,
+      "rotation_z": 120.82578668999797,
+      "offset_dist": 834.1410807275145,
+      "tx": 5459.878186637448,
+      "ty": -1420.8833443002397,
+      "tz": 197.93255064387057
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_33</strong></td><td class='note'>test_22 base + extended timemax 15s — allow more water to settle in pond.</td><td><code>M0[T4,-4,-2], M1[T4,-4,-2], M2[T4,-4,-2], M3[T4,-4,-2], M4[T4,-4,-2], M5[T4,-4,-2]</code></td><td>35</td><td>300</td><td>120</td><td>420</td><td class='ratio ok'>0.117</td><td>0.631</td><td>91.6s</td><td>2026-05-26 04:19:29</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_33</strong></td><td class='note'>grid sweep gen_04-var_08</td><td><code>M0[r=5523 mz=3523 rx=1 rz=73 off=750 T=(243,-695,132)] | M1[r=6083 mz=4342 rx=5 rz=81 off=1463 T=(3818,-2520,-82)] | M2[r=5486 mz=4686 rx=4 rz=89 off=1336 T=(4712,-4353,-148)] | M3[r=5755 mz=4955 rx=4 rz=117 off=868 T=(5310,-1425,-39)]</code></td><td>0</td><td>55</td><td>6582</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>4219/2238/94/92</code></td><td>25.7s</td><td>2026-05-27 02:11:45</td><td><details><summary>params</summary><pre>{
   "test_id": "test_33",
-  "note": "test_22 base + extended timemax 15s — allow more water to settle in pond.",
+  "note": "grid sweep gen_04-var_08",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
-    "timemax": 15.0,
-    "viscobound": 0.2
+    "v_inlet": 0.0,
+    "dp": 0.2,
+    "timemax": 10.0,
+    "viscobound": 1.2,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 4,
+    "var": 8
+  },
+  "batch_layer": "test_04",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 5523.339738152135,
+      "move_z": 3523.3397381521354,
+      "rotation_x": 1.3572696771535553,
+      "rotation_z": 73.42738575988506,
+      "offset_dist": 750.4244829670176,
+      "tx": 242.88970647244008,
+      "ty": -694.8797542243763,
+      "tz": 132.3655115915658
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 6082.788781476273,
+      "move_z": 4342.079777560952,
+      "rotation_x": 4.725710639791112,
+      "rotation_z": 80.58924639399586,
+      "offset_dist": 1462.8463486866444,
+      "tx": 3817.81680969918,
+      "ty": -2520.4977601155742,
+      "tz": -82.2311776205372
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 5486.140291955367,
+      "move_z": 4686.140291955367,
+      "rotation_x": 3.981394825575711,
+      "rotation_z": 89.35244533706017,
+      "offset_dist": 1336.076030258453,
+      "tx": 4711.654955575473,
+      "ty": -4353.1764645862895,
+      "tz": -147.511868269636
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 5755.19011599088,
+      "move_z": 4955.19011599088,
+      "rotation_x": 3.881804857295649,
+      "rotation_z": 117.0353616669436,
+      "offset_dist": 868.0759859620055,
+      "tx": 5310.030913264127,
+      "ty": -1424.5780845568543,
+      "tz": -39.105035941498244
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_34</strong></td><td class='note'>test_22 base + Z translation -1.5 (between -1 and -2 sweet spot).</td><td><code>M0[T4,-4,-1.5], M1[T4,-4,-1.5], M2[T4,-4,-1.5], M3[T4,-4,-1.5], M4[T4,-4,-1.5], M5[T4,-4,-1.5]</code></td><td>8</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.027</td><td>0.695</td><td>61.8s</td><td>2026-05-26 04:21:39</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_34</strong></td><td class='note'>grid sweep gen_05-var_01</td><td><code>M0[r=3521 mz=2721 rx=5 rz=65 off=1328 T=(256,-905,-171)] | M1[r=7791 mz=6241 rx=11 rz=157 off=1431 T=(3972,-2753,-60)] | M2[r=7412 mz=5412 rx=8 rz=336 off=1223 T=(4562,-4332,-161)] | M3[r=1674 mz=505 rx=19 rz=247 off=938 T=(5414,-1681,-49)]</code></td><td>0</td><td>172</td><td>2532</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.001</td><td><code>110/373/2183/996</code></td><td>31.4s</td><td>2026-05-27 02:13:30</td><td><details><summary>params</summary><pre>{
   "test_id": "test_34",
-  "note": "test_22 base + Z translation -1.5 (between -1 and -2 sweet spot).",
+  "note": "grid sweep gen_05-var_01",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.2
+    "viscobound": 1.2,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 5,
+    "var": 1
+  },
+  "batch_layer": "test_05",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -1.5
-      ],
-      "scale": 1.0
+      "radius": 3520.5169513517853,
+      "move_z": 2720.5169513517853,
+      "rotation_x": 5.055136134331612,
+      "rotation_z": 65.06012723787623,
+      "offset_dist": 1328.3365799218004,
+      "tx": 255.84599349757835,
+      "ty": -904.7087845049996,
+      "tz": -170.90345935875598
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -1.5
-      ],
-      "scale": 1.0
+      "radius": 7791.128268312167,
+      "move_z": 6240.77468346616,
+      "rotation_x": 11.374878060667267,
+      "rotation_z": 157.3475018572242,
+      "offset_dist": 1431.2726090426904,
+      "tx": 3972.390657075155,
+      "ty": -2753.2564254043414,
+      "tz": -60.27899276158536
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -1.5
-      ],
-      "scale": 1.0
+      "radius": 7412.08804138737,
+      "move_z": 5412.08804138737,
+      "rotation_x": 8.280291193894355,
+      "rotation_z": 335.5458192891995,
+      "offset_dist": 1222.9697425615375,
+      "tx": 4561.695186549645,
+      "ty": -4332.350978639034,
+      "tz": -160.64759628688398
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -1.5
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -1.5
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -4.0,
-        -1.5
-      ],
-      "scale": 1.0
+      "radius": 1674.2668524387066,
+      "move_z": 504.88144383950095,
+      "rotation_x": 18.573954676493315,
+      "rotation_z": 247.33943412650365,
+      "offset_dist": 937.6100220753283,
+      "tx": 5414.0320208647,
+      "ty": -1680.8281207345296,
+      "tz": -49.20760463824399
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_35</strong></td><td class='note'>Translate sculpture toward where water normally deflects (test +4, +4, -2 — opposite Y of test_22).</td><td><code>M0[T4,4,-2], M1[T4,4,-2], M2[T4,4,-2], M3[T4,4,-2], M4[T4,4,-2], M5[T4,4,-2]</code></td><td>227</td><td>300</td><td>120</td><td>420</td><td class='ratio good'>0.757</td><td>0.174</td><td>70.4s</td><td>2026-05-26 04:23:16</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_35</strong></td><td class='note'>grid sweep gen_05-var_02</td><td><code>M0[r=1345 mz=545 rx=9 rz=188 off=774 T=(270,-859,24)] | M1[r=1382 mz=582 rx=9 rz=61 off=1110 T=(3736,-2825,-6)] | M2[r=5650 mz=3650 rx=18 rz=303 off=911 T=(4743,-4273,-93)] | M3[r=4550 mz=3750 rx=4 rz=283 off=1187 T=(5320,-1702,18)]</code></td><td>0</td><td>58</td><td>534</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>82/23/409/487</code></td><td>24.4s</td><td>2026-05-27 02:14:04</td><td><details><summary>params</summary><pre>{
   "test_id": "test_35",
-  "note": "Translate sculpture toward where water normally deflects (test +4, +4, -2 — opposite Y of test_22).",
+  "note": "grid sweep gen_05-var_02",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.2
+    "viscobound": 1.2,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 5,
+    "var": 2
+  },
+  "batch_layer": "test_05",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 1344.699668085736,
+      "move_z": 544.699668085736,
+      "rotation_x": 8.906890329834747,
+      "rotation_z": 188.31533620921064,
+      "offset_dist": 774.2909503569069,
+      "tx": 270.4535461770399,
+      "ty": -858.9606189215378,
+      "tz": 24.005458539146616
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 1381.7384972450698,
+      "move_z": 581.7384972450698,
+      "rotation_x": 8.751335577279532,
+      "rotation_z": 61.364699275897394,
+      "offset_dist": 1110.2470650131727,
+      "tx": 3736.1348482724225,
+      "ty": -2825.22144524879,
+      "tz": -6.302378028963773
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 5649.908233640452,
+      "move_z": 3649.9082336404517,
+      "rotation_x": 17.628453673783934,
+      "rotation_z": 302.90979444522895,
+      "offset_dist": 910.618750585815,
+      "tx": 4743.225242592807,
+      "ty": -4272.624070731467,
+      "tz": -92.97627300998724
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        4.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        4.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 4549.584835802031,
+      "move_z": 3749.584835802031,
+      "rotation_x": 4.399150168694207,
+      "rotation_z": 283.1475349911542,
+      "offset_dist": 1187.4286784837655,
+      "tx": 5319.9033715321175,
+      "ty": -1702.0826195041425,
+      "tz": 17.785323636014056
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_36</strong></td><td class='note'>Compromise: top shells just at nozzle Y edge for minimal contact while letting most water pass. (+4, -1, -2).</td><td><code>M0[T4,-1,-2], M1[T4,-1,-2], M2[T4,-1,-2], M3[T4,-1,-2], M4[T4,-1,-2], M5[T4,-1,-2]</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>40.4s</td><td>2026-05-26 04:25:14</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_36</strong></td><td class='note'>grid sweep gen_05-var_03</td><td><code>M0[r=5931 mz=3931 rx=17 rz=190 off=1016 T=(161,-858,-42)] | M1[r=2328 mz=1528 rx=6 rz=175 off=896 T=(3820,-2685,43)] | M2[r=6850 mz=6050 rx=4 rz=150 off=884 T=(4570,-4397,-190)] | M3[r=7564 mz=6579 rx=6 rz=142 off=1216 T=(5357,-1590,92)]</code></td><td>0</td><td>61</td><td>761</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>534/99/106/143</code></td><td>26.5s</td><td>2026-05-27 02:14:41</td><td><details><summary>params</summary><pre>{
   "test_id": "test_36",
-  "note": "Compromise: top shells just at nozzle Y edge for minimal contact while letting most water pass. (+4, -1, -2).",
+  "note": "grid sweep gen_05-var_03",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.2
+    "viscobound": 1.2,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 5,
+    "var": 3
+  },
+  "batch_layer": "test_05",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -1.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 5930.616912391356,
+      "move_z": 3930.616912391356,
+      "rotation_x": 17.168205448823837,
+      "rotation_z": 190.27769839509716,
+      "offset_dist": 1015.9718081535568,
+      "tx": 160.61164931219707,
+      "ty": -857.6558825152097,
+      "tz": -41.9176000905897
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -1.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 2328.4834917004473,
+      "move_z": 1528.4834917004473,
+      "rotation_x": 6.375335994268745,
+      "rotation_z": 174.5019841183449,
+      "offset_dist": 896.085776701597,
+      "tx": 3820.057127550649,
+      "ty": -2684.557333765444,
+      "tz": 42.92230417429482
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -1.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 6850.186068026595,
+      "move_z": 6050.186068026595,
+      "rotation_x": 3.542027976497469,
+      "rotation_z": 149.77321005645524,
+      "offset_dist": 884.0720621919545,
+      "tx": 4570.031567527416,
+      "ty": -4397.11540622111,
+      "tz": -189.70009532436566
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -1.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -1.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -1.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 7563.904475225744,
+      "move_z": 6578.535648773695,
+      "rotation_x": 5.846244731046652,
+      "rotation_z": 141.5658590374643,
+      "offset_dist": 1215.762638018069,
+      "tx": 5357.272623709728,
+      "ty": -1589.7018105814657,
+      "tz": 91.68996925942594
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_37</strong></td><td class='note'>Position top shells so nozzle Y is just inside their bbox: (+4, -2, -2).</td><td><code>M0[T4,-2,-2], M1[T4,-2,-2], M2[T4,-2,-2], M3[T4,-2,-2], M4[T4,-2,-2], M5[T4,-2,-2]</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>40.4s</td><td>2026-05-26 04:26:18</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_37</strong></td><td class='note'>grid sweep gen_05-var_04</td><td><code>M0[r=7995 mz=7195 rx=3 rz=295 off=956 T=(300,-892,46)] | M1[r=6346 mz=4346 rx=17 rz=114 off=1396 T=(3716,-2784,50)] | M2[r=1247 mz=500 rx=7 rz=51 off=853 T=(4637,-4398,118)] | M3[r=6861 mz=4861 rx=16 rz=194 off=1165 T=(5246,-1723,124)]</code></td><td>0</td><td>100</td><td>1127</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>185/486/40/539</code></td><td>27.1s</td><td>2026-05-27 02:15:19</td><td><details><summary>params</summary><pre>{
   "test_id": "test_37",
-  "note": "Position top shells so nozzle Y is just inside their bbox: (+4, -2, -2).",
+  "note": "grid sweep gen_05-var_04",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.2
+    "viscobound": 1.2,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 5,
+    "var": 4
+  },
+  "batch_layer": "test_05",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -2.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 7995.465669109455,
+      "move_z": 7195.465669109455,
+      "rotation_x": 3.267514363364879,
+      "rotation_z": 295.2159688611732,
+      "offset_dist": 956.3537026042186,
+      "tx": 299.6973309982694,
+      "ty": -891.6992192988997,
+      "tz": 45.7046350414393
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -2.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 6346.33771067504,
+      "move_z": 4346.33771067504,
+      "rotation_x": 16.548455290284608,
+      "rotation_z": 113.75423814361521,
+      "offset_dist": 1395.7144725542757,
+      "tx": 3716.2667762647916,
+      "ty": -2783.939770908409,
+      "tz": 50.35403564851495
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -2.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 1247.40786922373,
+      "move_z": 500.0,
+      "rotation_x": 7.119762752923877,
+      "rotation_z": 50.690551593966205,
+      "offset_dist": 853.3603912074693,
+      "tx": 4636.7744384002635,
+      "ty": -4398.301684149067,
+      "tz": 118.35061960854676
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -2.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -2.0,
-        -2.0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        4.0,
-        -2.0,
-        -2.0
-      ],
-      "scale": 1.0
+      "radius": 6861.474171231709,
+      "move_z": 4861.474171231709,
+      "rotation_x": 15.866376068696674,
+      "rotation_z": 193.97841178943926,
+      "offset_dist": 1165.2116491603413,
+      "tx": 5245.80304401917,
+      "ty": -1723.3226801124233,
+      "tz": 124.18203448635671
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_38</strong></td><td class='note'>GA stage0 module0 tx=1.39 ty=-4.75 tz=-1.35 R=(-16.6,14.2,10.6) s=1.31</td><td><code>M0[R-16.6074,14.1883,10.602 T1.39427,-4.74989,-1.34982 S1.31374]</code></td><td>12</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.040</td><td>0.686</td><td>62.9s</td><td>2026-05-26 09:23:32</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_38</strong></td><td class='note'>grid sweep gen_05-var_05</td><td><code>M0[r=7743 mz=6943 rx=3 rz=225 off=1133 T=(255,-994,-165)] | M1[r=6078 mz=5278 rx=4 rz=310 off=872 T=(3984,-2693,45)] | M2[r=7774 mz=5774 rx=15 rz=213 off=743 T=(4548,-4278,-198)] | M3[r=2419 mz=1619 rx=6 rz=306 off=1365 T=(5324,-1619,85)]</code></td><td>0</td><td>58</td><td>799</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>174/97/552/586</code></td><td>26.4s</td><td>2026-05-27 02:15:55</td><td><details><summary>params</summary><pre>{
   "test_id": "test_38",
-  "note": "GA stage0 module0 tx=1.39 ty=-4.75 tz=-1.35 R=(-16.6,14.2,10.6) s=1.31",
+  "note": "grid sweep gen_05-var_05",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.2
+    "viscobound": 1.2,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 5,
+    "var": 5
+  },
+  "batch_layer": "test_05",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        -16.607355711070635,
-        14.188272849840743,
-        10.601969245374676
-      ],
-      "translation_m": [
-        1.3942679845788373,
-        -4.74989244777333,
-        -1.3498240897852845
-      ],
-      "scale": 1.3137436541638763
+      "radius": 7743.34896192949,
+      "move_z": 6943.34896192949,
+      "rotation_x": 3.3224559179540436,
+      "rotation_z": 224.53313445308052,
+      "offset_dist": 1133.384237845433,
+      "tx": 255.01436959614207,
+      "ty": -994.1553748738008,
+      "tz": -165.02475739313707
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 6077.700848786054,
+      "move_z": 5277.700848786054,
+      "rotation_x": 3.7717339267731416,
+      "rotation_z": 309.7329582970527,
+      "offset_dist": 871.6633116505238,
+      "tx": 3984.2562304054973,
+      "ty": -2693.0115609925438,
+      "tz": 44.98678045731518
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 7774.211721660994,
+      "move_z": 5774.211721660994,
+      "rotation_x": 14.840650483529098,
+      "rotation_z": 212.7798054903369,
+      "offset_dist": 742.5215408490985,
+      "tx": 4547.871846443733,
+      "ty": -4278.203963777463,
+      "tz": -197.98153565507118
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 2418.5456141213554,
+      "move_z": 1618.5456141213554,
+      "rotation_x": 6.237682625038917,
+      "rotation_z": 306.0916843256486,
+      "offset_dist": 1365.1177781210797,
+      "tx": 5323.906629322954,
+      "ty": -1618.8633210699002,
+      "tz": 84.78829541085247
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_39</strong></td><td class='note'>GA stage0 module0 tx=-4.13 ty=-0.78 tz=-2.82 R=(-16.9,0.3,-28.4) s=0.76</td><td><code>M0[R-16.8817,0.321317,-28.4078 T-4.13061,-0.780782,-2.82122 S0.75907]</code></td><td>155</td><td>300</td><td>120</td><td>420</td><td class='ratio good'>0.517</td><td>0.345</td><td>71.6s</td><td>2026-05-26 09:24:51</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_39</strong></td><td class='note'>grid sweep gen_05-var_06</td><td><code>M0[r=3254 mz=2454 rx=5 rz=278 off=745 T=(178,-927,160)] | M1[r=5892 mz=4784 rx=8 rz=207 off=1073 T=(3797,-2816,58)] | M2[r=3839 mz=1839 rx=22 rz=300 off=713 T=(4800,-4272,-20)] | M3[r=6739 mz=5939 rx=4 rz=45 off=1159 T=(5500,-1455,-31)]</code></td><td>0</td><td>55</td><td>615</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.007</td><td><code>112/144/320/424</code></td><td>27.8s</td><td>2026-05-27 02:16:32</td><td><details><summary>params</summary><pre>{
   "test_id": "test_39",
-  "note": "GA stage0 module0 tx=-4.13 ty=-0.78 tz=-2.82 R=(-16.9,0.3,-28.4) s=0.76",
+  "note": "grid sweep gen_05-var_06",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.2
+    "viscobound": 1.2,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 5,
+    "var": 6
+  },
+  "batch_layer": "test_05",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        -16.881721511783798,
-        0.3213172862017437,
-        -28.407841818968183
-      ],
-      "translation_m": [
-        -4.130611673705839,
-        -0.7807818031472955,
-        -2.8212166833715777
-      ],
-      "scale": 0.7590701205493188
+      "radius": 3253.9388491517557,
+      "move_z": 2453.9388491517557,
+      "rotation_x": 5.279021082067037,
+      "rotation_z": 277.6060875854403,
+      "offset_dist": 744.8345238609775,
+      "tx": 177.71635980741837,
+      "ty": -927.2335977003411,
+      "tz": 160.20705662952923
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 5892.349729180024,
+      "move_z": 4783.605055755117,
+      "rotation_x": 8.307662598201748,
+      "rotation_z": 206.80649504977308,
+      "offset_dist": 1072.7558837031256,
+      "tx": 3797.2974246604617,
+      "ty": -2816.2845003889765,
+      "tz": 57.942316182175716
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 3838.863602814973,
+      "move_z": 1838.863602814973,
+      "rotation_x": 21.88200384593014,
+      "rotation_z": 299.5501533279975,
+      "offset_dist": 712.5977070024292,
+      "tx": 4799.639178172687,
+      "ty": -4272.264467389437,
+      "tz": -20.282551257590455
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 6739.375341978144,
+      "move_z": 5939.375341978144,
+      "rotation_x": 3.5724160672316136,
+      "rotation_z": 44.72445276739141,
+      "offset_dist": 1159.1990718243355,
+      "tx": 5500.023079920741,
+      "ty": -1455.072291544728,
+      "tz": -30.631668061947295
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_40</strong></td><td class='note'>GA stage0 module0 tx=1.50 ty=0.45 tz=-1.68 R=(5.4,18.6,-29.6) s=1.24</td><td><code>M0[R5.35594,18.5658,-29.6101 T1.49884,0.449415,-1.67736 S1.24466]</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>50.6s</td><td>2026-05-26 09:25:49</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_40</strong></td><td class='note'>grid sweep gen_05-var_07</td><td><code>M0[r=3637 mz=1637 rx=23 rz=216 off=1356 T=(313,-877,154)] | M1[r=6699 mz=4699 rx=16 rz=201 off=1058 T=(3772,-2838,-112)] | M2[r=3196 mz=2396 rx=5 rz=184 off=1446 T=(4695,-4313,-20)] | M3[r=5337 mz=4537 rx=4 rz=94 off=1273 T=(5384,-1639,-179)]</code></td><td>0</td><td>98</td><td>893</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>333/546/56/89</code></td><td>19.7s</td><td>2026-05-27 02:17:01</td><td><details><summary>params</summary><pre>{
   "test_id": "test_40",
-  "note": "GA stage0 module0 tx=1.50 ty=0.45 tz=-1.68 R=(5.4,18.6,-29.6) s=1.24",
+  "note": "grid sweep gen_05-var_07",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.2
+    "viscobound": 1.2,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 5,
+    "var": 7
+  },
+  "batch_layer": "test_05",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        5.355941032554526,
-        18.565827400669598,
-        -29.61007441931634
-      ],
-      "translation_m": [
-        1.4988443777952316,
-        0.4494148060321663,
-        -1.6773562677558198
-      ],
-      "scale": 1.2446554014662463
+      "radius": 3636.752656005154,
+      "move_z": 1636.7526560051542,
+      "rotation_x": 22.575308334544424,
+      "rotation_z": 216.188762580707,
+      "offset_dist": 1355.9026161993077,
+      "tx": 312.6877906270926,
+      "ty": -876.8185303301619,
+      "tz": 153.71378819278522
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 6699.298468738905,
+      "move_z": 4699.298468738905,
+      "rotation_x": 16.071924918637986,
+      "rotation_z": 201.11921014180598,
+      "offset_dist": 1057.6209089201068,
+      "tx": 3772.334409386571,
+      "ty": -2838.3235570564752,
+      "tz": -111.61785969050544
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 3196.15278675813,
+      "move_z": 2396.15278675813,
+      "rotation_x": 5.331600673557479,
+      "rotation_z": 184.41371094629892,
+      "offset_dist": 1446.1020984595812,
+      "tx": 4694.772038032986,
+      "ty": -4313.462471486188,
+      "tz": -20.084697183965517
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 5336.664130867821,
+      "move_z": 4536.664130867821,
+      "rotation_x": 4.040147238462239,
+      "rotation_z": 94.30039704310363,
+      "offset_dist": 1272.8301598867847,
+      "tx": 5384.426238421038,
+      "ty": -1639.1817568957954,
+      "tz": -178.5299704622501
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_41</strong></td><td class='note'>GA stage0 module0 tx=1.98 ty=-1.60 tz=-2.07 R=(27.4,-9.8,-24.4) s=0.68</td><td><code>M0[R27.4328,-9.80433,-24.4352 T1.98139,-1.59749,-2.06712 S0.677373]</code></td><td>105</td><td>300</td><td>120</td><td>420</td><td class='ratio good'>0.350</td><td>0.464</td><td>74.3s</td><td>2026-05-26 09:27:10</td><td><details><summary>params</summary><pre>{
+<tr><td><strong>test_41</strong></td><td class='note'>grid sweep gen_05-var_08</td><td><code>M0[r=7272 mz=5272 rx=15 rz=128 off=965 T=(340,-1032,-68)] | M1[r=3756 mz=2956 rx=5 rz=348 off=1033 T=(3925,-2620,-156)] | M2[r=6323 mz=4654 rx=5 rz=105 off=1089 T=(4807,-4281,75)] | M3[r=1862 mz=1062 rx=7 rz=171 off=942 T=(5263,-1455,-112)]</code></td><td>0</td><td>148</td><td>2416</td><td class='ratio bad'>0.000</td><td class='ratio bad'>0.000</td><td><code>553/65/1913/279</code></td><td>26.8s</td><td>2026-05-27 02:17:41</td><td><details><summary>params</summary><pre>{
   "test_id": "test_41",
-  "note": "GA stage0 module0 tx=1.98 ty=-1.60 tz=-2.07 R=(27.4,-9.8,-24.4) s=0.68",
+  "note": "grid sweep gen_05-var_08",
   "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 0.2
+    "viscobound": 1.2,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 5,
+    "var": 8
+  },
+  "batch_layer": "test_05",
   "modules": [
     {
       "index": 0,
-      "rotation_deg": [
-        27.432784332406875,
-        -9.804327293242395,
-        -24.435249397191125
-      ],
-      "translation_m": [
-        1.9813939498822686,
-        -1.5974948348200813,
-        -2.0671230011293105
-      ],
-      "scale": 0.6773731014667712
+      "radius": 7271.553099361186,
+      "move_z": 5271.553099361186,
+      "rotation_x": 15.379932522334819,
+      "rotation_z": 127.59824833728352,
+      "offset_dist": 965.3797549029116,
+      "tx": 340.2305489248356,
+      "ty": -1032.2789432938669,
+      "tz": -68.27495864892933
     },
     {
       "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 3755.6896031615906,
+      "move_z": 2955.6896031615906,
+      "rotation_x": 4.879604514742103,
+      "rotation_z": 347.99656217737993,
+      "offset_dist": 1033.006127158691,
+      "tx": 3924.5056184180876,
+      "ty": -2619.5436297270257,
+      "tz": -156.14284420438284
     },
     {
       "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 6322.796412173113,
+      "move_z": 4653.771133336487,
+      "rotation_x": 4.856284515431063,
+      "rotation_z": 104.98992901931763,
+      "offset_dist": 1088.809629962966,
+      "tx": 4806.88828825265,
+      "ty": -4280.938626163674,
+      "tz": 74.81415495687713
     },
     {
       "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
+      "radius": 1861.5255290526704,
+      "move_z": 1061.5255290526704,
+      "rotation_x": 7.271989315871886,
+      "rotation_z": 171.44199115315644,
+      "offset_dist": 942.409864285568,
+      "tx": 5262.707193108957,
+      "ty": -1455.3512037802202,
+      "tz": -112.2367601563282
     }
   ]
 }</pre></details></td></tr>
-<tr><td><strong>test_42</strong></td><td class='note'>GA stage0 module0 tx=3.47 ty=1.04 tz=1.84 R=(13.8,2.2,28.4) s=0.90</td><td><code>M0[R13.7839,2.17369,28.3869 T3.47494,1.03726,1.84277 S0.902828]</code></td><td>156</td><td>300</td><td>120</td><td>420</td><td class='ratio good'>0.520</td><td>0.343</td><td>73.9s</td><td>2026-05-26 09:28:31</td><td><details><summary>params</summary><pre>{
-  "test_id": "test_42",
-  "note": "GA stage0 module0 tx=3.47 ty=1.04 tz=1.84 R=(13.8,2.2,28.4) s=0.90",
-  "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
-    "timemax": 10.0,
-    "viscobound": 0.2
-  },
-  "modules": [
-    {
-      "index": 0,
-      "rotation_deg": [
-        13.78390720162907,
-        2.173685487282043,
-        28.386945838762237
-      ],
-      "translation_m": [
-        3.4749436634745976,
-        1.0372603136689111,
-        1.8427696396462814
-      ],
-      "scale": 0.9028275017666827
-    },
-    {
-      "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    }
-  ]
-}</pre></details></td></tr>
-<tr><td><strong>test_43</strong></td><td class='note'>GA stage0 module0 tx=0.52 ty=3.29 tz=0.71 R=(21.7,4.6,12.3) s=0.64</td><td><code>M0[R21.7024,4.64113,12.2743 T0.520406,3.29405,0.711119 S0.63666]</code></td><td>155</td><td>300</td><td>120</td><td>420</td><td class='ratio good'>0.517</td><td>0.345</td><td>71.6s</td><td>2026-05-26 09:29:50</td><td><details><summary>params</summary><pre>{
-  "test_id": "test_43",
-  "note": "GA stage0 module0 tx=0.52 ty=3.29 tz=0.71 R=(21.7,4.6,12.3) s=0.64",
-  "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
-    "timemax": 10.0,
-    "viscobound": 0.2
-  },
-  "modules": [
-    {
-      "index": 0,
-      "rotation_deg": [
-        21.702414018646635,
-        4.641128715405721,
-        12.274310172895412
-      ],
-      "translation_m": [
-        0.5204063127322698,
-        3.294046642529949,
-        0.7111185141854763
-      ],
-      "scale": 0.6366595069245298
-    },
-    {
-      "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    }
-  ]
-}</pre></details></td></tr>
-<tr><td><strong>test_44</strong></td><td class='note'>GA stage0 module0 tx=-2.72 ty=-2.11 tz=-2.52 R=(-16.0,-23.9,-13.3) s=1.11</td><td><code>M0[R-16.0325,-23.9399,-13.3216 T-2.72102,-2.10612,-2.52125 S1.10855]</code></td><td>84</td><td>300</td><td>120</td><td>420</td><td class='ratio ok'>0.280</td><td>0.514</td><td>68.0s</td><td>2026-05-26 09:31:05</td><td><details><summary>params</summary><pre>{
-  "test_id": "test_44",
-  "note": "GA stage0 module0 tx=-2.72 ty=-2.11 tz=-2.52 R=(-16.0,-23.9,-13.3) s=1.11",
-  "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
-    "timemax": 10.0,
-    "viscobound": 0.2
-  },
-  "modules": [
-    {
-      "index": 0,
-      "rotation_deg": [
-        -16.03254681833819,
-        -23.939914235416254,
-        -13.321583813394472
-      ],
-      "translation_m": [
-        -2.7210172434845314,
-        -2.1061203639789285,
-        -2.521248138458235
-      ],
-      "scale": 1.10854755541152
-    },
-    {
-      "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    }
-  ]
-}</pre></details></td></tr>
-<tr><td><strong>test_45</strong></td><td class='note'>GA stage0 module0 tx=-1.35 ty=-1.30 tz=-1.74 R=(-14.0,26.2,8.9) s=1.09</td><td><code>M0[R-13.9813,26.1993,8.88212 T-1.35168,-1.29819,-1.74296 S1.0873]</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>50.2s</td><td>2026-05-26 09:32:02</td><td><details><summary>params</summary><pre>{
-  "test_id": "test_45",
-  "note": "GA stage0 module0 tx=-1.35 ty=-1.30 tz=-1.74 R=(-14.0,26.2,8.9) s=1.09",
-  "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
-    "timemax": 10.0,
-    "viscobound": 0.2
-  },
-  "modules": [
-    {
-      "index": 0,
-      "rotation_deg": [
-        -13.981330677053197,
-        26.199275262749637,
-        8.882123114795611
-      ],
-      "translation_m": [
-        -1.3516782102991574,
-        -1.2981903288311738,
-        -1.7429578153710739
-      ],
-      "scale": 1.0873048045335905
-    },
-    {
-      "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    }
-  ]
-}</pre></details></td></tr>
-<tr><td><strong>test_46</strong></td><td class='note'>GA stage0 module0 tx=1.98 ty=-1.60 tz=-2.07 R=(27.4,-9.8,-24.4) s=0.68</td><td><code>M0[R27.4328,-9.80433,-24.4352 T1.98139,-1.59749,-2.06712 S0.677373]</code></td><td>105</td><td>300</td><td>120</td><td>420</td><td class='ratio good'>0.350</td><td>0.464</td><td>74.3s</td><td>2026-05-26 09:33:24</td><td><details><summary>params</summary><pre>{
-  "test_id": "test_46",
-  "note": "GA stage0 module0 tx=1.98 ty=-1.60 tz=-2.07 R=(27.4,-9.8,-24.4) s=0.68",
-  "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
-    "timemax": 10.0,
-    "viscobound": 0.2
-  },
-  "modules": [
-    {
-      "index": 0,
-      "rotation_deg": [
-        27.432784332406875,
-        -9.804327293242395,
-        -24.435249397191125
-      ],
-      "translation_m": [
-        1.9813939498822686,
-        -1.5974948348200813,
-        -2.0671230011293105
-      ],
-      "scale": 0.6773731014667712
-    },
-    {
-      "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    }
-  ]
-}</pre></details></td></tr>
-<tr><td><strong>test_47</strong></td><td class='note'>GA stage0 module0 tx=-1.35 ty=-1.30 tz=-1.74 R=(-14.0,26.2,8.9) s=1.09</td><td><code>M0[R-13.9813,26.1993,8.88212 T-1.35168,-1.29819,-1.74296 S1.0873]</code></td><td>0</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.000</td><td>0.714</td><td>50.5s</td><td>2026-05-26 09:34:21</td><td><details><summary>params</summary><pre>{
-  "test_id": "test_47",
-  "note": "GA stage0 module0 tx=-1.35 ty=-1.30 tz=-1.74 R=(-14.0,26.2,8.9) s=1.09",
-  "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
-    "timemax": 10.0,
-    "viscobound": 0.2
-  },
-  "modules": [
-    {
-      "index": 0,
-      "rotation_deg": [
-        -13.981330677053197,
-        26.199275262749637,
-        8.882123114795611
-      ],
-      "translation_m": [
-        -1.3516782102991574,
-        -1.2981903288311738,
-        -1.7429578153710739
-      ],
-      "scale": 1.0873048045335905
-    },
-    {
-      "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    }
-  ]
-}</pre></details></td></tr>
-<tr><td><strong>test_48</strong></td><td class='note'>GA stage0 module0 tx=1.00 ty=-1.36 tz=-0.11 R=(30.0,-30.0,30.0) s=0.81</td><td><code>M0[R30,-30,30 T1.00256,-1.35849,-0.106766 S0.810858]</code></td><td>48</td><td>300</td><td>120</td><td>420</td><td class='ratio ok'>0.160</td><td>0.600</td><td>59.1s</td><td>2026-05-26 09:35:27</td><td><details><summary>params</summary><pre>{
-  "test_id": "test_48",
-  "note": "GA stage0 module0 tx=1.00 ty=-1.36 tz=-0.11 R=(30.0,-30.0,30.0) s=0.81",
-  "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
-    "timemax": 10.0,
-    "viscobound": 0.2
-  },
-  "modules": [
-    {
-      "index": 0,
-      "rotation_deg": [
-        30.0,
-        -30.0,
-        30.0
-      ],
-      "translation_m": [
-        1.0025629170508592,
-        -1.3584929838841608,
-        -0.10676643360465488
-      ],
-      "scale": 0.8108581374684432
-    },
-    {
-      "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    }
-  ]
-}</pre></details></td></tr>
-<tr><td><strong>test_49</strong></td><td class='note'>GA stage0 module0 tx=3.31 ty=-1.64 tz=-0.12 R=(11.2,-0.7,-30.0) s=0.64</td><td><code>M0[R11.1575,-0.735374,-30 T3.31401,-1.643,-0.117587 S0.643856]</code></td><td>131</td><td>300</td><td>120</td><td>420</td><td class='ratio good'>0.437</td><td>0.402</td><td>64.9s</td><td>2026-05-26 09:36:39</td><td><details><summary>params</summary><pre>{
-  "test_id": "test_49",
-  "note": "GA stage0 module0 tx=3.31 ty=-1.64 tz=-0.12 R=(11.2,-0.7,-30.0) s=0.64",
-  "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
-    "timemax": 10.0,
-    "viscobound": 0.2
-  },
-  "modules": [
-    {
-      "index": 0,
-      "rotation_deg": [
-        11.15745818399453,
-        -0.7353741544116759,
-        -30.0
-      ],
-      "translation_m": [
-        3.314007240594447,
-        -1.6430029072419547,
-        -0.11758692787837421
-      ],
-      "scale": 0.643855827260961
-    },
-    {
-      "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    }
-  ]
-}</pre></details></td></tr>
-<tr><td><strong>test_50</strong></td><td class='note'>GA stage0 module0 tx=1.98 ty=-1.60 tz=-2.07 R=(27.4,-9.8,-24.4) s=0.68</td><td><code>M0[R27.4328,-9.80433,-24.4352 T1.98139,-1.59749,-2.06712 S0.677373]</code></td><td>105</td><td>300</td><td>120</td><td>420</td><td class='ratio good'>0.350</td><td>0.464</td><td>78.7s</td><td>2026-05-26 09:38:04</td><td><details><summary>params</summary><pre>{
-  "test_id": "test_50",
-  "note": "GA stage0 module0 tx=1.98 ty=-1.60 tz=-2.07 R=(27.4,-9.8,-24.4) s=0.68",
-  "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
-    "timemax": 10.0,
-    "viscobound": 0.2
-  },
-  "modules": [
-    {
-      "index": 0,
-      "rotation_deg": [
-        27.432784332406875,
-        -9.804327293242395,
-        -24.435249397191125
-      ],
-      "translation_m": [
-        1.9813939498822686,
-        -1.5974948348200813,
-        -2.0671230011293105
-      ],
-      "scale": 0.6773731014667712
-    },
-    {
-      "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    }
-  ]
-}</pre></details></td></tr>
-<tr><td><strong>test_51</strong></td><td class='note'>GA stage0 module0 tx=1.39 ty=-4.75 tz=-1.35 R=(-16.6,14.2,10.6) s=1.31</td><td><code>M0[R-16.6074,14.1883,10.602 T1.39427,-4.74989,-1.34982 S1.31374]</code></td><td>12</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.040</td><td>0.686</td><td>65.7s</td><td>2026-05-26 09:39:18</td><td><details><summary>params</summary><pre>{
-  "test_id": "test_51",
-  "note": "GA stage0 module0 tx=1.39 ty=-4.75 tz=-1.35 R=(-16.6,14.2,10.6) s=1.31",
-  "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
-    "timemax": 10.0,
-    "viscobound": 0.2
-  },
-  "modules": [
-    {
-      "index": 0,
-      "rotation_deg": [
-        -16.607355711070635,
-        14.188272849840743,
-        10.601969245374676
-      ],
-      "translation_m": [
-        1.3942679845788373,
-        -4.74989244777333,
-        -1.3498240897852845
-      ],
-      "scale": 1.3137436541638763
-    },
-    {
-      "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    }
-  ]
-}</pre></details></td></tr>
-<tr><td><strong>test_52</strong></td><td class='note'>GA stage0 module0 tx=2.06 ty=0.06 tz=-0.70 R=(17.2,-14.5,30.0) s=0.79</td><td><code>M0[R17.2179,-14.5379,30 T2.0641,0.0592896,-0.700065 S0.792732]</code></td><td>80</td><td>300</td><td>120</td><td>420</td><td class='ratio ok'>0.267</td><td>0.524</td><td>67.0s</td><td>2026-05-26 09:40:32</td><td><details><summary>params</summary><pre>{
-  "test_id": "test_52",
-  "note": "GA stage0 module0 tx=2.06 ty=0.06 tz=-0.70 R=(17.2,-14.5,30.0) s=0.79",
-  "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
-    "timemax": 10.0,
-    "viscobound": 0.2
-  },
-  "modules": [
-    {
-      "index": 0,
-      "rotation_deg": [
-        17.217877316964028,
-        -14.537875047689349,
-        30.0
-      ],
-      "translation_m": [
-        2.0640994729145903,
-        0.059289555012280504,
-        -0.700065264054981
-      ],
-      "scale": 0.7927316920182539
-    },
-    {
-      "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    }
-  ]
-}</pre></details></td></tr>
-<tr><td><strong>test_53</strong></td><td class='note'>GA stage0 module0 tx=5.00 ty=-0.62 tz=0.48 R=(24.0,6.9,-30.0) s=0.79</td><td><code>M0[R23.9988,6.90723,-30 T5,-0.619524,0.475712 S0.787469]</code></td><td>155</td><td>300</td><td>120</td><td>420</td><td class='ratio good'>0.517</td><td>0.345</td><td>74.9s</td><td>2026-05-26 09:41:54</td><td><details><summary>params</summary><pre>{
-  "test_id": "test_53",
-  "note": "GA stage0 module0 tx=5.00 ty=-0.62 tz=0.48 R=(24.0,6.9,-30.0) s=0.79",
-  "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
-    "timemax": 10.0,
-    "viscobound": 0.2
-  },
-  "modules": [
-    {
-      "index": 0,
-      "rotation_deg": [
-        23.998814217071917,
-        6.907233241728999,
-        -30.0
-      ],
-      "translation_m": [
-        5.0,
-        -0.6195240761634506,
-        0.47571190257195184
-      ],
-      "scale": 0.7874689112152
-    },
-    {
-      "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    }
-  ]
-}</pre></details></td></tr>
-<tr><td><strong>test_54</strong></td><td class='note'>GA stage0 module0 tx=3.31 ty=-1.64 tz=-0.12 R=(11.2,-0.7,-30.0) s=0.64</td><td><code>M0[R11.1575,-0.735374,-30 T3.31401,-1.643,-0.117587 S0.643856]</code></td><td>131</td><td>300</td><td>120</td><td>420</td><td class='ratio good'>0.437</td><td>0.402</td><td>66.0s</td><td>2026-05-26 09:43:07</td><td><details><summary>params</summary><pre>{
-  "test_id": "test_54",
-  "note": "GA stage0 module0 tx=3.31 ty=-1.64 tz=-0.12 R=(11.2,-0.7,-30.0) s=0.64",
-  "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
-    "timemax": 10.0,
-    "viscobound": 0.2
-  },
-  "modules": [
-    {
-      "index": 0,
-      "rotation_deg": [
-        11.15745818399453,
-        -0.7353741544116759,
-        -30.0
-      ],
-      "translation_m": [
-        3.314007240594447,
-        -1.6430029072419547,
-        -0.11758692787837421
-      ],
-      "scale": 0.643855827260961
-    },
-    {
-      "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    }
-  ]
-}</pre></details></td></tr>
-<tr><td><strong>test_55</strong></td><td class='note'>GA stage0 module0 tx=1.39 ty=-4.75 tz=-1.35 R=(-16.6,14.2,10.6) s=1.31</td><td><code>M0[R-16.6074,14.1883,10.602 T1.39427,-4.74989,-1.34982 S1.31374]</code></td><td>12</td><td>300</td><td>120</td><td>420</td><td class='ratio bad'>0.040</td><td>0.686</td><td>66.7s</td><td>2026-05-26 09:44:21</td><td><details><summary>params</summary><pre>{
-  "test_id": "test_55",
-  "note": "GA stage0 module0 tx=1.39 ty=-4.75 tz=-1.35 R=(-16.6,14.2,10.6) s=1.31",
-  "global": {
-    "v_inlet": 2.0,
-    "burst_end": 0.5,
-    "dp": 0.1,
-    "timemax": 10.0,
-    "viscobound": 0.2
-  },
-  "modules": [
-    {
-      "index": 0,
-      "rotation_deg": [
-        -16.607355711070635,
-        14.188272849840743,
-        10.601969245374676
-      ],
-      "translation_m": [
-        1.3942679845788373,
-        -4.74989244777333,
-        -1.3498240897852845
-      ],
-      "scale": 1.3137436541638763
-    },
-    {
-      "index": 1,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 2,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 3,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 4,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    },
-    {
-      "index": 5,
-      "rotation_deg": [
-        0,
-        0,
-        0
-      ],
-      "translation_m": [
-        0,
-        0,
-        0
-      ],
-      "scale": 1.0
-    }
-  ]
-}</pre></details></td></tr>
-</table><div class="meta">Last refreshed: 2026-05-26 09:44:27</div>
+</table><div class="meta">Last refreshed: 2026-05-27 02:17:46</div>
 </body></html>

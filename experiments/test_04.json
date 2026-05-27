@@ -1,18 +1,67 @@
 {
   "test_id": "test_04",
-  "note": "All 6 modules scaled to 0.5 — test if smaller shells let water through",
+  "note": "grid sweep gen_01-var_03",
   "global": {
-    "v_inlet": 2.0,
-    "dp": 0.10,
+    "v_inlet": 0.0,
+    "dp": 0.2,
     "timemax": 10.0,
-    "viscobound": 1.0
+    "viscobound": 1.5,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
   },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 1,
+    "var": 3
+  },
+  "batch_layer": "test_01",
   "modules": [
-    {"index": 0, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 0.5},
-    {"index": 1, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 0.5},
-    {"index": 2, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 0.5},
-    {"index": 3, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 0.5},
-    {"index": 4, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 0.5},
-    {"index": 5, "rotation_deg": [0, 0, 0], "translation_m": [0, 0, 0], "scale": 0.5}
+    {
+      "index": 0,
+      "radius": 2464.0197106271958,
+      "move_z": 1664.0197106271958,
+      "rotation_x": 6.1714844679977325,
+      "rotation_z": 144.21941134446092,
+      "offset_dist": 1270.5672332733657,
+      "tx": 217.63020218343655,
+      "ty": -814.4928976716525,
+      "tz": -135.54917857236728
+    },
+    {
+      "index": 1,
+      "radius": 6591.277028002835,
+      "move_z": 5791.277028002835,
+      "rotation_x": 3.6142784133662333,
+      "rotation_z": 71.32391256283871,
+      "offset_dist": 899.0355679837994,
+      "tx": 3619.9619666079248,
+      "ty": -2989.034243146517,
+      "tz": 178.33268860945088
+    },
+    {
+      "index": 2,
+      "radius": 3814.151423111514,
+      "move_z": 3014.151423111514,
+      "rotation_x": 4.838735232251153,
+      "rotation_z": 123.71948369121097,
+      "offset_dist": 1063.374355576148,
+      "tx": 4449.089462306447,
+      "ty": -4512.441412822781,
+      "tz": -34.91170085247256
+    },
+    {
+      "index": 3,
+      "radius": 7512.455880633512,
+      "move_z": 5880.892108536396,
+      "rotation_x": 12.279894814356243,
+      "rotation_z": 144.28276021449028,
+      "offset_dist": 908.3785345656696,
+      "tx": 5287.134793992707,
+      "ty": -1730.1542235590903,
+      "tz": -91.49046302899713
+    }
   ]
 }

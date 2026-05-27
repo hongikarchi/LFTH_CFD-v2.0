@@ -19,20 +19,30 @@ else:
     if doc is None:
         print(json.dumps({"error": "No GH document loaded."}))
     else:
+        # Build port-GUID -> component-GUID map
+        port_to_comp = {}
+        for obj in doc.Objects:
+            cid = str(obj.InstanceGuid)
+            # The obj itself is a port for Param_* objects
+            port_to_comp[cid] = cid
+            if hasattr(obj, "Params"):
+                for p in obj.Params.Input:
+                    port_to_comp[str(p.InstanceGuid)] = cid
+                for p in obj.Params.Output:
+                    port_to_comp[str(p.InstanceGuid)] = cid
+
         objects = []
         for obj in doc.Objects:
             info = {
                 "id": str(obj.InstanceGuid),
                 "name": obj.Name,
                 "nickname": obj.NickName if hasattr(obj, "NickName") else "",
-                "type": obj.GetType().FullName,
                 "type_short": obj.GetType().Name,
                 "category": obj.Category if hasattr(obj, "Category") else "",
                 "subcategory": obj.SubCategory if hasattr(obj, "SubCategory") else "",
                 "pivot_x": obj.Attributes.Pivot.X,
                 "pivot_y": obj.Attributes.Pivot.Y,
             }
-            # Slider value
             if obj.GetType().Name == "GH_NumberSlider":
                 try:
                     info["slider_value"] = float(obj.CurrentValue)
@@ -40,32 +50,31 @@ else:
                     info["slider_max"] = float(obj.Slider.Maximum)
                 except Exception as e:
                     info["slider_err"] = str(e)
-            # Panel content
             elif obj.GetType().Name == "GH_Panel":
                 try:
                     info["panel_text"] = obj.UserText
                 except:
                     pass
-            # Component input/output ports
             if hasattr(obj, "Params"):
                 ins = []
                 for p in obj.Params.Input:
-                    src = [str(s.InstanceGuid) for s in p.Sources]
+                    src_comps = [port_to_comp.get(str(s.InstanceGuid), str(s.InstanceGuid))
+                                 for s in p.Sources]
                     ins.append({
                         "name": p.Name,
                         "nickname": p.NickName,
-                        "sources": src,
-                        "data_count": p.VolatileDataCount if hasattr(p, "VolatileDataCount") else 0,
+                        "src_comps": src_comps,
                     })
                 outs = []
                 for p in obj.Params.Output:
-                    rec = []
+                    rec_comps = []
                     if hasattr(p, "Recipients"):
-                        rec = [str(r.InstanceGuid) for r in p.Recipients]
+                        rec_comps = [port_to_comp.get(str(r.InstanceGuid), str(r.InstanceGuid))
+                                     for r in p.Recipients]
                     outs.append({
                         "name": p.Name,
                         "nickname": p.NickName,
-                        "recipients": rec,
+                        "rec_comps": rec_comps,
                     })
                 info["inputs"] = ins
                 info["outputs"] = outs
@@ -106,7 +115,11 @@ def main():
             depth -= 1
             if depth == 0: e = i + 1; break
     data = json.loads(out[s:e])
-    print(json.dumps(data, indent=2, ensure_ascii=False)[:3000])
+    import sys
+    from pathlib import Path
+    out_path = Path(__file__).resolve().parent.parent / "runs" / "_gh_doc.json"
+    out_path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    sys.stdout.write(f"Wrote {out_path}  count={data.get('count')}\n")
 
 
 if __name__ == "__main__":

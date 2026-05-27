@@ -1,13 +1,67 @@
 {
   "test_id": "test_35",
-  "note": "Translate sculpture toward where water normally deflects (test +4, +4, -2 — opposite Y of test_22).",
-  "global": {"v_inlet": 2.0, "burst_end": 0.5, "dp": 0.10, "timemax": 10.0, "viscobound": 0.2},
+  "note": "grid sweep gen_05-var_02",
+  "global": {
+    "v_inlet": 0.0,
+    "dp": 0.2,
+    "timemax": 10.0,
+    "viscobound": 1.2,
+    "nozzle_diameter": 0.2,
+    "nozzle_thickness": 0.2,
+    "cflnumber": 0.3,
+    "use_gpu": true,
+    "timeout": 0.05
+  },
+  "prefill": true,
+  "grid_cell": {
+    "gen": 5,
+    "var": 2
+  },
+  "batch_layer": "test_05",
   "modules": [
-    {"index": 0, "rotation_deg": [0, 0, 0], "translation_m": [4.0, 4.0, -2.0], "scale": 1.0},
-    {"index": 1, "rotation_deg": [0, 0, 0], "translation_m": [4.0, 4.0, -2.0], "scale": 1.0},
-    {"index": 2, "rotation_deg": [0, 0, 0], "translation_m": [4.0, 4.0, -2.0], "scale": 1.0},
-    {"index": 3, "rotation_deg": [0, 0, 0], "translation_m": [4.0, 4.0, -2.0], "scale": 1.0},
-    {"index": 4, "rotation_deg": [0, 0, 0], "translation_m": [4.0, 4.0, -2.0], "scale": 1.0},
-    {"index": 5, "rotation_deg": [0, 0, 0], "translation_m": [4.0, 4.0, -2.0], "scale": 1.0}
+    {
+      "index": 0,
+      "radius": 1344.699668085736,
+      "move_z": 544.699668085736,
+      "rotation_x": 8.906890329834747,
+      "rotation_z": 188.31533620921064,
+      "offset_dist": 774.2909503569069,
+      "tx": 270.4535461770399,
+      "ty": -858.9606189215378,
+      "tz": 24.005458539146616
+    },
+    {
+      "index": 1,
+      "radius": 1381.7384972450698,
+      "move_z": 581.7384972450698,
+      "rotation_x": 8.751335577279532,
+      "rotation_z": 61.364699275897394,
+      "offset_dist": 1110.2470650131727,
+      "tx": 3736.1348482724225,
+      "ty": -2825.22144524879,
+      "tz": -6.302378028963773
+    },
+    {
+      "index": 2,
+      "radius": 5649.908233640452,
+      "move_z": 3649.9082336404517,
+      "rotation_x": 17.628453673783934,
+      "rotation_z": 302.90979444522895,
+      "offset_dist": 910.618750585815,
+      "tx": 4743.225242592807,
+      "ty": -4272.624070731467,
+      "tz": -92.97627300998724
+    },
+    {
+      "index": 3,
+      "radius": 4549.584835802031,
+      "move_z": 3749.584835802031,
+      "rotation_x": 4.399150168694207,
+      "rotation_z": 283.1475349911542,
+      "offset_dist": 1187.4286784837655,
+      "tx": 5319.9033715321175,
+      "ty": -1702.0826195041425,
+      "tz": 17.785323636014056
+    }
   ]
 }

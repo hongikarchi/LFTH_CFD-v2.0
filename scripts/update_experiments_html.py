@@ -63,27 +63,27 @@ TAIL_FMT = """<div class="meta">Last refreshed: {ts}</div>
 
 
 def ratio_class(r):
-    if r < 0.5: return "good"
-    if r < 0.8: return "ok"
+    # Higher catch ratio is better -> green; lower -> red.
+    if r >= 0.3: return "good"
+    if r >= 0.1: return "ok"
     return "bad"
 
 
 def module_summary(modules):
-    """One-liner summary of which modules got non-identity transforms."""
+    """One-line per-module summary of the 8-gene parametric config."""
     if not modules: return "—"
     out = []
     for m in modules:
         idx = m.get("index")
-        rot = m.get("rotation_deg", [0, 0, 0])
-        trans = m.get("translation_m", [0, 0, 0])
-        scl = m.get("scale", 1.0)
-        if any(rot) or any(trans) or scl != 1.0:
-            tag = []
-            if any(rot): tag.append("R" + ",".join(f"{r:g}" for r in rot))
-            if any(trans): tag.append("T" + ",".join(f"{t:g}" for t in trans))
-            if scl != 1.0: tag.append(f"S{scl:g}")
-            out.append(f"M{idx}[{' '.join(tag)}]")
-    return ", ".join(out) if out else "identity"
+        out.append(
+            f"M{idx}[r={m.get('radius', 0):.0f} "
+            f"mz={m.get('move_z', 0):.0f} "
+            f"rx={m.get('rotation_x', 0):.0f} "
+            f"rz={m.get('rotation_z', 0):.0f} "
+            f"off={m.get('offset_dist', 0):.0f} "
+            f"T=({m.get('tx', 0):.0f},{m.get('ty', 0):.0f},{m.get('tz', 0):.0f})]"
+        )
+    return " | ".join(out)
 
 
 def regenerate():
@@ -101,15 +101,20 @@ def regenerate():
 
     body = ['<table>']
     body.append("<tr>"
-                "<th>Test</th><th>Note</th><th>Modules changed</th>"
-                "<th>Caught</th><th>Moved</th><th>Stuck</th><th>Total</th>"
-                "<th>Catch rate (moved)</th><th>Splash ratio</th>"
+                "<th>Test</th><th>Note</th><th>Modules</th>"
+                "<th>Caught</th><th>Moved</th><th>Stuck</th>"
+                "<th>Catch rate</th><th>Touch all</th>"
+                "<th>Per-slab touch</th>"
                 "<th>Wall</th><th>Date</th><th>Details</th></tr>")
     for name, r, p in rows:
         tid = r.get("test_id", name)
-        ratio = r.get("splash_ratio", 1.0)
         catch = r.get("catch_rate_moved", 0.0)
         cls = "good" if catch >= 0.3 else ("ok" if catch >= 0.1 else "bad")
+        touch = r.get("touch", {}) or {}
+        touch_all = touch.get("touch_all_ratio", 0.0)
+        touch_cls = "good" if touch_all >= 0.7 else ("ok" if touch_all >= 0.5 else "bad")
+        per_slab = touch.get("per_slab_touch", [])
+        per_slab_s = "/".join(str(v) for v in per_slab) if per_slab else "—"
         note = p.get("note", "")
         modules = p.get("modules", [])
         body.append(
@@ -120,9 +125,9 @@ def regenerate():
             f"<td>{r.get('caught', 0)}</td>"
             f"<td>{r.get('moved', '—')}</td>"
             f"<td>{r.get('stuck', '—')}</td>"
-            f"<td>{r.get('total', 0)}</td>"
             f"<td class='ratio {cls}'>{catch:.3f}</td>"
-            f"<td>{ratio:.3f}</td>"
+            f"<td class='ratio {touch_cls}'>{touch_all:.3f}</td>"
+            f"<td><code>{per_slab_s}</code></td>"
             f"<td>{r.get('wall_time_s', '—')}s</td>"
             f"<td>{r.get('timestamp', '—')}</td>"
             f"<td><details><summary>params</summary>"

@@ -32,7 +32,7 @@
             <speedsystem value="5" auto="false" comment="Reference system speed (m/s) — set above max expected velocity" />
             <coefsound value="20" />
             <speedsound value="100" auto="false" comment="Sound speed (m/s). Higher = more numerical stiffness" />
-            <coefh value="1.0" />
+            <coefh value="0.85" />
             <cflnumber value="0.2" />
         </constantsdef>
 
@@ -63,7 +63,7 @@
                          SCULPTURE — STL import, MK=20
                          ============================================================ -->
                     <setmkbound mk="20" />
-                    <drawfilestl file="{{stl_path}}" autofill="false">
+                    <drawfilestl file="{{stl_path}}" autofill="true">
                         <drawmove x="0" y="0" z="{{stl_move_z}}" />
                         <drawrotate angx="0" angy="0" angz="{{stl_rotate_z_deg}}" />
                         <drawscale x="{{stl_scale}}" y="{{stl_scale}}" z="{{stl_scale}}" />
@@ -77,7 +77,7 @@
                     <drawbox>
                         <boxfill>solid</boxfill>
                         <point x="{{domain_xmin}}" y="{{domain_ymin}}" z="{{domain_zmin}}" />
-                        <size x="{{domain_xsize}}" y="{{domain_ysize}}" z="0.01" />
+                        <size x="{{domain_xsize}}" y="{{domain_ysize}}" z="0.50" />
                     </drawbox>
 
                     <!-- ============================================================

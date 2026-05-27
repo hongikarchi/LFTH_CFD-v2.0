@@ -32,11 +32,17 @@ OUT = PROJECT / "ga_dashboard.html"
 
 POP = 8           # must match ga_sequential.py
 N_GEN = 4
-GENE_ORDER = ["tx", "ty", "tz", "rx", "ry", "rz", "scale"]
+GENE_ORDER = ["radius", "move_z", "rotation_x", "rotation_z",
+              "offset_dist", "tx", "ty", "tz"]
 GENE_BOUNDS = {
-    "tx": (-5, 5), "ty": (-5, 5), "tz": (-3, 3),
-    "rx": (-30, 30), "ry": (-30, 30), "rz": (-30, 30),
-    "scale": (0.6, 1.4),
+    "radius": (1000, 8000),
+    "move_z": (500, 9500),
+    "rotation_x": (0, 90),
+    "rotation_z": (0, 360),
+    "offset_dist": (30, 300),
+    "tx": (-3000, 3000),
+    "ty": (-3000, 3000),
+    "tz": (-2000, 2000),
 }
 
 
@@ -162,9 +168,12 @@ def render_html(state: dict) -> str:
         best_str = "<em>n/a</em>"
         if best_ind:
             best_str = (
-                f"<code>T=({best_ind['tx']:+.2f}, {best_ind['ty']:+.2f}, {best_ind['tz']:+.2f}) m</code> · "
-                f"<code>R=({best_ind['rx']:+.1f}°, {best_ind['ry']:+.1f}°, {best_ind['rz']:+.1f}°)</code> · "
-                f"<code>s={best_ind['scale']:.2f}</code>"
+                f"<code>r={best_ind['radius']:.0f}</code> · "
+                f"<code>mz={best_ind['move_z']:.0f}</code> · "
+                f"<code>rx={best_ind['rotation_x']:.0f}°</code> · "
+                f"<code>rz={best_ind['rotation_z']:.0f}°</code> · "
+                f"<code>off={best_ind['offset_dist']:.0f}</code> · "
+                f"<code>T=({best_ind['tx']:+.0f},{best_ind['ty']:+.0f},{best_ind['tz']:+.0f}) mm</code>"
             )
 
         block = f"""
