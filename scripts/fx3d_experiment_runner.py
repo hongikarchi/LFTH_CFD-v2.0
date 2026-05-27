@@ -98,6 +98,46 @@ def write_nozzles_txt(path: Path, nozzles_m: list[list[float]], vz: float) -> No
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+SETTINGS_LOG = RUNS / "_settings_log.jsonl"
+
+
+def append_settings_log(test_id: str, case: dict, result: dict, iter_dir: Path,
+                         wall_s: float, collider_stl: Path | None = None) -> None:
+    """Append one JSON line capturing settings + headline metrics + paths."""
+    r = result.get("retention", {}) or {}
+    entry = {
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "test_id": test_id,
+        "engine": result.get("engine", "fluidx3d"),
+        # settings
+        "dp_m": case.get("dp_m"),
+        "timemax_s": case.get("timemax_s"),
+        "dt_out_s": case.get("dt_out_s"),
+        "n_nozzles": case.get("n_nozzles"),
+        "nozzle_LPM": case.get("nozzle_LPM"),
+        "nozzle_vz_mps": case.get("nozzle_vz_mps"),
+        "score_slab_thickness_m": case.get("score_slab_thickness_m"),
+        "domain_bbox_m": case.get("domain_bbox_m"),
+        # results
+        "score": result.get("score"),
+        "in_positive": r.get("in_positive"),
+        "in_negative": r.get("in_negative"),
+        "in_column": r.get("in_column"),
+        "splash": r.get("splash"),
+        "total": r.get("total"),
+        "retention_rate": r.get("retention_rate"),
+        # cost
+        "wall_s": round(wall_s, 2),
+        # paths
+        "iter_dir": str(iter_dir).replace("\\", "/"),
+        "frames_dir": str(iter_dir / "fx3d_out" / "frames").replace("\\", "/"),
+        "collider_stl": str(collider_stl).replace("\\", "/") if collider_stl else None,
+    }
+    SETTINGS_LOG.parent.mkdir(parents=True, exist_ok=True)
+    with SETTINGS_LOG.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry) + "\n")
+
+
 def _domain_from_sculpture(bbox_m: list[list[float]],
                            pad_m: float) -> tuple[list[float], list[float]]:
     (x0, y0, z0), (x1, y1, z1) = bbox_m
@@ -207,6 +247,18 @@ def run_experiment(test_id: str, params: dict, *,
     print(f"[{test_id}] wall={wall_s:.1f}s  score={result['score']:.4f}  "
           f"in_pos={r['in_positive']}  in_neg={r['in_negative']}  "
           f"in_col={r['in_column']}  splash={r['splash']}  total={r['total']}")
+
+    # 5b) settings DB append (for HTML compare viewer)
+    case_json = json.loads((iter_dir / "case.json").read_text(encoding="utf-8"))
+    append_settings_log(test_id, case_json, result, iter_dir, wall_s,
+                        collider_stl=stl_path)
+    # refresh settings dashboard (best-effort)
+    try:
+        subprocess.run([sys.executable,
+                        str(PROJECT / "scripts" / "update_settings_compare.py")],
+                        capture_output=True, timeout=30)
+    except Exception:
+        pass
 
     # 6) Rhino push
     if push_to_rhino:

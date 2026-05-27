@@ -21,7 +21,7 @@ from fx3d_experiment_runner import (
     FLUIDX3D_EXE, DOMAIN_PAD_M, DEFAULT_DP_M, DEFAULT_TIMEMAX_S,
     DEFAULT_DT_OUT_S, DEFAULT_NOZZLE_LPM, DEFAULT_SLAB_THICKNESS_M,
     _load_targets, _domain_from_sculpture, _write_case_txt,
-    nozzle_vz_from_lpm, write_nozzles_txt,
+    nozzle_vz_from_lpm, write_nozzles_txt, append_settings_log,
 )
 from fx3d_postprocess import postprocess
 from rhino_mcp_helpers import push_stl_to_rhino_layer
@@ -108,6 +108,15 @@ def main() -> int:
     r = result["retention"]
     print(f"  score={result['score']:.4f}  in_pos={r['in_positive']}  in_neg={r['in_negative']}  "
           f"in_col={r['in_column']}  splash={r['splash']}  total={r['total']}")
+
+    case_json = json.loads((ITER_DIR / "case.json").read_text(encoding="utf-8"))
+    append_settings_log("real", case_json, result, ITER_DIR, wall, collider_stl=stl_local)
+    try:
+        subprocess.run([sys.executable,
+                        str(PROJECT / "scripts" / "update_settings_compare.py")],
+                        capture_output=True, timeout=30)
+    except Exception:
+        pass
 
     try:
         push_stl_to_rhino_layer(stl_local, "fluidx3d::real::sculpture",

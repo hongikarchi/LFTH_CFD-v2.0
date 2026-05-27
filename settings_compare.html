@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>LFTH_CFD · settings compare</title>
+<meta http-equiv="refresh" content="60">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root { --bg:#0f1115; --panel:#1a1d27; --text:#e7e9ef; --muted:#8a93a6; --border:#2a3040; --accent:#7cc4ff; --best:#2a4030; }
+@media (prefers-color-scheme: light) {
+  :root { --bg:#f6f8fb; --panel:#fff; --text:#1a1e29; --muted:#5b6273; --border:#d6dbe5; --accent:#1d6ddc; --best:#d9f3df; }
+}
+body { font-family: -apple-system, "Segoe UI", "Pretendard", "Noto Sans KR", sans-serif;
+       background: var(--bg); color: var(--text); margin: 0; padding: 24px; line-height: 1.5; }
+h1 { margin: 0 0 8px 0; font-size: 22px; }
+.bar { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
+.bar input { padding: 6px 10px; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 4px; flex: 0 0 280px; }
+.hint { color: var(--muted); font-size: 12px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--panel); }
+th, td { padding: 6px 9px; border-bottom: 1px solid var(--border); text-align: right; vertical-align: middle; }
+th:nth-child(1), td:nth-child(1), th:nth-child(2), td:nth-child(2) { text-align: left; }
+th { background: var(--panel); color: var(--muted); font-size: 11px; text-transform: uppercase;
+      letter-spacing: .06em; cursor: pointer; user-select: none; position: sticky; top: 0; }
+tr.best td { background: var(--best); font-weight: 600; }
+tr:hover td { background: var(--border); }
+.thumb img { width: 110px; height: auto; border-radius: 3px; vertical-align: middle; }
+.charts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-top: 28px; max-width: 1200px; }
+.charts h3 { margin: 0 0 8px 0; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+canvas { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; max-height: 320px; }
+code { background: var(--panel); padding: 2px 6px; border-radius: 3px; }
+</style>
+</head>
+<body>
+<h1>LFTH_CFD · settings compare</h1>
+<p>No experiments logged yet. Run <code>fx3d_run_real.py</code> or <code>fx3d_experiment_runner.py</code>.</p>
+</body>
+</html>
