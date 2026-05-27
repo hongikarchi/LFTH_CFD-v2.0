@@ -166,15 +166,13 @@ def compose_params(stage_module_idx: int, ind_dict: dict,
         "test_id": test_id,
         "note": note,
         "global": {
-            "v_inlet": 0.0,
-            "dp": 0.20,
-            "timemax": 5.0,
-            "viscobound": 1.0,
-            "nozzle_diameter": 0.20,
-            "nozzle_thickness": 0.20,
-            "cflnumber": 0.30,
+            "dp": 0.08,                      # FluidX3D LBM cell size [m]
+            "timemax": 4.0,                  # [s]
+            "timeout": 0.05,                 # frame interval [s]
+            "inflow_radius_m": 1.0,
+            "inflow_z_top_m": 30.0,
+            "inflow_velocity_mps": -4.0,
             "use_gpu": True,
-            "timeout": 0.10,
         },
         "modules": modules,
     }
