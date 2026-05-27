@@ -50,47 +50,66 @@ FIELD_GROUPS = [
     {
         "title": "Simulation",
         "fields": [
-            {"key": "dp_m", "label": "dp (cell size)", "unit": "m", "min": 0.02, "max": 0.20, "step": 0.005, "type": "number"},
-            {"key": "timemax_s", "label": "timemax", "unit": "s", "min": 1, "max": 120, "step": 1, "type": "number"},
-            {"key": "dt_out_s", "label": "dt_out (frame interval)", "unit": "s", "min": 0.01, "max": 0.5, "step": 0.01, "type": "number"},
-            {"key": "nozzle_refill_dt_s", "label": "nozzle refill dt", "unit": "s", "min": 0.005, "max": 0.5, "step": 0.005, "type": "number"},
-            {"key": "lbm_u_ref", "label": "LBM u_ref (stability)", "unit": "lattice", "min": 0.005, "max": 0.2, "step": 0.005, "type": "number", "desc": "larger = less stable + more dissipative; smaller = slower / stall risk"},
-            {"key": "side_walls", "label": "side walls", "unit": "", "type": "select", "options": ["E", "S"], "desc": "E = equilibrium (absorb), S = solid (reflect)"},
-            {"key": "floor_type", "label": "floor", "unit": "", "type": "select", "options": ["S", "E"], "desc": "Bottom plane (z=0)"},
+            {"key": "dp_m", "label": "dp", "unit": "m", "step": 0.005, "type": "number",
+             "desc": "격자 셀 크기. 작을수록 정확하지만 셀 수가 폭증 (dp/2 = 8배 셀, ~16배 시간)."},
+            {"key": "timemax_s", "label": "timemax", "unit": "s", "step": 1, "type": "number",
+             "desc": "시뮬 길이(초). 물이 도메인을 통과·정착할 시간."},
+            {"key": "dt_out_s", "label": "dt_out", "unit": "s", "step": 0.01, "type": "number",
+             "desc": "PNG/VTK 출력 간격. 작을수록 부드러운 영상 + 더 많은 디스크 사용."},
+            {"key": "nozzle_refill_dt_s", "label": "nozzle refill dt", "unit": "s", "step": 0.005, "type": "number",
+             "desc": "노즐 셀 재충전 주기. 작으면 inflow 지속 강함, 너무 작으면 device sync 오버헤드."},
+            {"key": "lbm_u_ref", "label": "LBM u_ref", "unit": "lattice", "step": 0.005, "type": "number",
+             "desc": "LBM 속도 스케일 → relaxation time 결정. 크면 빠름·불안정, 작으면 느림·정체 위험."},
+            {"key": "side_walls", "label": "side walls", "unit": "", "type": "select", "options": ["E", "S"],
+             "desc": "도메인 측벽. E = 흡수 (escape), S = 반사. S면 물이 도메인 안에 갇혀 진짜 cascade 확인 가능."},
+            {"key": "floor_type", "label": "floor", "unit": "", "type": "select", "options": ["S", "E"],
+             "desc": "도메인 바닥 (z=0). S = 반사 (pond 역할), E = 흡수."},
         ],
     },
     {
         "title": "Inflow (nozzles)",
         "fields": [
-            {"key": "nozzle_LPM", "label": "per-nozzle flow", "unit": "L/min", "min": 1, "max": 500, "step": 1, "type": "number"},
-            {"key": "seed_col_h", "label": "seed column height", "unit": "cells", "min": 1, "max": 30, "step": 1, "type": "number"},
+            {"key": "nozzle_LPM", "label": "per-nozzle flow", "unit": "L/min", "step": 1, "type": "number",
+             "desc": "각 노즐의 유량(L/min). 230 노즐 × 45 LPM = 0.17 m³/s 전체."},
+            {"key": "seed_col_h", "label": "seed column height", "unit": "cells", "step": 1, "type": "number",
+             "desc": "각 노즐 아래로 stamp되는 셀 깊이. 12 = 0.96m at dp=0.08. 너무 짧으면 SURFACE LBM에 잡히지 않음."},
         ],
     },
     {
         "title": "Physics",
         "fields": [
-            {"key": "surface_tension_Npm", "label": "surface tension", "unit": "N/m", "min": 0, "max": 0.1, "step": 0.005, "type": "number"},
-            {"key": "viscosity_m2ps", "label": "viscosity", "unit": "m²/s", "min": 1e-7, "max": 1e-3, "step": 1e-7, "type": "number"},
-            {"key": "density_kgpm3", "label": "density", "unit": "kg/m³", "min": 500, "max": 2000, "step": 10, "type": "number"},
-            {"key": "gravity_mps2", "label": "gravity", "unit": "m/s²", "min": 0, "max": 20, "step": 0.1, "type": "number"},
+            {"key": "surface_tension_Npm", "label": "surface tension", "unit": "N/m", "step": 0.005, "type": "number",
+             "desc": "물 표면장력 (실제 ~0.072 N/m at 20°C). 너무 크면 물방울이 안 깨짐."},
+            {"key": "viscosity_m2ps", "label": "viscosity", "unit": "m²/s", "step": 1e-7, "type": "number",
+             "desc": "동점성 (실제 물 ~1e-6 m²/s). 너무 작으면 발산, 크면 점도 흐름."},
+            {"key": "density_kgpm3", "label": "density", "unit": "kg/m³", "step": 10, "type": "number",
+             "desc": "유체 밀도 (물 1000 kg/m³)."},
+            {"key": "gravity_mps2", "label": "gravity", "unit": "m/s²", "step": 0.1, "type": "number",
+             "desc": "중력가속도 (지구 9.81). 0이면 무중력 = 흐름 안 생김."},
         ],
     },
     {
         "title": "Geometry / scoring",
         "fields": [
-            {"key": "thicken_thickness_m", "label": "collider thicken thickness", "unit": "m", "min": 0.05, "max": 1.0, "step": 0.01, "type": "number"},
-            {"key": "score_slab_thickness_m", "label": "score slab (pos/neg slab z)", "unit": "m", "min": 0.05, "max": 5.0, "step": 0.05, "type": "number"},
-            {"key": "fluid_threshold", "label": "phi cutoff (fluid cell threshold)", "unit": "", "min": 0.1, "max": 0.95, "step": 0.05, "type": "number"},
-            {"key": "domain_pad_m", "label": "domain padding", "unit": "m", "min": 0.5, "max": 10, "step": 0.5, "type": "number"},
+            {"key": "thicken_thickness_m", "label": "thicken thickness", "unit": "m", "step": 0.01, "type": "number",
+             "desc": "open mesh를 닫을 때 두께. dp의 2배 이상 권장 (얇으면 누수, 두꺼우면 dish가 솔리드 cap이 됨)."},
+            {"key": "score_slab_thickness_m", "label": "score slab", "unit": "m", "step": 0.05, "type": "number",
+             "desc": "positive/negative 평면 Brep을 두께 있는 슬랩으로 확장하는 양. score 판정 영역."},
+            {"key": "fluid_threshold", "label": "phi cutoff", "unit": "", "step": 0.05, "type": "number",
+             "desc": "어느 phi 값부터 '물 셀'로 셀지 (0~1). 0.5 기본. 낮으면 interface 셀도 포함."},
+            {"key": "domain_pad_m", "label": "domain padding", "unit": "m", "step": 0.5, "type": "number",
+             "desc": "sculpture bbox 주변 패딩. 크면 도메인 크고 안전, 셀 수 증가."},
         ],
     },
     {
         "title": "View / output",
         "fields": [
-            {"key": "visualization_modes", "label": "PNG viz modes (comma-sep)", "unit": "", "type": "text",
-             "desc": "PHI_RAYTRACE,FLAG_SURFACE,FLAG_LATTICE,Q_CRITERION,FIELD,STREAMLINES,PHI_RASTERIZE,PARTICLES"},
-            {"key": "camera", "label": "camera (rx ry fov zoom)", "unit": "", "type": "vec4"},
-            {"key": "push_to_rhino", "label": "push STL to Rhino after run", "unit": "", "type": "bool"},
+            {"key": "visualization_modes", "label": "PNG viz modes", "unit": "", "type": "text",
+             "desc": "콤마 구분. PHI_RAYTRACE = 물 raytraced, FLAG_SURFACE = sculpture 표면, FLAG_LATTICE = 격자, Q_CRITERION = 와류, FIELD = 속도/밀도, STREAMLINES = 유선, PHI_RASTERIZE, PARTICLES."},
+            {"key": "camera", "label": "camera (rx ry fov zoom)", "unit": "", "type": "vec4",
+             "desc": "rx/ry = 회전 각도(도), fov = 시야각, zoom = 확대. ex: 200 15 60 1 = 뒤편에서 살짝 위."},
+            {"key": "push_to_rhino", "label": "Rhino push", "unit": "", "type": "bool",
+             "desc": "sim 끝나면 sculpture STL을 Rhino MCP로 push (Rhino 켜져 있어야 함)."},
         ],
     },
 ]
@@ -101,22 +120,28 @@ BUILD_FIELD_GROUPS = [
         "title": "Solver (compile-time)",
         "fields": [
             {"key": "precision", "label": "precision", "type": "select", "options": ["FP32", "FP16S", "FP16C"],
-             "desc": "FP32=baseline 2x VRAM, FP16S=default (2x speed, half VRAM), FP16C=accurate FP16"},
+             "desc": "수치 정밀도. FP32 = 정확하지만 VRAM 2배. FP16S = 기본 (속도 2배, VRAM 절반). FP16C = FP16의 정확 변종."},
             {"key": "velocity_set", "label": "velocity set", "type": "select", "options": ["D3Q19", "D3Q27"],
-             "desc": "D3Q19=default, D3Q27=more accurate (27% slower)"},
-            {"key": "subgrid", "label": "LES subgrid (high Re)", "type": "bool",
-             "desc": "Smagorinsky-Lilly turbulence model"},
+             "desc": "LBM 격자 모델. D3Q19 = 기본 (19 방향). D3Q27 = 더 정확하지만 27% 느림."},
+            {"key": "subgrid", "label": "LES subgrid", "type": "bool",
+             "desc": "Smagorinsky-Lilly LES 모델. 고 Reynolds 수에서 안정화 효과."},
         ],
     },
     {
         "title": "Graphics (compile-time)",
         "fields": [
-            {"key": "graphics_u_max", "label": "viz u_max (color scale)", "min": 0.01, "max": 1.0, "step": 0.01, "type": "number"},
-            {"key": "graphics_rho_delta", "label": "rho coloring range", "min": 0.0001, "max": 0.1, "step": 0.0001, "type": "number"},
-            {"key": "graphics_raytracing_transmittance", "label": "raytracing transmittance", "min": 0, "max": 1, "step": 0.05, "type": "number"},
-            {"key": "graphics_raytracing_color", "label": "water color (hex)", "type": "text", "desc": "e.g. 0x005F7F"},
-            {"key": "graphics_frame_width", "label": "frame width", "min": 320, "max": 3840, "step": 32, "type": "number"},
-            {"key": "graphics_frame_height", "label": "frame height", "min": 240, "max": 2160, "step": 32, "type": "number"},
+            {"key": "graphics_u_max", "label": "viz u_max", "step": 0.01, "type": "number",
+             "desc": "속도 컬러맵 최대값 (lattice 단위). 색상 스케일 조절."},
+            {"key": "graphics_rho_delta", "label": "rho coloring range", "step": 0.0001, "type": "number",
+             "desc": "밀도 컬러맵 범위. ±delta 만큼 펼침."},
+            {"key": "graphics_raytracing_transmittance", "label": "raytracing transmittance", "step": 0.05, "type": "number",
+             "desc": "물 통과 빛 비율 (0~1). 0.25 = 1/4 통과. 작을수록 진한 물."},
+            {"key": "graphics_raytracing_color", "label": "water color (hex)", "type": "text",
+             "desc": "물 흡수 색상. 0x005F7F = 청록. 0xFF0000 = 빨강."},
+            {"key": "graphics_frame_width", "label": "frame width", "step": 32, "type": "number",
+             "desc": "PNG 가로 픽셀. 1920이 일반."},
+            {"key": "graphics_frame_height", "label": "frame height", "step": 32, "type": "number",
+             "desc": "PNG 세로 픽셀. 1080이 일반."},
         ],
     },
 ]
@@ -369,16 +394,17 @@ header .chip b { color: var(--text); font-weight: 600; }
 
 .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
 
-/* form */
-.fld { display: grid; grid-template-columns: 220px 1fr 100px 60px; align-items: center; gap: 12px; padding: 7px 0; border-bottom: 1px dashed var(--border-soft); }
+/* form: label | input | unit | desc_ko */
+.fld { display: grid; grid-template-columns: 180px 120px 70px 1fr; align-items: center; gap: 12px;
+       padding: 7px 0; border-bottom: 1px dashed var(--border-soft); }
 .fld:last-child { border-bottom: none; }
-.fld label { color: var(--text-soft); font-size: 13px; }
-.fld .desc { color: var(--text-faint); font-size: 11.5px; }
-.fld input[type=range] { width: 100%; }
+.fld label { color: var(--text); font-size: 13px; font-weight: 500; }
+.fld .desc-ko { color: var(--text-soft); font-size: 12px; line-height: 1.4; }
 .fld input[type=number], .fld input[type=text], .fld select {
   font-family: var(--mono); font-size: 12.5px;
   border: 1px solid var(--border); border-radius: 5px; padding: 4px 6px; background: var(--panel); color: var(--text); width: 100%; }
 .fld .unit { font-family: var(--mono); color: var(--text-faint); font-size: 11.5px; }
+.fld input[type=checkbox] { width: 18px; height: 18px; }
 
 .btnrow { display: flex; gap: 10px; margin: 20px 0 12px; flex-wrap: wrap; }
 button.action { background: var(--accent); color: white; border: none; border-radius: 6px;
@@ -406,9 +432,13 @@ table.grid img { height: 50px; border-radius: 3px; vertical-align: middle; }
              color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; }
 .charts canvas { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; max-height: 260px; }
 
-.filebar { font-family: var(--mono); font-size: 12.5px; color: var(--accent); font-weight: 600; }
-.fileitem { margin: 6px 0 12px 0; }
-.fileitem .role { color: var(--text-soft); font-size: 13px; margin-top: 3px; }
+.tree-wrap { font-family: var(--mono); font-size: 12.5px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; overflow-x: auto; }
+.tree-line { display: grid; grid-template-columns: minmax(360px, max-content) 1fr; gap: 18px; padding: 3px 0; align-items: baseline; }
+.tree-line .path { color: var(--text); white-space: pre; }
+.tree-line .path .seg-dir { color: var(--accent); font-weight: 600; }
+.tree-line .path .seg-file { color: var(--text); }
+.tree-line .path .branch { color: var(--text-faint); }
+.tree-line .role { color: var(--text-soft); font-family: var(--sans); font-size: 12.5px; line-height: 1.4; }
 
 .q { padding: 4px 8px; font-size: 13px; border: 1px solid var(--border); border-radius: 5px; width: 280px; }
 </style>
@@ -524,46 +554,33 @@ function renderForm() {
     }
     sec.appendChild(card); root.appendChild(sec);
   }
-  // wire up sliders -> number sync
-  document.querySelectorAll('.fld input[type=range]').forEach(el => {
-    el.addEventListener('input', e => {
-      const num = document.querySelector('input[type=number][data-key="' + el.dataset.key + '"]');
-      if (num) num.value = el.value;
-    });
-  });
-  document.querySelectorAll('.fld input[type=number]').forEach(el => {
-    el.addEventListener('input', e => {
-      const slider = document.querySelector('input[type=range][data-key="' + el.dataset.key + '"]');
-      if (slider) slider.value = el.value;
-    });
-  });
 }
 
 function renderField(f, val) {
-  let label = `<label>${esc(f.label)}${f.desc ? '<div class="desc">' + esc(f.desc) + '</div>' : ''}</label>`;
+  const label = `<label>${esc(f.label)}</label>`;
+  const desc = `<div class="desc-ko">${esc(f.desc || '')}</div>`;
+  const unit = `<span class="unit">${esc(f.unit || '')}</span>`;
   if (f.type === 'number') {
-    return label + `
-      <input type="range" data-key="${f.key}" min="${f.min}" max="${f.max}" step="${f.step}" value="${val ?? f.min}">
-      <input type="number" data-key="${f.key}" min="${f.min}" max="${f.max}" step="${f.step}" value="${val ?? ''}">
-      <span class="unit">${esc(f.unit || '')}</span>`;
+    const step = f.step !== undefined ? `step="${f.step}"` : '';
+    return label + `<input type="number" data-key="${f.key}" ${step} value="${val ?? ''}">` + unit + desc;
   }
   if (f.type === 'select') {
     const opts = f.options.map(o => `<option value="${esc(o)}"${val === o ? ' selected' : ''}>${esc(o)}</option>`).join('');
-    return label + `<select data-key="${f.key}">${opts}</select><span></span><span class="unit">${esc(f.unit || '')}</span>`;
+    return label + `<select data-key="${f.key}">${opts}</select>` + unit + desc;
   }
   if (f.type === 'bool') {
-    return label + `<input type="checkbox" data-key="${f.key}"${val ? ' checked' : ''}><span></span><span></span>`;
+    return label + `<input type="checkbox" data-key="${f.key}"${val ? ' checked' : ''}>` + unit + desc;
   }
   if (f.type === 'vec4') {
     const arr = Array.isArray(val) ? val : [0,0,0,0];
-    return label + `<div style="display:flex; gap:6px;">
-      <input type="number" data-key="${f.key}__0" value="${arr[0]}" style="width:60px">
-      <input type="number" data-key="${f.key}__1" value="${arr[1]}" style="width:60px">
-      <input type="number" data-key="${f.key}__2" value="${arr[2]}" style="width:60px">
-      <input type="number" data-key="${f.key}__3" value="${arr[3]}" style="width:60px">
-    </div><span></span><span></span>`;
+    return label + `<div style="display:flex; gap:4px; grid-column-end:span 1;">
+      <input type="number" data-key="${f.key}__0" value="${arr[0]}">
+      <input type="number" data-key="${f.key}__1" value="${arr[1]}">
+      <input type="number" data-key="${f.key}__2" value="${arr[2]}">
+      <input type="number" data-key="${f.key}__3" value="${arr[3]}">
+    </div>` + unit + desc;
   }
-  return label + `<input type="text" data-key="${f.key}" value="${esc(val)}"><span></span><span></span>`;
+  return label + `<input type="text" data-key="${f.key}" value="${esc(val ?? '')}">` + unit + desc;
 }
 
 function collectFormValues() {
@@ -658,44 +675,11 @@ function renderBuildForm() {
     for (const f of grp.fields) {
       const val = BUILD_CONFIG[f.key];
       const row = document.createElement('div'); row.className = 'fld';
-      row.innerHTML = renderBuildField(f, val);
+      row.innerHTML = renderField(f, val);    // reuse same render function
       card.appendChild(row);
     }
     sec.appendChild(card); root.appendChild(sec);
   }
-  document.querySelectorAll('#build_form_groups input[type=range]').forEach(el => {
-    el.addEventListener('input', e => {
-      const num = document.querySelector('#build_form_groups input[type=number][data-key="' + el.dataset.key + '"]');
-      if (num) num.value = el.value;
-    });
-  });
-  document.querySelectorAll('#build_form_groups input[type=number]').forEach(el => {
-    el.addEventListener('input', e => {
-      const slider = document.querySelector('#build_form_groups input[type=range][data-key="' + el.dataset.key + '"]');
-      if (slider) slider.value = el.value;
-    });
-  });
-}
-
-function renderBuildField(f, val) {
-  let label = `<label>${esc(f.label)}${f.desc ? '<div class="desc">' + esc(f.desc) + '</div>' : ''}</label>`;
-  if (f.type === 'number') {
-    return label + `
-      <input type="range" data-key="${f.key}" min="${f.min}" max="${f.max}" step="${f.step}" value="${val ?? f.min}">
-      <input type="number" data-key="${f.key}" min="${f.min}" max="${f.max}" step="${f.step}" value="${val ?? ''}">
-      <span class="unit">${esc(f.unit || '')}</span>`;
-  }
-  if (f.type === 'select') {
-    const opts = f.options.map(o => `<option value="${esc(o)}"${val === o ? ' selected' : ''}>${esc(o)}</option>`).join('');
-    return label + `<select data-key="${f.key}">${opts}</select><span></span><span></span>`;
-  }
-  if (f.type === 'bool') {
-    return label + `<input type="checkbox" data-key="${f.key}"${val ? ' checked' : ''}><span></span><span></span>`;
-  }
-  if (f.type === 'text') {
-    return label + `<input type="text" data-key="${f.key}" value="${esc(val)}"><span></span><span></span>`;
-  }
-  return '';
 }
 
 function collectBuildValues() {
@@ -839,12 +823,59 @@ function mkScatter(canvasId, key) {
 }
 document.getElementById('btn_refresh_charts').addEventListener('click', loadCharts);
 
-// ---------- files ----------
+// ---------- files (tree) ----------
 async function loadFiles() {
   const r = await fetch('/api/structure'); const j = await r.json();
-  document.getElementById('file_list').innerHTML = j.files.map(f =>
-    '<div class="fileitem"><div class="filebar">' + esc(f.path) + '</div><div class="role">' + esc(f.role) + '</div></div>'
-  ).join('');
+  document.getElementById('file_list').innerHTML = renderTree(j.files);
+}
+
+function buildTree(files) {
+  // files: [{path, role}, ...]  -> nested map
+  const root = {children: new Map(), role: null};
+  for (const f of files) {
+    const parts = f.path.split('/').filter(p => p !== '');
+    let node = root;
+    for (let i = 0; i < parts.length; i++) {
+      const seg = parts[i];
+      if (!node.children.has(seg)) node.children.set(seg, {children: new Map(), role: null});
+      node = node.children.get(seg);
+      if (i === parts.length - 1) node.role = f.role;
+    }
+  }
+  return root;
+}
+
+function renderTree(files) {
+  const root = buildTree(files);
+  const lines = [];
+  function walk(node, prefix, isLast, name, depth) {
+    if (depth >= 0) {
+      const branch = depth === 0 ? '' : (isLast ? '└── ' : '├── ');
+      const isDir = node.children.size > 0;
+      const segCls = isDir ? 'seg-dir' : 'seg-file';
+      const display = name + (isDir ? '/' : '');
+      const pathHtml = '<span class="branch">' + esc(prefix + branch) + '</span>'
+                     + '<span class="' + segCls + '">' + esc(display) + '</span>';
+      const role = node.role || (isDir ? '' : '');
+      lines.push('<div class="tree-line"><div class="path">' + pathHtml + '</div><div class="role">' + esc(role) + '</div></div>');
+    }
+    const kids = Array.from(node.children.entries());
+    // sort: dirs first, then files; alphabetical within each
+    kids.sort(([a, na], [b, nb]) => {
+      const ad = na.children.size > 0, bd = nb.children.size > 0;
+      if (ad !== bd) return ad ? -1 : 1;
+      return a.localeCompare(b);
+    });
+    kids.forEach(([childName, child], i) => {
+      const last = i === kids.length - 1;
+      const nextPrefix = depth < 0 ? '' : (prefix + (isLast ? '    ' : '│   '));
+      walk(child, nextPrefix, last, childName, depth + 1);
+    });
+  }
+  walk(root, '', true, 'LFTH_CFD v2.0', -1);
+  // Add the root line manually at the top
+  lines.unshift('<div class="tree-line"><div class="path"><span class="seg-dir">LFTH_CFD v2.0/</span></div><div class="role">project root</div></div>');
+  return '<div class="tree-wrap">' + lines.join('') + '</div>';
 }
 
 // ---------- init ----------
