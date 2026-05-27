@@ -1,0 +1,14 @@
+{
+  "_comment": "Compile-time FluidX3D config. Editing requires re-running scripts/build_fluidx3d.py (~30s msbuild). Both PNG and Interactive variants are produced.",
+
+  "precision": "FP16S",
+  "velocity_set": "D3Q19",
+  "subgrid": false,
+
+  "graphics_u_max": 0.18,
+  "graphics_rho_delta": 0.001,
+  "graphics_raytracing_transmittance": 0.25,
+  "graphics_raytracing_color": "0x005F7F",
+  "graphics_frame_width": 1920,
+  "graphics_frame_height": 1080
+}

@@ -138,10 +138,21 @@ def latest_phi_vtk(vtk_dir: Path) -> Path:
     return files[-1]
 
 
-def postprocess(iter_dir: Path, fluid_threshold: float = 0.5) -> dict:
+def postprocess(iter_dir: Path, fluid_threshold: float | None = None) -> dict:
     vtk_dir = iter_dir / "fx3d_out" / "vtk"
     phi_path = latest_phi_vtk(vtk_dir)
     phi, shape, vtk_origin, spacing = parse_vtk_structured_points(phi_path)
+
+    # If threshold not given, read from iter_dir/case.json (key fluid_threshold)
+    if fluid_threshold is None:
+        case_path = iter_dir / "case.json"
+        if case_path.exists():
+            try:
+                fluid_threshold = float(json.loads(case_path.read_text(encoding="utf-8")).get("fluid_threshold", 0.5))
+            except Exception:
+                fluid_threshold = 0.5
+        else:
+            fluid_threshold = 0.5
 
     positive_bbox, negative_bbox, module_bboxes = load_bboxes(iter_dir)
 

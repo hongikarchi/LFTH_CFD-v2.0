@@ -35,3 +35,6 @@ __pycache__/
 # Large project assets (kept local)
 *.pdf
 
+# External FluidX3D clone (~100 MB) — has its own .git, tracked upstream
+external/FluidX3D/
+

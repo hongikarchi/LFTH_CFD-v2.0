@@ -33,7 +33,9 @@ sys.path.insert(0, str(PROJECT / "scripts"))
 from fx3d_postprocess import postprocess
 from rhino_mcp_helpers import push_stl_to_rhino_layer
 
-FLUIDX3D_EXE = Path("C:/Users/user/Downloads/FluidX3D/bin/FluidX3D.exe")
+FLUIDX3D_DIR = PROJECT / "external" / "FluidX3D"
+FLUIDX3D_EXE = FLUIDX3D_DIR / "bin" / "FluidX3D.exe"
+FLUIDX3D_EXE_INTERACTIVE = FLUIDX3D_DIR / "bin" / "FluidX3D_interactive.exe"
 
 CONFIG_DEFAULT = PROJECT / "config" / "case.json"
 RUNS = PROJECT / "runs"
@@ -157,7 +159,8 @@ def run_experiment(test_id: str,
                    config_overrides: dict | None = None,
                    config_path: Path = CONFIG_DEFAULT,
                    push_rhino: bool | None = None,
-                   timeout_s: float = 1800.0) -> dict:
+                   interactive: bool = False,
+                   timeout_s: float = 7200.0) -> dict:
     cfg = load_config(config_path)
     if config_overrides:
         cfg.update(config_overrides)
@@ -197,7 +200,10 @@ def run_experiment(test_id: str,
         "dt_out_s": cfg["dt_out_s"],
         "nozzle_refill_dt_s": cfg["nozzle_refill_dt_s"],
         "seed_col_h": cfg["seed_col_h"],
+        "lbm_u_ref": cfg.get("lbm_u_ref", 0.05),
         "side_walls": cfg["side_walls"],
+        "floor_type": cfg.get("floor_type", "S"),
+        "visualization_modes": cfg.get("visualization_modes", "PHI_RAYTRACE,FLAG_SURFACE"),
         "surface_tension_Npm": cfg["surface_tension_Npm"],
         "viscosity_m2ps": cfg["viscosity_m2ps"],
         "density_kgpm3": cfg["density_kgpm3"],
@@ -214,6 +220,7 @@ def run_experiment(test_id: str,
         "negative_bbox_m": targets["negative_bbox_m"],
         "module_bboxes_m": [],
         "score_slab_thickness_m": cfg["score_slab_thickness_m"],
+        "fluid_threshold": cfg.get("fluid_threshold", 0.5),
         "n_nozzles": len(nozzles_m),
         "nozzle_LPM": cfg["nozzle_LPM"],
         "nozzle_vz_mps": vz,
@@ -222,10 +229,14 @@ def run_experiment(test_id: str,
         "collider_stl_source": str(stl_path).replace("\\", "/"),
     }, indent=2), encoding="utf-8")
 
-    # Run FluidX3D
-    print(f"[{test_id}] FluidX3D launching (dp={cfg['dp_m']} timemax={cfg['timemax_s']} side_walls={cfg['side_walls']})")
+    # Run FluidX3D (interactive uses the GUI variant — viz only, no PNG/VTK)
+    exe = FLUIDX3D_EXE_INTERACTIVE if interactive else FLUIDX3D_EXE
+    if not exe.exists():
+        raise FileNotFoundError(f"{exe} missing. Run scripts/build_fluidx3d.py to build it.")
+    mode_tag = "INTERACTIVE" if interactive else "PNG"
+    print(f"[{test_id}] FluidX3D launching ({mode_tag} mode, dp={cfg['dp_m']} timemax={cfg['timemax_s']} side_walls={cfg['side_walls']})")
     t0 = time.time()
-    proc = subprocess.run([str(FLUIDX3D_EXE)],
+    proc = subprocess.run([str(exe)],
                           cwd=str(iter_dir),
                           capture_output=True, text=True, timeout=timeout_s)
     wall = time.time() - t0
@@ -234,6 +245,12 @@ def run_experiment(test_id: str,
     print(f"[{test_id}] wall={wall:.1f}s rc={proc.returncode}")
     if proc.returncode != 0:
         print("  stdout tail:\n  " + "\n  ".join(proc.stdout.splitlines()[-10:]))
+
+    # Interactive mode: no PNG/VTK output, so skip postprocess + DB + Rhino push.
+    if interactive:
+        print(f"  (interactive run — DB skipped)")
+        return {"engine": "fluidx3d-interactive", "wall_time_s": round(wall, 1),
+                 "score": None, "retention": {}}
 
     # Postprocess
     result = postprocess(iter_dir)
@@ -271,6 +288,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--stl", default=None, help="path to collider STL (default: _real_collider_thickened.stl)")
     ap.add_argument("--config", default=str(CONFIG_DEFAULT), help="canonical config json")
     ap.add_argument("--no-push", action="store_true", help="skip Rhino push")
+    ap.add_argument("--interactive", action="store_true", help="use FluidX3D_interactive.exe (GUI window, no DB)")
     args = ap.parse_args(argv[1:])
 
     stl_path = Path(args.stl).resolve() if args.stl else None
@@ -278,7 +296,8 @@ def main(argv: list[str]) -> int:
     run_experiment(args.test_id,
                     stl_path=stl_path,
                     config_path=config_path,
-                    push_rhino=False if args.no_push else None)
+                    push_rhino=False if args.no_push else None,
+                    interactive=args.interactive)
     return 0
 
 

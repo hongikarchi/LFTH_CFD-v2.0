@@ -35,6 +35,7 @@ from flask import Flask, jsonify, request, send_file, Response, abort
 PROJECT = Path(__file__).resolve().parent.parent
 
 CONFIG_PATH = PROJECT / "config" / "case.json"
+BUILD_CONFIG_PATH = PROJECT / "config" / "build.json"
 SETTINGS_LOG = PROJECT / "runs" / "_settings_log.jsonl"
 SCRIPTS = PROJECT / "scripts"
 
@@ -53,7 +54,9 @@ FIELD_GROUPS = [
             {"key": "timemax_s", "label": "timemax", "unit": "s", "min": 1, "max": 120, "step": 1, "type": "number"},
             {"key": "dt_out_s", "label": "dt_out (frame interval)", "unit": "s", "min": 0.01, "max": 0.5, "step": 0.01, "type": "number"},
             {"key": "nozzle_refill_dt_s", "label": "nozzle refill dt", "unit": "s", "min": 0.005, "max": 0.5, "step": 0.005, "type": "number"},
+            {"key": "lbm_u_ref", "label": "LBM u_ref (stability)", "unit": "lattice", "min": 0.005, "max": 0.2, "step": 0.005, "type": "number", "desc": "larger = less stable + more dissipative; smaller = slower / stall risk"},
             {"key": "side_walls", "label": "side walls", "unit": "", "type": "select", "options": ["E", "S"], "desc": "E = equilibrium (absorb), S = solid (reflect)"},
+            {"key": "floor_type", "label": "floor", "unit": "", "type": "select", "options": ["S", "E"], "desc": "Bottom plane (z=0)"},
         ],
     },
     {
@@ -77,12 +80,15 @@ FIELD_GROUPS = [
         "fields": [
             {"key": "thicken_thickness_m", "label": "collider thicken thickness", "unit": "m", "min": 0.05, "max": 1.0, "step": 0.01, "type": "number"},
             {"key": "score_slab_thickness_m", "label": "score slab (pos/neg slab z)", "unit": "m", "min": 0.05, "max": 5.0, "step": 0.05, "type": "number"},
+            {"key": "fluid_threshold", "label": "phi cutoff (fluid cell threshold)", "unit": "", "min": 0.1, "max": 0.95, "step": 0.05, "type": "number"},
             {"key": "domain_pad_m", "label": "domain padding", "unit": "m", "min": 0.5, "max": 10, "step": 0.5, "type": "number"},
         ],
     },
     {
         "title": "View / output",
         "fields": [
+            {"key": "visualization_modes", "label": "PNG viz modes (comma-sep)", "unit": "", "type": "text",
+             "desc": "PHI_RAYTRACE,FLAG_SURFACE,FLAG_LATTICE,Q_CRITERION,FIELD,STREAMLINES,PHI_RASTERIZE,PARTICLES"},
             {"key": "camera", "label": "camera (rx ry fov zoom)", "unit": "", "type": "vec4"},
             {"key": "push_to_rhino", "label": "push STL to Rhino after run", "unit": "", "type": "bool"},
         ],
@@ -90,25 +96,54 @@ FIELD_GROUPS = [
 ]
 
 
+BUILD_FIELD_GROUPS = [
+    {
+        "title": "Solver (compile-time)",
+        "fields": [
+            {"key": "precision", "label": "precision", "type": "select", "options": ["FP32", "FP16S", "FP16C"],
+             "desc": "FP32=baseline 2x VRAM, FP16S=default (2x speed, half VRAM), FP16C=accurate FP16"},
+            {"key": "velocity_set", "label": "velocity set", "type": "select", "options": ["D3Q19", "D3Q27"],
+             "desc": "D3Q19=default, D3Q27=more accurate (27% slower)"},
+            {"key": "subgrid", "label": "LES subgrid (high Re)", "type": "bool",
+             "desc": "Smagorinsky-Lilly turbulence model"},
+        ],
+    },
+    {
+        "title": "Graphics (compile-time)",
+        "fields": [
+            {"key": "graphics_u_max", "label": "viz u_max (color scale)", "min": 0.01, "max": 1.0, "step": 0.01, "type": "number"},
+            {"key": "graphics_rho_delta", "label": "rho coloring range", "min": 0.0001, "max": 0.1, "step": 0.0001, "type": "number"},
+            {"key": "graphics_raytracing_transmittance", "label": "raytracing transmittance", "min": 0, "max": 1, "step": 0.05, "type": "number"},
+            {"key": "graphics_raytracing_color", "label": "water color (hex)", "type": "text", "desc": "e.g. 0x005F7F"},
+            {"key": "graphics_frame_width", "label": "frame width", "min": 320, "max": 3840, "step": 32, "type": "number"},
+            {"key": "graphics_frame_height", "label": "frame height", "min": 240, "max": 2160, "step": 32, "type": "number"},
+        ],
+    },
+]
+
+
 FILE_STRUCTURE = [
-    {"path": "config/case.json", "role": "캐노니컬 파라미터. 이 페이지에서 편집됨. fx3d_run.py가 매 실행마다 읽어 iter_dir/case.txt로 복사."},
+    {"path": "config/case.json", "role": "캐노니컬 runtime 파라미터. Settings 탭에서 편집. fx3d_run.py가 매 실행마다 iter_dir/case.txt로 복사 (재빌드 불필요)."},
+    {"path": "config/build.json", "role": "캐노니컬 compile-time 파라미터 (precision/velocity_set/SUBGRID/graphics 상수). Build 탭에서 편집 + Rebuild 버튼."},
     {"path": "runs/_real_targets.json", "role": "Rhino에서 추출한 positive/negative bbox + 230 nozzle 좌표. extract_targets.py로 생성."},
     {"path": "runs/_real_collider.stl", "role": "Rhino env::collider 원본 STL (open mesh)."},
     {"path": "runs/_real_collider_thickened.stl", "role": "thicken_collider.py가 만든 closed manifold. fx3d_run.py가 우선 사용."},
     {"path": "runs/_settings_log.jsonl", "role": "append-only DB. 매 실험 한 줄. History 탭이 이 파일을 읽음."},
     {"path": "runs/iter_*/", "role": "실험마다 한 폴더 (case.txt + nozzles.txt + sculpture.stl + result.json + fx3d_out/{frames,vtk}/)."},
     {"path": "scripts/dashboard_server.py", "role": "이 서버 (Flask). 포트 8080."},
-    {"path": "scripts/fx3d_run.py", "role": "통합 runner. CLI + 라이브러리 함수 run_experiment()."},
-    {"path": "scripts/fx3d_postprocess.py", "role": "VTK → result.json (in_pos, in_neg, score 계산)."},
+    {"path": "scripts/fx3d_run.py", "role": "통합 runner. CLI + 라이브러리 함수 run_experiment(). --interactive 플래그 = GUI 변종 사용."},
+    {"path": "scripts/build_fluidx3d.py", "role": "build.json 읽어 defines.hpp 패치 → msbuild 2회 → PNG + Interactive 두 binary 생성."},
+    {"path": "scripts/fx3d_postprocess.py", "role": "VTK → result.json (in_pos, in_neg, score 계산). case.json의 fluid_threshold 사용."},
     {"path": "scripts/extract_targets.py", "role": "Rhino MCP → runs/_real_targets.json + _real_collider.stl."},
     {"path": "scripts/thicken_collider.py", "role": "open mesh → closed manifold. 인자 = 두께(m)."},
     {"path": "scripts/fx3d_visualize_in_rhino.py", "role": "iter_real STL을 Rhino 레이어에 푸시."},
     {"path": "scripts/rhino_mcp_helpers.py", "role": "Rhino MCP socket 호출 헬퍼."},
     {"path": "scripts/ga_sequential.py", "role": "DEAP GA loop (현재 비활성, 추후 활성화)."},
     {"path": "scripts/module_geometry.py", "role": "parametric STL 생성 (추후 신규 design용)."},
-    {"path": "C:/Users/user/Downloads/FluidX3D/src/setup.cpp", "role": "FluidX3D 시뮬 로직. case.txt를 cwd에서 읽음. 수정시 msbuild 재빌드 필요."},
-    {"path": "C:/Users/user/Downloads/FluidX3D/src/defines.hpp", "role": "FluidX3D compile-time 매크로 (SURFACE/SOI 등). 수정시 재빌드 필요."},
-    {"path": "C:/Users/user/Downloads/FluidX3D/bin/FluidX3D.exe", "role": "컴파일된 시뮬레이터 바이너리."},
+    {"path": "external/FluidX3D/src/setup.cpp", "role": "FluidX3D 시뮬 로직. case.txt를 cwd에서 읽음. 수정시 Build 탭 → Rebuild."},
+    {"path": "external/FluidX3D/src/defines.hpp", "role": "compile-time 매크로 baseline. build_fluidx3d.py가 build.json대로 임시 패치 후 복구."},
+    {"path": "external/FluidX3D/bin/FluidX3D.exe", "role": "PNG 모드 binary (백그라운드, frames + VTK 저장)."},
+    {"path": "external/FluidX3D/bin/FluidX3D_interactive.exe", "role": "Interactive 모드 binary (실시간 GUI 윈도우, P/WASD 조작, DB 안 남김)."},
 ]
 
 
@@ -139,6 +174,44 @@ def api_config_post():
     return jsonify({"ok": True, "saved": list(data.keys())})
 
 
+@app.route("/api/build_config", methods=["GET"])
+def api_build_get():
+    cfg = json.loads(BUILD_CONFIG_PATH.read_text(encoding="utf-8"))
+    return jsonify({"config": cfg, "groups": BUILD_FIELD_GROUPS})
+
+
+@app.route("/api/build_config", methods=["POST"])
+def api_build_post():
+    data = request.get_json(force=True)
+    if not isinstance(data, dict):
+        return jsonify({"ok": False, "error": "expected JSON object"}), 400
+    existing = json.loads(BUILD_CONFIG_PATH.read_text(encoding="utf-8"))
+    for k, v in existing.items():
+        if k.startswith("_") and k not in data:
+            data[k] = v
+    BUILD_CONFIG_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    return jsonify({"ok": True})
+
+
+@app.route("/api/build", methods=["POST"])
+def api_build():
+    cmd = [sys.executable, str(SCRIPTS / "build_fluidx3d.py")]
+    def _runner():
+        log_path = PROJECT / "runs" / "_dashboard_build.log"
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        with log_path.open("w", encoding="utf-8") as f:
+            subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, cwd=str(PROJECT))
+    threading.Thread(target=_runner, daemon=True).start()
+    return jsonify({"ok": True, "cmd": " ".join(cmd)})
+
+
+@app.route("/api/build_status")
+def api_build_status():
+    log_path = PROJECT / "runs" / "_dashboard_build.log"
+    out = log_path.read_text(encoding="utf-8")[-3000:] if log_path.exists() else ""
+    return jsonify({"log_tail": out})
+
+
 @app.route("/api/runs", methods=["GET"])
 def api_runs():
     entries = []
@@ -162,10 +235,13 @@ def api_run():
     data = request.get_json(force=True) or {}
     test_id = data.get("test_id") or f"run_{int(time.time())}"
     no_push = bool(data.get("no_push", False))
+    interactive = bool(data.get("interactive", False))
 
     cmd = [sys.executable, str(SCRIPTS / "fx3d_run.py"), "--test-id", test_id]
     if no_push:
         cmd.append("--no-push")
+    if interactive:
+        cmd.append("--interactive")
 
     def _runner():
         log_path = PROJECT / "runs" / f"_dashboard_run_{test_id}.log"
@@ -350,6 +426,7 @@ table.grid img { height: 50px; border-radius: 3px; vertical-align: middle; }
 <div class="wrap">
   <nav class="tabbar">
     <button class="tab-btn active" data-tab="settings">Settings</button>
+    <button class="tab-btn" data-tab="build">Build</button>
     <button class="tab-btn" data-tab="history">History</button>
     <button class="tab-btn" data-tab="charts">Charts</button>
     <button class="tab-btn" data-tab="files">Files</button>
@@ -359,11 +436,23 @@ table.grid img { height: 50px; border-radius: 3px; vertical-align: middle; }
     <div id="form_groups"></div>
     <div class="btnrow">
       <button class="action" id="btn_save">Save config</button>
-      <button class="action" id="btn_save_run">Save + Run</button>
+      <button class="action" id="btn_save_run">Save + Run (simulation)</button>
+      <button class="action" id="btn_save_run_int" style="background:#bf8700">Save + Run (interactive)</button>
       <button class="action secondary" id="btn_thicken">Re-thicken collider</button>
       <button class="action secondary" id="btn_reload">Reload from disk</button>
     </div>
     <div class="status-bar" id="status_bar">ready.</div>
+  </section>
+
+  <section class="panel" id="panel-build">
+    <div id="build_form_groups"></div>
+    <div class="btnrow">
+      <button class="action" id="btn_build_save">Save build config</button>
+      <button class="action" id="btn_build_run">Save + Rebuild (~1 min)</button>
+      <button class="action secondary" id="btn_build_reload">Reload from disk</button>
+    </div>
+    <div class="status-bar" id="build_status">ready.</div>
+    <pre id="build_log" style="margin-top:10px; font-family:var(--mono); font-size:11.5px; background:var(--panel); border:1px solid var(--border); border-radius:6px; padding:10px; max-height:240px; overflow:auto; white-space:pre-wrap;"></pre>
   </section>
 
   <section class="panel" id="panel-history">
@@ -404,6 +493,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     if (btn.dataset.tab === 'history') loadRuns();
     if (btn.dataset.tab === 'charts') loadCharts();
     if (btn.dataset.tab === 'files') loadFiles();
+    if (btn.dataset.tab === 'build') loadBuildConfig();
   });
 });
 
@@ -508,11 +598,13 @@ async function saveConfig() {
   setStatus(j.ok ? 'saved ' + j.saved.length + ' keys.' : 'save FAILED: ' + esc(j.error));
 }
 
-async function triggerRun() {
+async function triggerRun(interactive) {
   await saveConfig();
-  const test_id = 'dash_' + Math.floor(Date.now() / 1000);
-  setStatus('launching run ' + test_id + ' ...');
-  const r = await fetch('/api/run', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({test_id})});
+  const prefix = interactive ? 'iact_' : 'dash_';
+  const test_id = prefix + Math.floor(Date.now() / 1000);
+  setStatus('launching ' + (interactive ? 'INTERACTIVE ' : '') + 'run ' + test_id + ' ...');
+  const r = await fetch('/api/run', {method:'POST', headers:{'Content-Type':'application/json'},
+                                       body: JSON.stringify({test_id, interactive})});
   const j = await r.json();
   if (!j.ok) { setStatus('run launch FAILED: ' + esc(j.error)); return; }
   pollRun(test_id);
@@ -543,9 +635,120 @@ async function triggerThicken() {
 }
 
 document.getElementById('btn_save').addEventListener('click', saveConfig);
-document.getElementById('btn_save_run').addEventListener('click', triggerRun);
+document.getElementById('btn_save_run').addEventListener('click', () => triggerRun(false));
+document.getElementById('btn_save_run_int').addEventListener('click', () => triggerRun(true));
 document.getElementById('btn_thicken').addEventListener('click', triggerThicken);
 document.getElementById('btn_reload').addEventListener('click', loadConfig);
+
+// ---------- build (compile-time) form ----------
+let BUILD_GROUPS = [];
+let BUILD_CONFIG = {};
+
+async function loadBuildConfig() {
+  const r = await fetch('/api/build_config'); const j = await r.json();
+  BUILD_CONFIG = j.config; BUILD_GROUPS = j.groups; renderBuildForm();
+}
+
+function renderBuildForm() {
+  const root = document.getElementById('build_form_groups'); root.innerHTML = '';
+  for (const grp of BUILD_GROUPS) {
+    const sec = document.createElement('div');
+    sec.innerHTML = `<div class="section-title">${esc(grp.title)}</div>`;
+    const card = document.createElement('div'); card.className = 'card';
+    for (const f of grp.fields) {
+      const val = BUILD_CONFIG[f.key];
+      const row = document.createElement('div'); row.className = 'fld';
+      row.innerHTML = renderBuildField(f, val);
+      card.appendChild(row);
+    }
+    sec.appendChild(card); root.appendChild(sec);
+  }
+  document.querySelectorAll('#build_form_groups input[type=range]').forEach(el => {
+    el.addEventListener('input', e => {
+      const num = document.querySelector('#build_form_groups input[type=number][data-key="' + el.dataset.key + '"]');
+      if (num) num.value = el.value;
+    });
+  });
+  document.querySelectorAll('#build_form_groups input[type=number]').forEach(el => {
+    el.addEventListener('input', e => {
+      const slider = document.querySelector('#build_form_groups input[type=range][data-key="' + el.dataset.key + '"]');
+      if (slider) slider.value = el.value;
+    });
+  });
+}
+
+function renderBuildField(f, val) {
+  let label = `<label>${esc(f.label)}${f.desc ? '<div class="desc">' + esc(f.desc) + '</div>' : ''}</label>`;
+  if (f.type === 'number') {
+    return label + `
+      <input type="range" data-key="${f.key}" min="${f.min}" max="${f.max}" step="${f.step}" value="${val ?? f.min}">
+      <input type="number" data-key="${f.key}" min="${f.min}" max="${f.max}" step="${f.step}" value="${val ?? ''}">
+      <span class="unit">${esc(f.unit || '')}</span>`;
+  }
+  if (f.type === 'select') {
+    const opts = f.options.map(o => `<option value="${esc(o)}"${val === o ? ' selected' : ''}>${esc(o)}</option>`).join('');
+    return label + `<select data-key="${f.key}">${opts}</select><span></span><span></span>`;
+  }
+  if (f.type === 'bool') {
+    return label + `<input type="checkbox" data-key="${f.key}"${val ? ' checked' : ''}><span></span><span></span>`;
+  }
+  if (f.type === 'text') {
+    return label + `<input type="text" data-key="${f.key}" value="${esc(val)}"><span></span><span></span>`;
+  }
+  return '';
+}
+
+function collectBuildValues() {
+  const out = {};
+  for (const grp of BUILD_GROUPS) {
+    for (const f of grp.fields) {
+      if (f.type === 'number') {
+        const el = document.querySelector('#build_form_groups input[type=number][data-key="' + f.key + '"]');
+        if (el && el.value !== '') out[f.key] = parseFloat(el.value);
+      } else if (f.type === 'select') {
+        const el = document.querySelector('#build_form_groups select[data-key="' + f.key + '"]');
+        if (el) out[f.key] = el.value;
+      } else if (f.type === 'bool') {
+        const el = document.querySelector('#build_form_groups input[type=checkbox][data-key="' + f.key + '"]');
+        out[f.key] = !!(el && el.checked);
+      } else if (f.type === 'text') {
+        const el = document.querySelector('#build_form_groups input[type=text][data-key="' + f.key + '"]');
+        if (el) out[f.key] = el.value;
+      }
+    }
+  }
+  return out;
+}
+
+async function saveBuildConfig() {
+  const payload = collectBuildValues();
+  document.getElementById('build_status').textContent = 'saving...';
+  const r = await fetch('/api/build_config', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+  const j = await r.json();
+  document.getElementById('build_status').textContent = j.ok ? 'saved.' : 'save FAILED: ' + esc(j.error);
+}
+
+async function triggerBuild() {
+  await saveBuildConfig();
+  document.getElementById('build_status').textContent = 'rebuilding (~1 min)...';
+  document.getElementById('build_log').textContent = '';
+  await fetch('/api/build', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({})});
+  const interval = setInterval(async () => {
+    const r = await fetch('/api/build_status'); const j = await r.json();
+    document.getElementById('build_log').textContent = j.log_tail || '(building...)';
+    if ((j.log_tail || '').includes('DONE:')) {
+      clearInterval(interval);
+      document.getElementById('build_status').textContent = 'build done. both binaries refreshed.';
+    } else if ((j.log_tail || '').match(/FAILED|ERROR/)) {
+      clearInterval(interval);
+      document.getElementById('build_status').textContent = 'build FAILED — see log below.';
+    }
+  }, 3000);
+}
+
+document.getElementById('btn_build_save').addEventListener('click', saveBuildConfig);
+document.getElementById('btn_build_run').addEventListener('click', triggerBuild);
+document.getElementById('btn_build_reload').addEventListener('click', loadBuildConfig);
 
 // ---------- history table ----------
 let CACHED_RUNS = [];
