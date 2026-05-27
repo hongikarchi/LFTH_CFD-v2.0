@@ -107,7 +107,15 @@ FIELD_GROUPS = [
             {"key": "visualization_modes", "label": "PNG viz modes", "unit": "", "type": "multi",
              "options": ["PHI_RAYTRACE", "PHI_RASTERIZE", "FLAG_SURFACE", "FLAG_LATTICE",
                           "Q_CRITERION", "FIELD", "STREAMLINES", "PARTICLES"],
-             "desc": "PNG 렌더링 모드 (여러 개 동시 가능). RAYTRACE = 물 광선추적, FLAG_SURFACE = sculpture 표면, FLAG_LATTICE = 격자, Q_CRITERION = 와류, FIELD = 속도장, STREAMLINES = 유선."},
+             "desc": "여러 모드 동시 선택 가능 (체크된 칩 전부 합성됨)\n"
+                     "PHI_RAYTRACE: 물 표면을 광선추적으로 사실적 렌더 (가장 예쁨, 느림)\n"
+                     "PHI_RASTERIZE: 물 표면을 빠르게 raster 렌더 (광선추적 안 함)\n"
+                     "FLAG_SURFACE: sculpture (TYPE_S)의 표면을 흰색 wireframe으로\n"
+                     "FLAG_LATTICE: 격자 cell 경계 표시 (디버그용, 무거움)\n"
+                     "Q_CRITERION: 와류(소용돌이) 등고면 표시\n"
+                     "FIELD: 단면 색상으로 속도/밀도장 표시\n"
+                     "STREAMLINES: 유선 (속도 흐름선) 표시\n"
+                     "PARTICLES: 입자 (PARTICLES 확장 켜야 함)"},
             {"key": "camera", "label": "camera (rx ry fov zoom)", "unit": "", "type": "vec4",
              "desc": "rx/ry = 회전 각도(도), fov = 시야각, zoom = 확대. ex: 200 15 60 1 = 뒤편에서 살짝 위."},
             {"key": "push_to_rhino", "label": "Rhino push", "unit": "", "type": "bool",
@@ -401,7 +409,7 @@ header .chip b { color: var(--text); font-weight: 600; }
        padding: 7px 0; border-bottom: 1px dashed var(--border-soft); }
 .fld:last-child { border-bottom: none; }
 .fld label { color: var(--text); font-size: 13px; font-weight: 500; }
-.fld .desc-ko { color: var(--text-soft); font-size: 12px; line-height: 1.4; }
+.fld .desc-ko { color: var(--text-soft); font-size: 12px; line-height: 1.5; white-space: pre-line; }
 .fld input[type=number], .fld input[type=text], .fld select {
   font-family: var(--mono); font-size: 12.5px;
   border: 1px solid var(--border); border-radius: 5px; padding: 4px 6px; background: var(--panel); color: var(--text); width: 100%; }
