@@ -69,7 +69,8 @@ def main(argv: list[str]) -> int:
     if not IN_STL.exists():
         print(f"ERROR: {IN_STL} missing. Run extract_targets.py first.")
         return 1
-    mesh = trimesh.load(IN_STL)
+    loaded = trimesh.load(IN_STL, force="mesh")
+    mesh = loaded if isinstance(loaded, trimesh.Trimesh) else trimesh.util.concatenate(loaded.dump())
     print(f"loaded {IN_STL}")
     print(f"  verts={len(mesh.vertices)} faces={len(mesh.faces)} closed={mesh.is_watertight}")
     if mesh.is_watertight:
