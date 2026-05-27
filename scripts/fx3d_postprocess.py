@@ -89,31 +89,46 @@ def cells_inside_bbox(grid_shape: tuple[int, int, int],
     return mz[:, None, None] & my[None, :, None] & mx[None, None, :]
 
 
-def load_bboxes(iter_dir: Path) -> tuple[list[list[float]], list[list[list[float]]]]:
-    """Return (pond_bbox_m, module_bboxes_m). Prefer case.json, fallback to collider JSON."""
+DEFAULT_SCORE_SLAB_M = 0.5  # extrude flat positive/negative footprints into a vertical slab of this thickness
+
+
+def _inflate_to_slab(bbox: list, slab_m: float) -> list:
+    """If a bbox has zero z-extent (Rhino Brep surface), inflate to a slab from
+    the bbox z-level up by slab_m. Otherwise pass through.
+    """
+    (x0, y0, z0), (x1, y1, z1) = bbox
+    if abs(z1 - z0) < 1e-6:
+        return [[x0, y0, z0], [x1, y1, z0 + slab_m]]
+    return [[x0, y0, z0], [x1, y1, z1]]
+
+
+def load_bboxes(iter_dir: Path) -> tuple[list, list, list[list]]:
+    """Return (positive_bbox_m, negative_bbox_m, module_bboxes_m_or_empty).
+
+    Prefer case.json. Backwards-compat: if only pond_bbox_m exists, treat as
+    positive with empty negative.
+    """
     case_path = iter_dir / "case.json"
+    slab = DEFAULT_SCORE_SLAB_M
     if case_path.exists():
         case = json.loads(case_path.read_text(encoding="utf-8"))
-        pond_bbox = case["pond_bbox_m"]
-        module_bboxes = case["module_bboxes_m"]
-        return pond_bbox, module_bboxes
+        slab = float(case.get("score_slab_thickness_m", DEFAULT_SCORE_SLAB_M))
+        if "positive_bbox_m" in case:
+            pos = _inflate_to_slab(case["positive_bbox_m"], slab)
+            neg = _inflate_to_slab(case["negative_bbox_m"], slab) if "negative_bbox_m" in case else None
+            mods = case.get("module_bboxes_m", []) or []
+            return pos, neg, mods
+        if "pond_bbox_m" in case:
+            return case["pond_bbox_m"], None, case.get("module_bboxes_m", []) or []
 
-    # fallback: pond = floor slab, modules from _collider_modules.json (mm->m)
-    coll = PROJECT / "runs" / "_collider_modules.json"
-    if not coll.exists():
-        raise FileNotFoundError(f"need case.json in {iter_dir} or {coll}")
-    cm = json.loads(coll.read_text(encoding="utf-8"))
-    module_bboxes = []
-    for m in sorted(cm["modules"], key=lambda x: x["index"]):
-        (x0, y0, z0), (x1, y1, z1) = m["bbox_mm"]
-        module_bboxes.append([[x0 / 1000.0, y0 / 1000.0, z0 / 1000.0],
-                              [x1 / 1000.0, y1 / 1000.0, z1 / 1000.0]])
-    # pond = a generous horizontal slab at base
-    xs_all = [b for mod in module_bboxes for corner in mod for b in (corner[0],)]
-    ys_all = [b for mod in module_bboxes for corner in mod for b in (corner[1],)]
-    pond_bbox = [[min(xs_all) - 1.0, min(ys_all) - 1.0, 0.0],
-                 [max(xs_all) + 1.0, max(ys_all) + 1.0, 0.5]]
-    return pond_bbox, module_bboxes
+    # Last-resort fallback: pull positive/negative from runs/_real_targets.json
+    targets = PROJECT / "runs" / "_real_targets.json"
+    if targets.exists():
+        t = json.loads(targets.read_text(encoding="utf-8"))
+        pos = _inflate_to_slab(t["positive_bbox_m"], slab)
+        neg = _inflate_to_slab(t["negative_bbox_m"], slab)
+        return pos, neg, []
+    raise FileNotFoundError(f"no case.json with positive/negative/pond in {iter_dir} and no fallback targets")
 
 
 def latest_phi_vtk(vtk_dir: Path) -> Path:
@@ -128,17 +143,17 @@ def postprocess(iter_dir: Path, fluid_threshold: float = 0.5) -> dict:
     phi_path = latest_phi_vtk(vtk_dir)
     phi, shape, vtk_origin, spacing = parse_vtk_structured_points(phi_path)
 
-    pond_bbox, module_bboxes = load_bboxes(iter_dir)
+    positive_bbox, negative_bbox, module_bboxes = load_bboxes(iter_dir)
 
     # FluidX3D writes VTK with origin centered around (0,0,0) in lattice space
     # (independent of our setup.cpp's si_offset). Override the origin to match
     # our physical SI frame: cell (0,0,0) sits at domain_bbox_m[0:3].
     case_path = iter_dir / "case.json"
+    case = {}
     if case_path.exists():
         case = json.loads(case_path.read_text(encoding="utf-8"))
         dbb = case.get("domain_bbox_m")
         if dbb is not None and len(dbb) >= 3:
-            # domain_bbox_m can be flat 6-tuple or pair-of-corners
             if isinstance(dbb[0], list):
                 origin = tuple(dbb[0])
             else:
@@ -151,9 +166,18 @@ def postprocess(iter_dir: Path, fluid_threshold: float = 0.5) -> dict:
     fluid_mask = phi >= fluid_threshold
     total = int(fluid_mask.sum())
 
-    pond_mask = cells_inside_bbox(shape, origin, spacing, pond_bbox)
-    in_pond = int((fluid_mask & pond_mask).sum())
+    positive_mask = cells_inside_bbox(shape, origin, spacing, positive_bbox)
+    in_positive = int((fluid_mask & positive_mask).sum())
 
+    if negative_bbox is not None:
+        negative_mask_full = cells_inside_bbox(shape, origin, spacing, negative_bbox)
+        # negative excludes positive footprint (positive sits inside negative)
+        negative_mask = negative_mask_full & ~positive_mask
+    else:
+        negative_mask = np.zeros_like(fluid_mask)
+    in_negative = int((fluid_mask & negative_mask).sum())
+
+    # module retention (water held on sculpture, not yet at floor)
     in_module_each = []
     on_module = {}
     in_column_mask = np.zeros_like(fluid_mask)
@@ -163,48 +187,51 @@ def postprocess(iter_dir: Path, fluid_threshold: float = 0.5) -> dict:
         in_module_each.append(cnt)
         on_module[str(i)] = cnt
         in_column_mask |= mod_mask
+    in_column = int((fluid_mask & in_column_mask & ~positive_mask & ~negative_mask).sum())
 
-    in_column = int((fluid_mask & in_column_mask & ~pond_mask).sum())
-    splash = int((fluid_mask & ~pond_mask & ~in_column_mask).sum())
+    splash = int((fluid_mask & ~positive_mask & ~negative_mask & ~in_column_mask).sum())
+
+    # primary score: ratio of water landed on positive vs (positive+negative).
+    # Cells still in_column / splash (mid-air) don't count yet.
+    score = in_positive / max(in_positive + in_negative, 1)
 
     # per-frame touch metric: did any fluid pass through each module's z-slab?
-    # use all available phi VTK frames
     per_slab_touch = [0] * len(module_bboxes)
     n_touched_all = 0
     all_phi = sorted(vtk_dir.glob("phi-*.vtk"))
-    for p in all_phi:
-        phi_t, _, _, _ = parse_vtk_structured_points(p)
-        fl_t = phi_t >= fluid_threshold
-        slab_hits = []
-        for i, bbox in enumerate(module_bboxes):
-            mod_mask = cells_inside_bbox(shape, origin, spacing, bbox)
-            hit = bool((fl_t & mod_mask).any())
-            slab_hits.append(hit)
-            if hit:
-                per_slab_touch[i] += 1
-        if all(slab_hits):
-            n_touched_all += 1
+    if module_bboxes:
+        for p in all_phi:
+            phi_t, _, _, _ = parse_vtk_structured_points(p)
+            fl_t = phi_t >= fluid_threshold
+            slab_hits = []
+            for i, bbox in enumerate(module_bboxes):
+                mod_mask = cells_inside_bbox(shape, origin, spacing, bbox)
+                hit = bool((fl_t & mod_mask).any())
+                slab_hits.append(hit)
+                if hit:
+                    per_slab_touch[i] += 1
+            if all(slab_hits):
+                n_touched_all += 1
     touch_all_ratio = n_touched_all / max(len(all_phi), 1)
-
-    case = {}
-    case_path = iter_dir / "case.json"
-    if case_path.exists():
-        case = json.loads(case_path.read_text(encoding="utf-8"))
 
     result = {
         "test_id": iter_dir.name.replace("iter_", ""),
         "engine": "fluidx3d",
         "phi_threshold": fluid_threshold,
         "phi_source": phi_path.name,
+        "score": score,                                  # primary GA fitness
         "retention": {
             "total": total,
-            "in_pond": in_pond,
-            "in_column": in_column,
-            "splash": splash,
+            "in_positive": in_positive,                  # water on target pond
+            "in_negative": in_negative,                  # water on forbidden splash zone
+            "in_column": in_column,                      # held on sculpture
+            "splash": splash,                            # outside everything (mid-air / escaped)
             "on_module": on_module,
             "settled_in_place": 0,
-            "retained": in_pond + in_column,
-            "retention_rate": (in_pond + in_column) / max(total, 1),
+            "retained": in_positive + in_column,
+            "retention_rate": (in_positive + in_column) / max(total, 1),
+            # legacy alias for any consumer still expecting in_pond
+            "in_pond": in_positive,
         },
         "touch": {
             "n_total_frames": len(all_phi),
@@ -214,7 +241,8 @@ def postprocess(iter_dir: Path, fluid_threshold: float = 0.5) -> dict:
         },
         "wall_time_s": float(case.get("wall_time_s", 0.0)),
         "params": case,
-        "pond_bbox_m": pond_bbox,
+        "positive_bbox_m": positive_bbox,
+        "negative_bbox_m": negative_bbox,
         "module_bboxes_m": module_bboxes,
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
     }
@@ -234,8 +262,10 @@ def main(argv: list[str]) -> int:
     out_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
     r = result["retention"]
     print(f"Wrote {out_path}")
-    print(f"  total={r['total']}  in_pond={r['in_pond']}  in_column={r['in_column']}  splash={r['splash']}")
-    print(f"  retention_rate={r['retention_rate']:.3f}  touch_all_ratio={result['touch']['touch_all_ratio']:.3f}")
+    print(f"  total={r['total']}  in_positive={r['in_positive']}  in_negative={r['in_negative']}  "
+          f"in_column={r['in_column']}  splash={r['splash']}")
+    print(f"  score={result['score']:.4f}  retention_rate={r['retention_rate']:.3f}  "
+          f"touch_all_ratio={result['touch']['touch_all_ratio']:.3f}")
     return 0
 
 
