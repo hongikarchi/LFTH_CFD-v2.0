@@ -1,0 +1,59 @@
+{
+  "test_id": "test_02",
+  "note": "pymoo stage0 r=1760 mz=960 rx=7.5 rz=6.7 off=884 T=(-387,-265,-1223)",
+  "global": {
+    "dp": 0.08,
+    "timemax": 4.0,
+    "timeout": 0.05,
+    "inflow_radius_m": 1.0,
+    "inflow_z_top_m": 30.0,
+    "inflow_velocity_mps": -4.0,
+    "use_gpu": true
+  },
+  "modules": [
+    {
+      "index": 0,
+      "radius": 1760.3383622584101,
+      "move_z": 960.3383622584101,
+      "rotation_x": 7.521540936759405,
+      "rotation_z": 6.684375880218994,
+      "offset_dist": 883.9955179614124,
+      "tx": -386.94714877490566,
+      "ty": -264.6114038151801,
+      "tz": -1223.1594607436427
+    },
+    {
+      "index": 1,
+      "radius": 6000.0,
+      "move_z": 4500.0,
+      "rotation_x": 0.0,
+      "rotation_z": 0.0,
+      "offset_dist": 500.0,
+      "tx": 0.0,
+      "ty": 0.0,
+      "tz": 0.0
+    },
+    {
+      "index": 2,
+      "radius": 6000.0,
+      "move_z": 4500.0,
+      "rotation_x": 0.0,
+      "rotation_z": 0.0,
+      "offset_dist": 500.0,
+      "tx": 0.0,
+      "ty": 0.0,
+      "tz": 0.0
+    },
+    {
+      "index": 3,
+      "radius": 6000.0,
+      "move_z": 4500.0,
+      "rotation_x": 0.0,
+      "rotation_z": 0.0,
+      "offset_dist": 500.0,
+      "tx": 0.0,
+      "ty": 0.0,
+      "tz": 0.0
+    }
+  ]
+}
