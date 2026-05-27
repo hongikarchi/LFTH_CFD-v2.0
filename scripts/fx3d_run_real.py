@@ -26,7 +26,9 @@ from fx3d_experiment_runner import (
 from fx3d_postprocess import postprocess
 from rhino_mcp_helpers import push_stl_to_rhino_layer
 
-REAL_STL = PROJECT / "runs" / "_real_collider.stl"
+REAL_STL_THICK = PROJECT / "runs" / "_real_collider_thickened.stl"
+REAL_STL_RAW = PROJECT / "runs" / "_real_collider.stl"
+REAL_STL = REAL_STL_THICK if REAL_STL_THICK.exists() else REAL_STL_RAW
 ITER_DIR = PROJECT / "runs" / "iter_real"
 
 
