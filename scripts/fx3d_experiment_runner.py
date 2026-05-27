@@ -38,38 +38,33 @@ from fx3d_postprocess import postprocess
 
 RUNS = PROJECT / "runs"
 EXPERIMENTS_DIR = PROJECT / "experiments"
-GEOM_JSON = RUNS / "_real_geom.json"
+TARGETS_JSON = RUNS / "_real_targets.json"
 MODULES_JSON = RUNS / "_collider_modules.json"
 
 FLUIDX3D_EXE = Path("C:/Users/user/Downloads/FluidX3D/bin/FluidX3D.exe")
 
-DOMAIN_PAD_M = 3.0           # padding around sculpture bbox in each direction
+DOMAIN_PAD_M = 3.0
 DEFAULT_DP_M = 0.08
-DEFAULT_TIMEMAX_S = 4.0
+DEFAULT_TIMEMAX_S = 12.0
 DEFAULT_DT_OUT_S = 0.05
-DEFAULT_INFLOW_RADIUS_M = 1.0
-DEFAULT_INFLOW_Z_TOP_M  = 30.0
-DEFAULT_INFLOW_VEL_MPS  = -4.0
-INFLOW_COLUMN_HEIGHT_M  = 6.0
+DEFAULT_NOZZLE_LPM = 45.0       # per-nozzle volumetric flow
+DEFAULT_SLAB_THICKNESS_M = 0.5  # how thick to make positive/negative slabs above floor
+
+
+def _load_targets() -> dict:
+    if not TARGETS_JSON.exists():
+        raise FileNotFoundError(
+            f"{TARGETS_JSON} missing. Run `python scripts/extract_targets.py` first."
+        )
+    return json.loads(TARGETS_JSON.read_text(encoding="utf-8"))
 
 
 def _load_modules_info() -> list[dict]:
     return json.loads(MODULES_JSON.read_text(encoding="utf-8"))["modules"]
 
 
-def _load_nozzle_centroid_m() -> tuple[float, float, float]:
-    geom = json.loads(GEOM_JSON.read_text(encoding="utf-8"))
-    holes = geom.get("nozzle_holes_m", [])
-    if not holes:
-        return 4.0, -2.4, 29.0
-    arr = np.asarray(holes, dtype=float)
-    return float(arr[:, 0].mean()), float(arr[:, 1].mean()), float(arr[:, 2].max())
-
-
 def _module_bboxes_m(modules_info: list[dict],
                      per_module_bboxes_m: list[dict] | None = None) -> list[list[list[float]]]:
-    """Prefer per-module sculpture bboxes (from build_modules_combined_stl) over
-    static collider bboxes."""
     if per_module_bboxes_m:
         out = []
         for m in sorted(per_module_bboxes_m, key=lambda x: x.get("index", 0)):
@@ -81,6 +76,26 @@ def _module_bboxes_m(modules_info: list[dict],
         out.append([[x0 / 1000.0, y0 / 1000.0, z0 / 1000.0],
                     [x1 / 1000.0, y1 / 1000.0, z1 / 1000.0]])
     return out
+
+
+def nozzle_vz_from_lpm(lpm: float, dp_m: float) -> float:
+    """Per-nozzle initial downward velocity from volumetric flow.
+
+    Q [L/min] -> [m^3/s], divided by single-cell area (dp^2). Returns negative
+    (downward). Minimum magnitude 1 m/s for LBM stability (matches setup.cpp
+    v_ref floor); gravity dominates within the first few steps anyway.
+    """
+    q_m3s = lpm * 1.0e-3 / 60.0
+    area = dp_m * dp_m
+    v = -max(q_m3s / area, 1.0)
+    return v
+
+
+def write_nozzles_txt(path: Path, nozzles_m: list[list[float]], vz: float) -> None:
+    lines = ["# x_m y_m z_m vz_mps"]
+    for nz in nozzles_m:
+        lines.append(f"{nz[0]:.6f} {nz[1]:.6f} {nz[2]:.6f} {vz:.6f}")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def _domain_from_sculpture(bbox_m: list[list[float]],
@@ -124,37 +139,37 @@ def run_experiment(test_id: str, params: dict, *,
     bbox_m = m.bounds.tolist()
     stl_info["bbox_m"] = bbox_m
 
-    # 2) domain + inflow
+    # 2) targets + domain + inflow
+    targets = _load_targets()
     glb = params.get("global", {})
     dp_m = float(glb.get("dp", DEFAULT_DP_M))
     timemax_s = float(glb.get("timemax", DEFAULT_TIMEMAX_S))
     dt_out_s = float(glb.get("timeout", DEFAULT_DT_OUT_S))
-    inflow_r = float(glb.get("inflow_radius_m", DEFAULT_INFLOW_RADIUS_M))
-    inflow_z_top = float(glb.get("inflow_z_top_m", DEFAULT_INFLOW_Z_TOP_M))
-    inflow_v = float(glb.get("inflow_velocity_mps", DEFAULT_INFLOW_VEL_MPS))
+    nozzle_lpm = float(glb.get("nozzle_LPM", DEFAULT_NOZZLE_LPM))
+    slab_thickness_m = float(glb.get("score_slab_thickness_m", DEFAULT_SLAB_THICKNESS_M))
 
-    cx, cy, _ = _load_nozzle_centroid_m()
-    inflow_z_bot = inflow_z_top - INFLOW_COLUMN_HEIGHT_M
+    nozzles_m = targets["nozzles_m"]
+    nozzle_z_top = max(p[2] for p in nozzles_m)
+    nozzle_vz = nozzle_vz_from_lpm(nozzle_lpm, dp_m)
+
+    # domain: sculpture + nozzle column + pad. floor at z=0.
     domain_lo, domain_hi = _domain_from_sculpture(bbox_m, DOMAIN_PAD_M)
-    domain_hi[2] = max(domain_hi[2], inflow_z_top + 1.0)
+    domain_hi[2] = max(domain_hi[2], nozzle_z_top + 1.0)
 
     module_bboxes_m = _module_bboxes_m(modules_info, stl_info.get("per_module"))
-    # pond = floor slab spanning combined sculpture footprint
-    pond_bbox_m = [[domain_lo[0], domain_lo[1], 0.0],
-                   [domain_hi[0], domain_hi[1], 0.5]]
 
-    # 3) case.txt
+    # 3) nozzles.txt
+    write_nozzles_txt(iter_dir / "nozzles.txt", nozzles_m, nozzle_vz)
+
+    # 4) case.txt
     case = {
         "stl_path": str(stl_path).replace("\\", "/"),
         "out_dir": str(iter_dir / "fx3d_out").replace("\\", "/") + "/",
+        "nozzles_file": str(iter_dir / "nozzles.txt").replace("\\", "/"),
         "domain_bbox_m": domain_lo + domain_hi,
         "dp_m": dp_m,
         "timemax_s": timemax_s,
         "dt_out_s": dt_out_s,
-        "inflow_center_m": [cx, cy, inflow_z_bot],
-        "inflow_radius_m": inflow_r,
-        "inflow_z_top_m": inflow_z_top,
-        "inflow_velocity_mps": inflow_v,
         "camera": [20.0, 15.0, 60.0, 1.0],
     }
     _write_case_txt(iter_dir / "case.txt", case)
@@ -162,8 +177,13 @@ def run_experiment(test_id: str, params: dict, *,
     # also persist a richer case.json for postprocess + replay
     (iter_dir / "case.json").write_text(json.dumps({
         **case,
-        "pond_bbox_m": pond_bbox_m,
+        "positive_bbox_m": targets["positive_bbox_m"],
+        "negative_bbox_m": targets["negative_bbox_m"],
         "module_bboxes_m": module_bboxes_m,
+        "score_slab_thickness_m": slab_thickness_m,
+        "n_nozzles": len(nozzles_m),
+        "nozzle_LPM": nozzle_lpm,
+        "nozzle_vz_mps": nozzle_vz,
         "test_id": test_id,
         "stl_info": stl_info,
     }, indent=2), encoding="utf-8")
@@ -184,8 +204,9 @@ def run_experiment(test_id: str, params: dict, *,
     result["wall_time_s"] = round(wall_s, 1)
     (iter_dir / "result.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     r = result["retention"]
-    print(f"[{test_id}] wall={wall_s:.1f}s  total={r['total']}  in_pond={r['in_pond']}  "
-          f"in_column={r['in_column']}  splash={r['splash']}  retention={r['retention_rate']:.3f}")
+    print(f"[{test_id}] wall={wall_s:.1f}s  score={result['score']:.4f}  "
+          f"in_pos={r['in_positive']}  in_neg={r['in_negative']}  "
+          f"in_col={r['in_column']}  splash={r['splash']}  total={r['total']}")
 
     # 6) Rhino push
     if push_to_rhino:

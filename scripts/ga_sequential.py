@@ -292,35 +292,26 @@ def evaluate(ind, stage_module_idx, prior_bests, modules_info, ga_state,
     rj = json.loads(result_path.read_text(encoding="utf-8"))
     retention = rj.get("retention", {}) or {}
     total = max(int(retention.get("total", 0)), 1)
-    catch_rate = float(retention.get("in_pond", 0)) / total
-    column_rate = float(retention.get("in_column", 0)) / total
-    splash_rate = float(retention.get("splash", 0)) / total
+    in_positive = int(retention.get("in_positive", retention.get("in_pond", 0)))
+    in_negative = int(retention.get("in_negative", 0))
+    in_column = int(retention.get("in_column", 0))
+    splash = int(retention.get("splash", 0))
 
-    # Tilt score averaged over all 4 modules. Stage GA freezes prior modules,
-    # so M0..N-1 carry prior-best rotation_x and MN carries the candidate's.
-    all_mods = []
-    for m in rj.get("params", {}).get("modules", []):
-        all_mods.append(float(m.get("rotation_x", 0)))
-    tilt_score = (sum(all_mods) / (len(all_mods) * 90.0)) if all_mods else 0.0
-
-    score = (W_CATCH * catch_rate
-              + W_TILT * tilt_score
-              + W_COLUMN * column_rate)
-    total_fit = -float(score)
+    # Pure score: fraction of "landed" water that hit positive (vs negative).
+    # in_column / splash (mid-air or held by sculpture) don't count yet.
+    score = float(rj.get("score", in_positive / max(in_positive + in_negative, 1)))
+    total_fit = -score
 
     ga_state["evaluations"][-1].update({
         "completed": time.strftime("%Y-%m-%d %H:%M:%S"),
         "wall_s": round(dt, 1),
-        "catch_rate": round(catch_rate, 4),
-        "tilt_score": round(tilt_score, 4),
-        "column_rate": round(column_rate, 4),
-        "splash_rate": round(splash_rate, 4),
         "score": round(score, 4),
-        "in_pond": retention.get("in_pond"),
-        "in_column": retention.get("in_column"),
-        "splash": retention.get("splash"),
+        "in_positive": in_positive,
+        "in_negative": in_negative,
+        "in_column": in_column,
+        "splash": splash,
         "on_module": retention.get("on_module"),
-        "total": retention.get("total"),
+        "total": total,
         "fitness": total_fit,
     })
     STATE_FILE.write_text(json.dumps(ga_state, indent=2), encoding="utf-8")
@@ -330,10 +321,8 @@ def evaluate(ind, stage_module_idx, prior_bests, modules_info, ga_state,
                         capture_output=True, timeout=30)
     except Exception:
         pass
-    print(f"score={score:.3f} (catch={catch_rate:.3f} tilt={tilt_score:.3f} "
-          f"col={column_rate:.3f} splash={splash_rate:.3f}) "
-          f"pond={retention.get('in_pond')} col={retention.get('in_column')} "
-          f"splash={retention.get('splash')}/{retention.get('total')} ({dt:.0f}s)")
+    print(f"score={score:.4f}  in_pos={in_positive} in_neg={in_negative} "
+          f"in_col={in_column} splash={splash} total={total} ({dt:.0f}s)")
     return (total_fit,)
 
 
