@@ -126,9 +126,27 @@ def latest_phi_vtk(vtk_dir: Path) -> Path:
 def postprocess(iter_dir: Path, fluid_threshold: float = 0.5) -> dict:
     vtk_dir = iter_dir / "fx3d_out" / "vtk"
     phi_path = latest_phi_vtk(vtk_dir)
-    phi, shape, origin, spacing = parse_vtk_structured_points(phi_path)
+    phi, shape, vtk_origin, spacing = parse_vtk_structured_points(phi_path)
 
     pond_bbox, module_bboxes = load_bboxes(iter_dir)
+
+    # FluidX3D writes VTK with origin centered around (0,0,0) in lattice space
+    # (independent of our setup.cpp's si_offset). Override the origin to match
+    # our physical SI frame: cell (0,0,0) sits at domain_bbox_m[0:3].
+    case_path = iter_dir / "case.json"
+    if case_path.exists():
+        case = json.loads(case_path.read_text(encoding="utf-8"))
+        dbb = case.get("domain_bbox_m")
+        if dbb is not None and len(dbb) >= 3:
+            # domain_bbox_m can be flat 6-tuple or pair-of-corners
+            if isinstance(dbb[0], list):
+                origin = tuple(dbb[0])
+            else:
+                origin = (float(dbb[0]), float(dbb[1]), float(dbb[2]))
+        else:
+            origin = vtk_origin
+    else:
+        origin = vtk_origin
 
     fluid_mask = phi >= fluid_threshold
     total = int(fluid_mask.sum())
