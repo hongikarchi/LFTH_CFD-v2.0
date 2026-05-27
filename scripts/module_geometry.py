@@ -277,8 +277,12 @@ GENE_BOUNDS = {
     # boundary kernel. Empirically >= 700 mm at dp=0.20 keeps the
     # below-cap penetration count under 1% of fluid particles.
     "offset_dist": (700.0, 1500.0),
-    "tx": (-3000.0, 3000.0),
-    "ty": (-3000.0, 3000.0),
+    # tx/ty narrowed from +/-3000 to +/-500 mm so the optimized module stays
+    # under the nozzle's water column footprint (INFLOW_R_M = 1.0 m). Wider
+    # bounds caused degenerate Pareto fronts where the module missed the
+    # water stream entirely and splash_frac collapsed to 1.0.
+    "tx": (-500.0, 500.0),
+    "ty": (-500.0, 500.0),
     "tz": (-2000.0, 2000.0),
 }
 GENE_ORDER = ["radius", "move_z", "rotation_x", "rotation_z",

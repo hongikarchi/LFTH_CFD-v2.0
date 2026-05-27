@@ -41,11 +41,24 @@ python scripts/dashboard_server.py   # 브라우저 자동 오픈
 - **Charts**: dp/timemax/LPM/thicken vs score scatter
 - **Files**: 프로젝트 파일 구조 + 각 파일의 역할
 
-## GA 최적화 (현재 비활성, 추후 활성화)
+## 멀티오브젝티브 최적화 (pymoo NSGA-II)
+
+모듈별 sequential staging (top-down: mod 0 → 3). 각 stage = 8-gene NSGA-II,
+2 objectives: `splash_frac` (min) + `-dist_from_nozzle` (min). 각 stage 끝
+에서 Pareto front 중 한 점 인터랙티브 선택.
 
 ```powershell
-python scripts/ga_sequential.py --stages 0 --pop 8 --n_gen 10
+# 단일 stage
+python scripts/pymoo_optimize.py --stage 0 --pop 16 --n_gen 10
+
+# 4 stage 연속
+python scripts/pymoo_optimize.py --stages 0,1,2,3 --pop 16 --n_gen 10 --seed 42
+
+# 상태 확인
+python scripts/pymoo_optimize.py --status
 ```
+
+상태는 `experiments/pymoo_state.json`에 저장됨 (resumable).
 
 ## 파일 구조
 
@@ -79,8 +92,8 @@ LFTH_CFD v2.0/
 │   ├── fx3d_postprocess.py             VTK → result.json
 │   ├── fx3d_visualize_in_rhino.py      결과 Rhino push
 │   ├── update_settings_compare.py      DB → dashboard
-│   ├── ga_sequential.py                GA 루프 (현재 비활성)
-│   ├── module_geometry.py              parametric STL gen (추후 GA용)
+│   ├── pymoo_optimize.py               NSGA-II 멀티오브젝티브 GA 루프
+│   ├── module_geometry.py              parametric STL gen (GA가 매 eval 호출)
 │   └── export_paraview.py              VTK 헬퍼
 │
 └── 외부: C:\Users\user\Downloads\FluidX3D\
