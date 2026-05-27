@@ -3,7 +3,9 @@
 
   "precision": "FP16S",
   "velocity_set": "D3Q19",
+  "collision": "SRT",
   "subgrid": false,
+  "particles": false,
 
   "graphics_u_max": 0.18,
   "graphics_rho_delta": 0.001,

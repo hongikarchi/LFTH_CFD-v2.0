@@ -71,8 +71,9 @@ def pick_default_stl() -> Path:
 
 
 def nozzle_vz_from_lpm(lpm: float, dp_m: float) -> float:
-    """Per-nozzle initial downward velocity from volumetric flow. Floored at
-    -1 m/s magnitude for LBM stability (matches setup.cpp v_ref floor)."""
+    """Per-nozzle initial downward velocity from volumetric flow.
+    v = Q/A, floored at -1 m/s (LBM stability — very low LPM still produces
+    non-zero motion). Returns negative (downward)."""
     q_m3s = lpm * 1.0e-3 / 60.0
     area = dp_m * dp_m
     return -max(q_m3s / area, 1.0)
@@ -117,7 +118,6 @@ def append_settings_log(test_id: str, case: dict, result: dict,
         "dp_m": case.get("dp_m"),
         "timemax_s": case.get("timemax_s"),
         "dt_out_s": case.get("dt_out_s"),
-        "nozzle_refill_dt_s": case.get("nozzle_refill_dt_s"),
         "surface_tension_Npm": case.get("surface_tension_Npm"),
         "viscosity_m2ps": case.get("viscosity_m2ps"),
         "density_kgpm3": case.get("density_kgpm3"),
@@ -177,7 +177,17 @@ def run_experiment(test_id: str,
     # STL copy (snapshot in iter dir, plus FluidX3D reads from absolute path)
     local_stl = iter_dir / "sculpture.stl"
     shutil.copy(stl_path, local_stl)
-    m = trimesh.load(local_stl)
+    if local_stl.stat().st_size < 100:
+        raise RuntimeError(
+            f"STL {stl_path} is empty/corrupt ({local_stl.stat().st_size} bytes). "
+            "Regenerate via extract_targets.py + thicken_collider.py, or "
+            "make_hemisphere.py, or build parametric STL via module_geometry.")
+    loaded = trimesh.load(local_stl, force="mesh")
+    if not isinstance(loaded, trimesh.Trimesh) or loaded.vertices is None or len(loaded.vertices) == 0:
+        raise RuntimeError(f"STL {stl_path} did not load as a usable mesh "
+                            f"(type={type(loaded).__name__}). Likely multi-component "
+                            "Scene or zero-byte file.")
+    m = loaded
     stl_bbox = m.bounds.tolist()
 
     # Targets (positive/negative + nozzles)
@@ -198,9 +208,13 @@ def run_experiment(test_id: str,
         "dp_m": cfg["dp_m"],
         "timemax_s": cfg["timemax_s"],
         "dt_out_s": cfg["dt_out_s"],
-        "nozzle_refill_dt_s": cfg["nozzle_refill_dt_s"],
         "seed_col_h": cfg["seed_col_h"],
         "lbm_u_ref": cfg.get("lbm_u_ref", 0.05),
+        "nozzle_rho_inflow": cfg.get("nozzle_rho_inflow", 1.0),
+        "nozzle_area_cells": cfg.get("nozzle_area_cells", 1),
+        "pond_prefill_z_m": cfg.get("pond_prefill_z_m", 0),
+        "pond_prefill_z_bot_m": cfg.get("pond_prefill_z_bot_m", 0),
+        "pond_prefill_xy_bbox_m": cfg.get("pond_prefill_xy_bbox_m", [0, 0, 0, 0]),
         "side_walls": cfg["side_walls"],
         "floor_type": cfg.get("floor_type", "S"),
         "visualization_modes": cfg.get("visualization_modes", "PHI_RAYTRACE,FLAG_SURFACE"),

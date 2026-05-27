@@ -30,6 +30,7 @@ MSBUILD = Path("C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/MSB
 
 PRECISION_OPTIONS = {"FP16S", "FP16C"}     # if neither: pure FP32
 VELOCITY_OPTIONS = {"D2Q9", "D3Q15", "D3Q19", "D3Q27"}
+COLLISION_OPTIONS = {"SRT", "TRT"}         # exactly one must be active
 
 
 def patch_macro_bool(content: str, name: str, enable: bool) -> str:
@@ -69,8 +70,16 @@ def patch_defines(cfg: dict, interactive: bool) -> str:
     for v in VELOCITY_OPTIONS:
         src = patch_macro_bool(src, v, v == vs)
 
-    # SUBGRID
+    # collision operator (SRT vs TRT, mutually exclusive)
+    coll = cfg.get("collision", "SRT")
+    for c in COLLISION_OPTIONS:
+        src = patch_macro_bool(src, c, c == coll)
+
+    # SUBGRID (LES)
     src = patch_macro_bool(src, "SUBGRID", bool(cfg.get("subgrid", False)))
+
+    # PARTICLES (Lagrangian tracers for visualization)
+    src = patch_macro_bool(src, "PARTICLES", bool(cfg.get("particles", False)))
 
     # GRAPHICS family
     src = patch_macro_bool(src, "GRAPHICS", True)

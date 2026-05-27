@@ -56,8 +56,6 @@ FIELD_GROUPS = [
              "desc": "시뮬 길이(초). 물이 도메인을 통과·정착할 시간."},
             {"key": "dt_out_s", "label": "dt_out", "unit": "s", "step": 0.01, "type": "number",
              "desc": "PNG/VTK 출력 간격. 작을수록 부드러운 영상 + 더 많은 디스크 사용."},
-            {"key": "nozzle_refill_dt_s", "label": "nozzle refill dt", "unit": "s", "step": 0.005, "type": "number",
-             "desc": "노즐 셀 재충전 주기. 작으면 inflow 지속 강함, 너무 작으면 device sync 오버헤드."},
             {"key": "lbm_u_ref", "label": "LBM u_ref", "unit": "lattice", "step": 0.005, "type": "number",
              "desc": "LBM 속도 스케일 → relaxation time 결정. 크면 빠름·불안정, 작으면 느림·정체 위험."},
             {"key": "side_walls", "label": "side walls", "unit": "", "type": "select", "options": ["E", "S"],
@@ -70,9 +68,38 @@ FIELD_GROUPS = [
         "title": "Inflow (nozzles)",
         "fields": [
             {"key": "nozzle_LPM", "label": "per-nozzle flow", "unit": "L/min", "step": 1, "type": "number",
-             "desc": "각 노즐의 유량(L/min). 230 노즐 × 45 LPM = 0.17 m³/s 전체."},
+             "desc": "각 노즐의 유량(L/min). vz = Q/A 자동 변환.\n"
+                     "60 LPM × dp=0.1 → 0.1 m/s → LBM stability floor 1.0 m/s 적용.\n"
+                     "230 노즐 × 60 LPM = 0.23 m³/s 전체."},
+            {"key": "nozzle_rho_inflow", "label": "nozzle TYPE_E rho", "unit": "lattice", "step": 0.05, "type": "number",
+             "desc": "노즐 TYPE_E cell의 고정 밀도 (lattice unit).\n"
+                     "1.0 = 중성 (자연 분출, 기본). >1 = 고압 → 강한 jet (예: 1.05~1.10).\n"
+                     ">1.3은 LBM 불안정. 자연 동작에는 1.0 권장."},
+            {"key": "nozzle_area_cells", "label": "nozzle area cells", "unit": "cells", "step": 1, "type": "number",
+             "desc": "노즐 footprint. (2r+1)² 셀, r = val/2.\n"
+                     "1 → 1×1 (1셀), 2/3 → 3×3 (9셀), 4/5 → 5×5 (25셀).\n"
+                     "dp=0.1, val=2 → 30cm 직경 = 사실적 분수 노즐."},
             {"key": "seed_col_h", "label": "seed column height", "unit": "cells", "step": 1, "type": "number",
-             "desc": "각 노즐 아래로 stamp되는 셀 깊이. 12 = 0.96m at dp=0.08. 너무 짧으면 SURFACE LBM에 잡히지 않음."},
+             "desc": "노즐 아래 warmup column 깊이 (init only, refill로 유지).\n"
+                     "12 cells × dp=0.1 = 1.2m 가시 노즐 stream.\n"
+                     "M0 top z=27.5 + col_h * dp가 모듈 안 들어가면 안 됨."},
+        ],
+    },
+    {
+        "title": "Pond pre-fill (optional)",
+        "fields": [
+            {"key": "pond_prefill_z_m", "label": "pre-fill z top", "unit": "m", "step": 0.1, "type": "number",
+             "desc": "t=0에 z ≤ 이 값인 셀들 TYPE_F + phi=1로 미리 채움.\n"
+                     "0 = 비활성. >0 = 연못 초기 수위 또는 모듈 미리 채우기.\n"
+                     "Solid/wall 셀은 skip."},
+            {"key": "pond_prefill_z_bot_m", "label": "pre-fill z bottom", "unit": "m", "step": 0.1, "type": "number",
+             "desc": "band-style 하한 (선택). z ≥ 이 값 ∧ z ≤ pre-fill z top.\n"
+                     "0 = half-open (전체 z ≤ top 채움).\n"
+                     ">0 = band: 특정 z 범위만 채움 (예: M0 interior만)."},
+            {"key": "pond_prefill_xy_bbox_m", "label": "pre-fill xy bbox", "unit": "m", "type": "vec4",
+             "desc": "xy 제한 (선택, [x_lo, y_lo, x_hi, y_hi]).\n"
+                     "[0,0,0,0] = 비활성, 전체 xy 채움.\n"
+                     "valid bbox 입력 시 그 영역 내에서만 채움."},
         ],
     },
     {
@@ -89,16 +116,20 @@ FIELD_GROUPS = [
         ],
     },
     {
-        "title": "Geometry / scoring",
+        "title": "Postprocess / Pipeline (does not affect simulation)",
         "fields": [
             {"key": "thicken_thickness_m", "label": "thicken thickness", "unit": "m", "step": 0.01, "type": "number",
-             "desc": "open mesh를 닫을 때 두께. dp의 2배 이상 권장 (얇으면 누수, 두꺼우면 dish가 솔리드 cap이 됨)."},
+             "desc": "[POSTPROCESS ONLY] sim 결과 변경 없음.\n"
+                     "thicken_collider.py에서 open mesh 닫을 때 두께. dp의 2배 이상 권장."},
             {"key": "score_slab_thickness_m", "label": "score slab", "unit": "m", "step": 0.05, "type": "number",
-             "desc": "positive/negative 평면 Brep을 두께 있는 슬랩으로 확장하는 양. score 판정 영역."},
+             "desc": "[POSTPROCESS ONLY] sim 결과 변경 없음.\n"
+                     "fx3d_postprocess.py에서 positive/negative 평면 Brep을 슬랩으로 확장하는 두께. score 판정 영역."},
             {"key": "fluid_threshold", "label": "phi cutoff", "unit": "", "step": 0.05, "type": "number",
-             "desc": "어느 phi 값부터 '물 셀'로 셀지 (0~1). 0.5 기본. 낮으면 interface 셀도 포함."},
+             "desc": "[POSTPROCESS ONLY] sim 결과 변경 없음.\n"
+                     "fx3d_postprocess.py에서 어느 phi 값부터 '물 셀'로 셀지 (0~1)."},
             {"key": "domain_pad_m", "label": "domain padding", "unit": "m", "step": 0.5, "type": "number",
-             "desc": "sculpture bbox 주변 패딩. 크면 도메인 크고 안전, 셀 수 증가."},
+             "desc": "[POSTPROCESS ONLY] sim 결과 변경 없음 (setup.cpp가 안 읽음).\n"
+                     "fx3d_run.py가 domain_bbox_m 계산 시 sculpture 주변 padding으로만 사용."},
         ],
     },
     {
@@ -133,8 +164,16 @@ BUILD_FIELD_GROUPS = [
              "desc": "수치 정밀도. FP32 = 정확하지만 VRAM 2배. FP16S = 기본 (속도 2배, VRAM 절반). FP16C = FP16의 정확 변종."},
             {"key": "velocity_set", "label": "velocity set", "type": "select", "options": ["D3Q19", "D3Q27"],
              "desc": "LBM 격자 모델. D3Q19 = 기본 (19 방향). D3Q27 = 더 정확하지만 27% 느림."},
+            {"key": "collision", "label": "collision operator", "type": "select", "options": ["SRT", "TRT"],
+             "desc": "충돌 연산자.\n"
+                     "SRT (single relaxation) = 기본, 단순/빠름.\n"
+                     "TRT (two relaxation) = 벽 근처 정확도 + 안정성 향상, 비용 거의 동일."},
             {"key": "subgrid", "label": "LES subgrid", "type": "bool",
              "desc": "Smagorinsky-Lilly LES 모델. 고 Reynolds 수에서 안정화 효과."},
+            {"key": "particles", "label": "particles", "type": "bool",
+             "desc": "Lagrangian tracer 입자 (단일 GPU).\n"
+                     "물 흐름에 점 입자 표시 → 흐름 시각화 강화.\n"
+                     "2-way coupling은 FORCE_FIELD 추가 필요 (현재 비활성)."},
         ],
     },
     {
@@ -173,7 +212,7 @@ FILE_STRUCTURE = [
     {"path": "scripts/thicken_collider.py", "role": "open mesh → closed manifold. 인자 = 두께(m)."},
     {"path": "scripts/fx3d_visualize_in_rhino.py", "role": "iter_real STL을 Rhino 레이어에 푸시."},
     {"path": "scripts/rhino_mcp_helpers.py", "role": "Rhino MCP socket 호출 헬퍼."},
-    {"path": "scripts/ga_sequential.py", "role": "DEAP GA loop (현재 비활성, 추후 활성화)."},
+    {"path": "scripts/pymoo_optimize.py", "role": "pymoo NSGA-II 멀티오브젝티브 최적화 루프 (splash_frac, -dist_from_nozzle). 모듈별 sequential staging + 인터랙티브 Pareto 픽."},
     {"path": "scripts/module_geometry.py", "role": "parametric STL 생성 (추후 신규 design용)."},
     {"path": "external/FluidX3D/src/setup.cpp", "role": "FluidX3D 시뮬 로직. case.txt를 cwd에서 읽음. 수정시 Build 탭 → Rebuild."},
     {"path": "external/FluidX3D/src/defines.hpp", "role": "compile-time 매크로 baseline. build_fluidx3d.py가 build.json대로 임시 패치 후 복구."},
