@@ -270,7 +270,7 @@ def evaluate(ind, stage_module_idx, prior_bests, modules_info, ga_state,
     params_path = EXPERIMENTS / f"{test_id}.json"
     params_path.write_text(json.dumps(params, indent=2), encoding="utf-8")
 
-    cmd = [sys.executable, str(PROJECT / "scripts" / "experiment_runner.py"),
+    cmd = [sys.executable, str(PROJECT / "scripts" / "fx3d_experiment_runner.py"),
             str(params_path)]
     print(f"  [{test_id}] running ...", end=" ", flush=True)
     t0 = time.time()
