@@ -1,0 +1,25 @@
+{
+  "_comment": "Canonical FluidX3D run config. Edit via dashboard or directly. fx3d_run.py copies these values into iter_dir/case.txt at each run.",
+
+  "dp_m": 0.08,
+  "timemax_s": 12.0,
+  "dt_out_s": 0.05,
+  "nozzle_refill_dt_s": 0.02,
+
+  "nozzle_LPM": 45.0,
+  "seed_col_h": 12,
+
+  "surface_tension_Npm": 0.072,
+  "viscosity_m2ps": 1.0e-6,
+  "density_kgpm3": 1000.0,
+  "gravity_mps2": 9.81,
+
+  "side_walls": "E",
+  "score_slab_thickness_m": 0.5,
+  "thicken_thickness_m": 0.20,
+
+  "domain_pad_m": 3.0,
+  "camera": [200, 15, 60, 1],
+
+  "push_to_rhino": true
+}

@@ -1,6 +1,6 @@
 """Render settings_compare.html from runs/_settings_log.jsonl.
 
-Each FluidX3D experiment (via fx3d_experiment_runner / fx3d_run_real) appends
+Each FluidX3D experiment (via fx3d_run.py) appends
 one JSON line capturing settings + key metrics. This script produces a single
 HTML page with:
 
@@ -89,7 +89,7 @@ COLUMNS = [
 
 def render(entries: list[dict]) -> str:
     if not entries:
-        body = "<p>No experiments logged yet. Run <code>fx3d_run_real.py</code> or <code>fx3d_experiment_runner.py</code>.</p>"
+        body = "<p>No experiments logged yet. Run <code>python scripts/fx3d_run.py</code>.</p>"
     else:
         # best-score row
         scored = [(i, e.get("score") or 0.0) for i, e in enumerate(entries)]

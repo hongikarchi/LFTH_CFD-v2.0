@@ -32,6 +32,64 @@ code { background: var(--panel); padding: 2px 6px; border-radius: 3px; }
 </head>
 <body>
 <h1>LFTH_CFD · settings compare</h1>
-<p>No experiments logged yet. Run <code>fx3d_run_real.py</code> or <code>fx3d_experiment_runner.py</code>.</p>
+
+<div class="bar">
+  <input id="q" placeholder="filter (case-insensitive)" />
+  <span class="hint">6 runs · best score row highlighted · click headers to sort</span>
+</div>
+<table id="t"><thead><tr><th data-key="ts">timestamp</th><th data-key="test_id">test_id</th><th data-key="dp_m">dp [m]</th><th data-key="timemax_s">timemax [s]</th><th data-key="n_nozzles">nozzles</th><th data-key="nozzle_LPM">LPM</th><th data-key="score">score</th><th data-key="in_positive">in_pos</th><th data-key="in_negative">in_neg</th><th data-key="in_column">in_col</th><th data-key="splash">splash</th><th data-key="total">total</th><th data-key="wall_s">wall [s]</th><th>preview</th></tr></thead><tbody><tr class="best"><td data-key="ts" data-num="">2026-05-27T12:01:25</td><td data-key="test_id" data-num="">real</td><td data-key="dp_m" data-num="0.08">0.08</td><td data-key="timemax_s" data-num="12.0">12</td><td data-key="n_nozzles" data-num="230">230</td><td data-key="nozzle_LPM" data-num="45.0">45</td><td data-key="score" data-num="0.9732718894009217">0.9733</td><td data-key="in_positive" data-num="1056">1056</td><td data-key="in_negative" data-num="29">29</td><td data-key="in_column" data-num="0">0</td><td data-key="splash" data-num="5425">5425</td><td data-key="total" data-num="6510">6510</td><td data-key="wall_s" data-num="36.33">36.3</td><td class="thumb"><a href="C:/Users/user/Documents/LFTH_CFD v2.0/runs/iter_real/fx3d_out/frames">open</a></td></tr><tr><td data-key="ts" data-num="">2026-05-27T12:49:35</td><td data-key="test_id" data-num="">real</td><td data-key="dp_m" data-num="0.08">0.08</td><td data-key="timemax_s" data-num="12.0">12</td><td data-key="n_nozzles" data-num="230">230</td><td data-key="nozzle_LPM" data-num="45.0">45</td><td data-key="score" data-num="0.18823529411764706">0.1882</td><td data-key="in_positive" data-num="16">16</td><td data-key="in_negative" data-num="69">69</td><td data-key="in_column" data-num="0">0</td><td data-key="splash" data-num="1077">1077</td><td data-key="total" data-num="1162">1162</td><td data-key="wall_s" data-num="36.94">36.9</td><td class="thumb"><a href="C:/Users/user/Documents/LFTH_CFD v2.0/runs/iter_real/fx3d_out/frames">open</a></td></tr><tr><td data-key="ts" data-num="">2026-05-27T12:57:08</td><td data-key="test_id" data-num="">real</td><td data-key="dp_m" data-num="0.08">0.08</td><td data-key="timemax_s" data-num="12.0">12</td><td data-key="n_nozzles" data-num="230">230</td><td data-key="nozzle_LPM" data-num="45.0">45</td><td data-key="score" data-num="0.0">0</td><td data-key="in_positive" data-num="0">0</td><td data-key="in_negative" data-num="0">0</td><td data-key="in_column" data-num="0">0</td><td data-key="splash" data-num="4386">4386</td><td data-key="total" data-num="4386">4386</td><td data-key="wall_s" data-num="36.54">36.5</td><td class="thumb"><a href="C:/Users/user/Documents/LFTH_CFD v2.0/runs/iter_real/fx3d_out/frames">open</a></td></tr><tr><td data-key="ts" data-num="">2026-05-27T13:00:35</td><td data-key="test_id" data-num="">real</td><td data-key="dp_m" data-num="0.08">0.08</td><td data-key="timemax_s" data-num="12.0">12</td><td data-key="n_nozzles" data-num="230">230</td><td data-key="nozzle_LPM" data-num="45.0">45</td><td data-key="score" data-num="0.0">0</td><td data-key="in_positive" data-num="0">0</td><td data-key="in_negative" data-num="0">0</td><td data-key="in_column" data-num="0">0</td><td data-key="splash" data-num="14593">14593</td><td data-key="total" data-num="14593">14593</td><td data-key="wall_s" data-num="66.01">66</td><td class="thumb"><a href="C:/Users/user/Documents/LFTH_CFD v2.0/runs/iter_real/fx3d_out/frames">open</a></td></tr><tr><td data-key="ts" data-num="">2026-05-27T13:59:25</td><td data-key="test_id" data-num="">real</td><td data-key="dp_m" data-num="0.08">0.08</td><td data-key="timemax_s" data-num="60.0">60</td><td data-key="n_nozzles" data-num="230">230</td><td data-key="nozzle_LPM" data-num="45.0">45</td><td data-key="score" data-num="0.0">0</td><td data-key="in_positive" data-num="0">0</td><td data-key="in_negative" data-num="0">0</td><td data-key="in_column" data-num="0">0</td><td data-key="splash" data-num="14593">14593</td><td data-key="total" data-num="14593">14593</td><td data-key="wall_s" data-num="303.49">303.5</td><td class="thumb"><a href="C:/Users/user/Documents/LFTH_CFD v2.0/runs/iter_real/fx3d_out/frames">open</a></td></tr><tr><td data-key="ts" data-num="">2026-05-27T14:52:33</td><td data-key="test_id" data-num="">test_walls</td><td data-key="dp_m" data-num="0.08">0.08</td><td data-key="timemax_s" data-num="12.0">12</td><td data-key="n_nozzles" data-num="230">230</td><td data-key="nozzle_LPM" data-num="45.0">45</td><td data-key="score" data-num="0.0">0</td><td data-key="in_positive" data-num="0">0</td><td data-key="in_negative" data-num="0">0</td><td data-key="in_column" data-num="0">0</td><td data-key="splash" data-num="14593">14593</td><td data-key="total" data-num="14593">14593</td><td data-key="wall_s" data-num="64.5">64.5</td><td class="thumb"><a href="C:/Users/user/Documents/LFTH_CFD v2.0/runs/iter_test_walls/fx3d_out/frames">open</a></td></tr></tbody></table>
+<div class="charts">
+  <div><h3>dp vs score</h3><canvas id="c_dp"></canvas></div>
+  <div><h3>timemax vs score</h3><canvas id="c_t"></canvas></div>
+  <div><h3>LPM vs score</h3><canvas id="c_l"></canvas></div>
+  <div><h3>wall vs score</h3><canvas id="c_w"></canvas></div>
+</div>
+<script>
+const D = [{"test_id": "real", "dp_m": 0.08, "timemax_s": 12.0, "nozzle_LPM": 45.0, "score": 0.9732718894009217, "wall_s": 36.33}, {"test_id": "real", "dp_m": 0.08, "timemax_s": 12.0, "nozzle_LPM": 45.0, "score": 0.18823529411764706, "wall_s": 36.94}, {"test_id": "real", "dp_m": 0.08, "timemax_s": 12.0, "nozzle_LPM": 45.0, "score": 0.0, "wall_s": 36.54}, {"test_id": "real", "dp_m": 0.08, "timemax_s": 12.0, "nozzle_LPM": 45.0, "score": 0.0, "wall_s": 66.01}, {"test_id": "real", "dp_m": 0.08, "timemax_s": 60.0, "nozzle_LPM": 45.0, "score": 0.0, "wall_s": 303.49}, {"test_id": "test_walls", "dp_m": 0.08, "timemax_s": 12.0, "nozzle_LPM": 45.0, "score": 0.0, "wall_s": 64.5}];
+function mkScatter(canvasId, key) {
+  const ctx = document.getElementById(canvasId);
+  const pts = D.filter(d => d[key] !== null && d.score !== null)
+               .map(d => ({x: d[key], y: d.score, label: d.test_id}));
+  new Chart(ctx, {
+    type: 'scatter',
+    data: {datasets: [{data: pts, backgroundColor: '#1d6ddc', pointRadius: 5}]},
+    options: {
+      plugins: {tooltip: {callbacks: {label: c => c.raw.label + ': (' + c.raw.x + ', ' + c.raw.y.toFixed(4) + ')'}}, legend: {display: false}},
+      scales: {x: {title: {display: true, text: key}}, y: {title: {display: true, text: 'score'}, min: 0, max: 1}}
+    }
+  });
+}
+mkScatter('c_dp', 'dp_m');
+mkScatter('c_t', 'timemax_s');
+mkScatter('c_l', 'nozzle_LPM');
+mkScatter('c_w', 'wall_s');
+
+// sortable table
+document.querySelectorAll('#t thead th').forEach((th, idx) => {
+  let asc = false;
+  th.addEventListener('click', () => {
+    const rows = Array.from(document.querySelectorAll('#t tbody tr'));
+    rows.sort((a, b) => {
+      const av = a.cells[idx].dataset.num || a.cells[idx].innerText;
+      const bv = b.cells[idx].dataset.num || b.cells[idx].innerText;
+      const an = parseFloat(av), bn = parseFloat(bv);
+      const cmp = (!isNaN(an) && !isNaN(bn)) ? an - bn : av.localeCompare(bv);
+      return asc ? cmp : -cmp;
+    });
+    asc = !asc;
+    const tbody = document.querySelector('#t tbody');
+    rows.forEach(r => tbody.appendChild(r));
+  });
+});
+
+// filter
+document.getElementById('q').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll('#t tbody tr').forEach(r => {
+    r.style.display = r.innerText.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+
 </body>
 </html>

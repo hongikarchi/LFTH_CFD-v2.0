@@ -112,11 +112,16 @@ for p in pts:
     return pts
 
 
-def fetch_collider_mesh_data(layer: str) -> tuple[list[list[float]], list[list[int]], list[dict]]:
+def fetch_collider_mesh_data(layer: str, only_names: list[str] | None = None) -> tuple[list[list[float]], list[list[int]], list[dict]]:
     """Returns combined (vertices_mm, faces) plus per-object info.
 
     Each Brep gets meshed via Mesh.CreateFromBrep; existing Meshes used as-is.
+    If only_names is given, restrict to objects whose Attributes.Name matches.
     """
+    name_filter = ""
+    if only_names:
+        name_list = ",".join(f'"{n}"' for n in only_names)
+        name_filter = f"\n    if o.Attributes.Name not in [{name_list}]: continue"
     out = _mcp_python(f'''
 import scriptcontext as sc, Rhino
 import json as _json
@@ -125,7 +130,7 @@ lid = doc.Layers.FindByFullPath("{layer}", -1)
 all_meshes = []
 infos = []
 for o in doc.Objects:
-    if o.Attributes.LayerIndex != lid: continue
+    if o.Attributes.LayerIndex != lid: continue{name_filter}
     g = o.Geometry
     meshes_for_obj = []
     if isinstance(g, Rhino.Geometry.Mesh):

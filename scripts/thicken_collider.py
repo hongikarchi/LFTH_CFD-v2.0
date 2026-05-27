@@ -91,15 +91,29 @@ def main(argv: list[str]) -> int:
             print(f"  comp {i}: already closed, kept as-is ({len(comp.faces)} faces)")
             continue
         try:
-            shell = thicken_shell(comp, thickness, inward=True)
-            ok_in = shell.is_watertight
-            if not ok_in:
-                shell_out = thicken_shell(comp, thickness, inward=False)
-                if shell_out.is_watertight:
-                    shell = shell_out
-                    ok_in = True
+            # Build BOTH shells; pick the one whose volume is closest to
+            # surface_area * thickness (= true shell). The other direction
+            # tends to flood-fill the concave interior of dishes, turning a
+            # bowl into a solid cap that blocks water.
+            shell_in = thicken_shell(comp, thickness, inward=True)
+            shell_out = thicken_shell(comp, thickness, inward=False)
+            # use abs(.volume) directly -- trimesh returns it even if is_volume=False
+            try:
+                vol_in = abs(float(shell_in.volume))
+            except Exception:
+                vol_in = float("inf")
+            try:
+                vol_out = abs(float(shell_out.volume))
+            except Exception:
+                vol_out = float("inf")
+            target_vol = float(comp.area) * thickness
+            pick_out = abs(vol_out - target_vol) < abs(vol_in - target_vol)
+            shell = shell_out if pick_out else shell_in
+            tag = "outward" if pick_out else "inward"
+            print(f"  comp {i}: thickened {len(comp.faces)} -> {len(shell.faces)} faces  "
+                  f"dir={tag}  vol_in={vol_in:.3f} vol_out={vol_out:.3f} target={target_vol:.3f}  "
+                  f"watertight={shell.is_watertight}")
             thickened_parts.append(shell)
-            print(f"  comp {i}: thickened {len(comp.faces)} -> {len(shell.faces)} faces, watertight={shell.is_watertight}")
         except Exception as e:
             print(f"  comp {i}: thicken FAILED ({e}), keeping original")
             thickened_parts.append(comp)

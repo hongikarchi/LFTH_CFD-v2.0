@@ -268,8 +268,8 @@ def evaluate(ind, stage_module_idx, prior_bests, modules_info, ga_state,
     params_path = EXPERIMENTS / f"{test_id}.json"
     params_path.write_text(json.dumps(params, indent=2), encoding="utf-8")
 
-    cmd = [sys.executable, str(PROJECT / "scripts" / "fx3d_experiment_runner.py"),
-            str(params_path)]
+    cmd = [sys.executable, str(PROJECT / "scripts" / "fx3d_run.py"),
+            "--test-id", test_id]
     print(f"  [{test_id}] running ...", end=" ", flush=True)
     t0 = time.time()
     proc = subprocess.run(cmd, capture_output=True, text=True, timeout=3600)
@@ -317,7 +317,7 @@ def evaluate(ind, stage_module_idx, prior_bests, modules_info, ga_state,
     STATE_FILE.write_text(json.dumps(ga_state, indent=2), encoding="utf-8")
     try:
         subprocess.run([sys.executable,
-                        str(PROJECT / "scripts" / "update_ga_dashboard.py")],
+                        str(PROJECT / "scripts" / "update_settings_compare.py")],
                         capture_output=True, timeout=30)
     except Exception:
         pass
