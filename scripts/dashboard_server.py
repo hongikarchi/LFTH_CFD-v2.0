@@ -104,8 +104,10 @@ FIELD_GROUPS = [
     {
         "title": "View / output",
         "fields": [
-            {"key": "visualization_modes", "label": "PNG viz modes", "unit": "", "type": "text",
-             "desc": "콤마 구분. PHI_RAYTRACE = 물 raytraced, FLAG_SURFACE = sculpture 표면, FLAG_LATTICE = 격자, Q_CRITERION = 와류, FIELD = 속도/밀도, STREAMLINES = 유선, PHI_RASTERIZE, PARTICLES."},
+            {"key": "visualization_modes", "label": "PNG viz modes", "unit": "", "type": "multi",
+             "options": ["PHI_RAYTRACE", "PHI_RASTERIZE", "FLAG_SURFACE", "FLAG_LATTICE",
+                          "Q_CRITERION", "FIELD", "STREAMLINES", "PARTICLES"],
+             "desc": "PNG 렌더링 모드 (여러 개 동시 가능). RAYTRACE = 물 광선추적, FLAG_SURFACE = sculpture 표면, FLAG_LATTICE = 격자, Q_CRITERION = 와류, FIELD = 속도장, STREAMLINES = 유선."},
             {"key": "camera", "label": "camera (rx ry fov zoom)", "unit": "", "type": "vec4",
              "desc": "rx/ry = 회전 각도(도), fov = 시야각, zoom = 확대. ex: 200 15 60 1 = 뒤편에서 살짝 위."},
             {"key": "push_to_rhino", "label": "Rhino push", "unit": "", "type": "bool",
@@ -405,6 +407,13 @@ header .chip b { color: var(--text); font-weight: 600; }
   border: 1px solid var(--border); border-radius: 5px; padding: 4px 6px; background: var(--panel); color: var(--text); width: 100%; }
 .fld .unit { font-family: var(--mono); color: var(--text-faint); font-size: 11.5px; }
 .fld input[type=checkbox] { width: 18px; height: 18px; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip-toggle { font-family: var(--mono); font-size: 11px; padding: 3px 9px;
+               border: 1px solid var(--border); background: var(--bg);
+               color: var(--text-soft); border-radius: 999px; cursor: pointer; }
+.chip-toggle:hover { background: var(--border-soft); color: var(--text); }
+.chip-toggle.on { background: var(--accent-soft); border-color: var(--accent);
+                  color: var(--accent); font-weight: 600; }
 
 .btnrow { display: flex; gap: 10px; margin: 20px 0 12px; flex-wrap: wrap; }
 button.action { background: var(--accent); color: white; border: none; border-radius: 6px;
@@ -580,6 +589,14 @@ function renderField(f, val) {
       <input type="number" data-key="${f.key}__3" value="${arr[3]}">
     </div>` + unit + desc;
   }
+  if (f.type === 'multi') {
+    const set = new Set(String(val ?? '').split(',').map(s => s.trim()).filter(s => s));
+    const chips = f.options.map(o => {
+      const on = set.has(o);
+      return `<button type="button" class="chip-toggle${on ? ' on' : ''}" data-mkey="${f.key}" data-mval="${esc(o)}">${esc(o)}</button>`;
+    }).join('');
+    return label + `<div class="chip-row" data-key="${f.key}" style="grid-column-end:span 1;">${chips}</div>` + unit + desc;
+  }
   return label + `<input type="text" data-key="${f.key}" value="${esc(val ?? '')}">` + unit + desc;
 }
 
@@ -601,11 +618,23 @@ function collectFormValues() {
           const el = document.querySelector('input[data-key="' + f.key + '__' + i + '"]');
           return el ? parseFloat(el.value) : 0;
         });
+      } else if (f.type === 'multi') {
+        const sel = Array.from(document.querySelectorAll('.chip-toggle.on[data-mkey="' + f.key + '"]'));
+        out[f.key] = sel.map(b => b.dataset.mval).join(',');
+      } else if (f.type === 'text') {
+        const el = document.querySelector('input[type=text][data-key="' + f.key + '"]');
+        if (el) out[f.key] = el.value;
       }
     }
   }
   return out;
 }
+
+// chip toggle click handler (delegated)
+document.addEventListener('click', e => {
+  const b = e.target.closest('.chip-toggle');
+  if (b) b.classList.toggle('on');
+});
 
 async function saveConfig() {
   const payload = collectFormValues();
