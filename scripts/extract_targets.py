@@ -15,12 +15,14 @@ from pathlib import Path
 import numpy as np
 import trimesh
 
-PROJECT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(PROJECT / "scripts"))
+SCRIPT_DIR = Path(__file__).resolve().parent
+MODULE_ROOT = SCRIPT_DIR.parent
+REPO_ROOT = MODULE_ROOT.parent
+sys.path.insert(0, str(SCRIPT_DIR))
 
 from rhino_mcp import mcp_call
 
-RUNS = PROJECT / "runs"
+RUNS = MODULE_ROOT / "runs"
 OUT_JSON = RUNS / "_real_targets.json"
 OUT_STL = RUNS / "_real_collider.stl"
 

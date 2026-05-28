@@ -17,9 +17,11 @@ from pathlib import Path
 import numpy as np
 import trimesh
 
-PROJECT = Path(__file__).resolve().parent.parent
-IN_STL = PROJECT / "runs" / "_real_collider.stl"
-OUT_STL = PROJECT / "runs" / "_real_collider_thickened.stl"
+SCRIPT_DIR = Path(__file__).resolve().parent
+MODULE_ROOT = SCRIPT_DIR.parent
+REPO_ROOT = MODULE_ROOT.parent
+IN_STL = MODULE_ROOT / "runs" / "_real_collider.stl"
+OUT_STL = MODULE_ROOT / "runs" / "_real_collider_thickened.stl"
 DEFAULT_THICKNESS_M = 0.1  # 100 mm (slightly > dp=0.08 so a cell sits fully inside)
 
 

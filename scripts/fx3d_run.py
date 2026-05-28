@@ -27,20 +27,22 @@ from pathlib import Path
 import numpy as np
 import trimesh
 
-PROJECT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(PROJECT / "scripts"))
+SCRIPT_DIR = Path(__file__).resolve().parent
+MODULE_ROOT = SCRIPT_DIR.parent
+REPO_ROOT = MODULE_ROOT.parent
+sys.path.insert(0, str(SCRIPT_DIR))
 
 from fx3d_postprocess import postprocess
 from rhino_mcp import push_stl_to_rhino_layer
 
-FLUIDX3D_DIR = PROJECT / "external" / "FluidX3D"
+FLUIDX3D_DIR = MODULE_ROOT / "external" / "FluidX3D"
 FLUIDX3D_EXE = FLUIDX3D_DIR / "bin" / "FluidX3D.exe"
 FLUIDX3D_EXE_INTERACTIVE = FLUIDX3D_DIR / "bin" / "FluidX3D_interactive.exe"
 
-CONFIG_DEFAULT = PROJECT / "config" / "case.json"
-RUNS = PROJECT / "runs"
+CONFIG_DEFAULT = MODULE_ROOT / "config" / "case.json"
+RUNS = MODULE_ROOT / "runs"
 TARGETS_JSON = RUNS / "_real_targets.json"
-SETTINGS_LOG = RUNS / "_settings_log.jsonl"
+SETTINGS_LOG = MODULE_ROOT / "_settings_log.jsonl"
 
 DEFAULT_COLLIDER_THICK = RUNS / "_real_collider_thickened.stl"
 DEFAULT_COLLIDER_RAW = RUNS / "_real_collider.stl"

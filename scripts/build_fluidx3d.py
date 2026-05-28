@@ -19,12 +19,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-PROJECT = Path(__file__).resolve().parent.parent
-FLUIDX3D_DIR = PROJECT / "external" / "FluidX3D"
+SCRIPT_DIR = Path(__file__).resolve().parent
+MODULE_ROOT = SCRIPT_DIR.parent
+REPO_ROOT = MODULE_ROOT.parent
+FLUIDX3D_DIR = MODULE_ROOT / "external" / "FluidX3D"
 DEFINES_HPP = FLUIDX3D_DIR / "src" / "defines.hpp"
 VCXPROJ = FLUIDX3D_DIR / "FluidX3D.vcxproj"
 BIN_DIR = FLUIDX3D_DIR / "bin"
-CONFIG_PATH = PROJECT / "config" / "build.json"
+CONFIG_PATH = MODULE_ROOT / "config" / "build.json"
 
 MSBUILD = Path("C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/MSBuild/Current/Bin/MSBuild.exe")
 

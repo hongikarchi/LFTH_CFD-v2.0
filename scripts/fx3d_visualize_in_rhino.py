@@ -13,13 +13,15 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-PROJECT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(PROJECT / "scripts"))
+SCRIPT_DIR = Path(__file__).resolve().parent
+MODULE_ROOT = SCRIPT_DIR.parent
+REPO_ROOT = MODULE_ROOT.parent
+sys.path.insert(0, str(SCRIPT_DIR))
 
 from rhino_mcp import push_stl_to_rhino_layer, mcp_call
 
 TEST_ID = "test_22"
-ITER_DIR = PROJECT / "runs" / f"iter_{TEST_ID}"
+ITER_DIR = MODULE_ROOT / "runs" / f"iter_{TEST_ID}"
 STL_PATH = ITER_DIR / "sculpture.stl"
 FRAMES_DIR = ITER_DIR / "fx3d_out" / "frames"
 VTK_DIR = ITER_DIR / "fx3d_out" / "vtk"

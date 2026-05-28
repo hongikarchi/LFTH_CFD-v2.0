@@ -37,8 +37,10 @@ from pymoo.operators.mutation.pm import PM
 from pymoo.operators.sampling.lhs import LHS
 from pymoo.optimize import minimize
 
-PROJECT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(PROJECT / "scripts"))
+SCRIPT_DIR = Path(__file__).resolve().parent
+MODULE_ROOT = SCRIPT_DIR.parent
+REPO_ROOT = MODULE_ROOT.parent
+sys.path.insert(0, str(SCRIPT_DIR))
 
 from pymoo_gen_module import (DEFAULTS, GENE_BOUNDS, GENE_ORDER,
                               build_modules_combined_stl)
@@ -48,8 +50,8 @@ from fx3d_run import run_experiment
 INFLOW_CX_M = 4.0
 INFLOW_CY_M = -2.4
 
-EXPERIMENTS = PROJECT / "experiments"
-RUNS = PROJECT / "runs"
+EXPERIMENTS = MODULE_ROOT / "experiments"
+RUNS = MODULE_ROOT / "runs"
 STATE_FILE = EXPERIMENTS / "pymoo_state.json"
 MODULES_JSON = RUNS / "_collider_modules.json"
 

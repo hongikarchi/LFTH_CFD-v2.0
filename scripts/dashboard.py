@@ -32,12 +32,14 @@ from pathlib import Path
 
 from flask import Flask, jsonify, request, send_file, Response, abort
 
-PROJECT = Path(__file__).resolve().parent.parent
+SCRIPT_DIR = Path(__file__).resolve().parent
+MODULE_ROOT = SCRIPT_DIR.parent
+REPO_ROOT = MODULE_ROOT.parent
 
-CONFIG_PATH = PROJECT / "config" / "case.json"
-BUILD_CONFIG_PATH = PROJECT / "config" / "build.json"
-SETTINGS_LOG = PROJECT / "runs" / "_settings_log.jsonl"
-SCRIPTS = PROJECT / "scripts"
+CONFIG_PATH = MODULE_ROOT / "config" / "case.json"
+BUILD_CONFIG_PATH = MODULE_ROOT / "config" / "build.json"
+SETTINGS_LOG = MODULE_ROOT / "_settings_log.jsonl"
+SCRIPTS = SCRIPT_DIR
 
 PORT = 8080
 
@@ -271,17 +273,17 @@ def api_build_post():
 def api_build():
     cmd = [sys.executable, str(SCRIPTS / "build_fluidx3d.py")]
     def _runner():
-        log_path = PROJECT / "runs" / "_dashboard_build.log"
+        log_path = MODULE_ROOT / "runs" / "_dashboard_build.log"
         log_path.parent.mkdir(parents=True, exist_ok=True)
         with log_path.open("w", encoding="utf-8") as f:
-            subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, cwd=str(PROJECT))
+            subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, cwd=str(REPO_ROOT))
     threading.Thread(target=_runner, daemon=True).start()
     return jsonify({"ok": True, "cmd": " ".join(cmd)})
 
 
 @app.route("/api/build_status")
 def api_build_status():
-    log_path = PROJECT / "runs" / "_dashboard_build.log"
+    log_path = MODULE_ROOT / "runs" / "_dashboard_build.log"
     out = log_path.read_text(encoding="utf-8")[-3000:] if log_path.exists() else ""
     return jsonify({"log_tail": out})
 
@@ -318,11 +320,11 @@ def api_run():
         cmd.append("--interactive")
 
     def _runner():
-        log_path = PROJECT / "runs" / f"_dashboard_run_{test_id}.log"
+        log_path = MODULE_ROOT / "runs" / f"_dashboard_run_{test_id}.log"
         log_path.parent.mkdir(parents=True, exist_ok=True)
         with log_path.open("w", encoding="utf-8") as f:
             proc = subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT,
-                                   cwd=str(PROJECT))
+                                   cwd=str(REPO_ROOT))
         _run_locks.pop(test_id, None)
 
     if test_id in _run_locks:
@@ -340,10 +342,10 @@ def api_thicken():
     cmd = [sys.executable, str(SCRIPTS / "thicken_collider.py"), str(thickness)]
 
     def _runner():
-        log_path = PROJECT / "runs" / "_dashboard_thicken.log"
+        log_path = MODULE_ROOT / "runs" / "_dashboard_thicken.log"
         log_path.parent.mkdir(parents=True, exist_ok=True)
         with log_path.open("w", encoding="utf-8") as f:
-            subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, cwd=str(PROJECT))
+            subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, cwd=str(REPO_ROOT))
 
     t = threading.Thread(target=_runner, daemon=True)
     t.start()
@@ -352,7 +354,7 @@ def api_thicken():
 
 @app.route("/api/run_status/<test_id>")
 def api_run_status(test_id):
-    log_path = PROJECT / "runs" / f"_dashboard_run_{test_id}.log"
+    log_path = MODULE_ROOT / "runs" / f"_dashboard_run_{test_id}.log"
     running = test_id in _run_locks
     out = ""
     if log_path.exists():

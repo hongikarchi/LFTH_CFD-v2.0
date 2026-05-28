@@ -29,7 +29,9 @@ from pathlib import Path
 
 import numpy as np
 
-PROJECT = Path(__file__).resolve().parent.parent
+SCRIPT_DIR = Path(__file__).resolve().parent
+MODULE_ROOT = SCRIPT_DIR.parent
+REPO_ROOT = MODULE_ROOT.parent
 
 
 def parse_vtk_structured_points(vtk_path: Path) -> tuple[np.ndarray, tuple[int, int, int],
@@ -123,7 +125,7 @@ def load_bboxes(iter_dir: Path) -> tuple[list, list, list[list]]:
             return case["pond_bbox_m"], None, case.get("module_bboxes_m", []) or []
 
     # Last-resort fallback: pull positive/negative from runs/_real_targets.json
-    targets = PROJECT / "runs" / "_real_targets.json"
+    targets = MODULE_ROOT / "runs" / "_real_targets.json"
     if targets.exists():
         t = json.loads(targets.read_text(encoding="utf-8"))
         pos = _inflate_to_slab(t["positive_bbox_m"], slab)
