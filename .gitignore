@@ -1,5 +1,8 @@
-# DualSPHysics outputs and runtime simulation data
-runs/
+# Runtime simulation data
+env_fx3d/runs/
+opt_pymoo/runs/
+env_fx3d/_settings_log.jsonl
+opt_pymoo/_optimization_log.jsonl
 *.bi4
 *.vtk
 *.vtu
@@ -36,5 +39,5 @@ __pycache__/
 *.pdf
 
 # External FluidX3D clone (~100 MB) — has its own .git, tracked upstream
-external/FluidX3D/
+env_fx3d/external/FluidX3D/
 

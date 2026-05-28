@@ -16,9 +16,9 @@ import numpy as np
 import trimesh
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-MODULE_ROOT = SCRIPT_DIR.parent
+MODULE_ROOT = SCRIPT_DIR.parent.parent
 REPO_ROOT = MODULE_ROOT.parent
-sys.path.insert(0, str(SCRIPT_DIR))
+sys.path.insert(0, str(MODULE_ROOT / "scripts"))
 
 from rhino_mcp import mcp_call
 
