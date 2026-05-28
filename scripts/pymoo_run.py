@@ -41,6 +41,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 MODULE_ROOT = SCRIPT_DIR.parent
 REPO_ROOT = MODULE_ROOT.parent
 sys.path.insert(0, str(SCRIPT_DIR))
+sys.path.insert(0, str(REPO_ROOT / "env_fx3d" / "scripts"))
 
 from pymoo_gen_module import (DEFAULTS, GENE_BOUNDS, GENE_ORDER,
                               build_modules_combined_stl)
@@ -243,7 +244,7 @@ class SculptureProblem(ElementwiseProblem):
               end=" ", flush=True)
         t0 = time.time()
         try:
-            result = run_experiment(test_id, stl_path=stl_in)
+            result = run_experiment(test_id, stl_path=stl_in, runs_root=RUNS)
         except Exception as e:
             dt = time.time() - t0
             print(f"FX3D FAIL ({dt:.0f}s): {e}")

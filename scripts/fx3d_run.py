@@ -162,7 +162,8 @@ def run_experiment(test_id: str,
                    config_path: Path = CONFIG_DEFAULT,
                    push_rhino: bool | None = None,
                    interactive: bool = False,
-                   timeout_s: float = 7200.0) -> dict:
+                   timeout_s: float = 7200.0,
+                   runs_root: Path | None = None) -> dict:
     cfg = load_config(config_path)
     if config_overrides:
         cfg.update(config_overrides)
@@ -171,7 +172,7 @@ def run_experiment(test_id: str,
     if push_rhino is None:
         push_rhino = bool(cfg.get("push_to_rhino", True))
 
-    iter_dir = RUNS / f"iter_{test_id}"
+    iter_dir = (runs_root or RUNS) / f"iter_{test_id}"
     iter_dir.mkdir(parents=True, exist_ok=True)
     (iter_dir / "fx3d_out" / "frames").mkdir(parents=True, exist_ok=True)
     (iter_dir / "fx3d_out" / "vtk").mkdir(parents=True, exist_ok=True)
