@@ -236,14 +236,14 @@ const PARAM_GROUPS = [
   {
     key: 'shape',
     label: '형상',
-    title: '타원체 형상',
-    desc: 'ellipsoid의 기본 크기와 깊이를 정합니다. cut profile이 없으면 z=0 기준의 기본 bowl이 됩니다.'
+    title: '입구와 곡률',
+    desc: '사용자가 직접 만지는 4개의 bowl 기본값입니다. ellipsoid의 axis 값은 여기서 내부 계산됩니다.'
   },
   {
     key: 'cut',
     label: '컷 라인',
-    title: '비수평 cut profile',
-    desc: '수평면 대신 각도별 rim 높이를 바꿔서 비대칭 또는 물결형 opening을 만듭니다.'
+    title: '사선 컷 평면',
+    desc: 'ellipsoid를 자르는 local plane을 기울기와 방향으로 정의합니다.'
   },
   {
     key: 'rim',
@@ -265,27 +265,24 @@ const PARAM_GROUPS = [
   }
 ];
 const PARAM_CONTROLS = [
-  ['axis_x_mm', 'axis x', 500, 12000, 10, 'mm', 'shape', 'X 방향 ellipsoid 반축입니다. rim ellipse의 좌우 폭에 직접 영향을 줍니다.'],
-  ['axis_y_mm', 'axis y', 500, 12000, 10, 'mm', 'shape', 'Y 방향 ellipsoid 반축입니다. rim ellipse의 앞뒤 폭을 정합니다.'],
-  ['axis_z_mm', 'axis z', 500, 14000, 10, 'mm', 'shape', 'Z 방향 ellipsoid 반축입니다. cap depth와 함께 bowl 곡률을 결정합니다.'],
-  ['cap_depth_mm', 'cap depth', 100, 12000, 10, 'mm', 'shape', 'rim plane에서 bowl bottom까지의 깊이입니다. 커질수록 더 깊은 bowl이 됩니다.'],
-  ['cut_slope_x_mm', 'cut x', -3000, 3000, 10, 'mm', 'cut', '+X 쪽 rim은 올리고 -X 쪽 rim은 내리는 비대칭 cut입니다. 음수면 반대로 작동합니다.'],
-  ['cut_slope_y_mm', 'cut y', -3000, 3000, 10, 'mm', 'cut', '+Y 쪽 rim과 -Y 쪽 rim의 높이 차이를 만듭니다. 전체 tilt와 달리 opening 자체가 비스듬해집니다.'],
-  ['rim_wave_amp_mm', 'wave amp', 0, 3000, 10, 'mm', 'cut', 'rim 둘레에 주기적인 높낮이를 추가합니다. 0이면 wave가 꺼집니다.'],
-  ['rim_wave_count', 'waves', 0, 8, 1, 'cnt', 'cut', 'rim을 한 바퀴 돌 때 반복되는 wave 개수입니다. 2~4 정도가 형태 차이를 보기 좋습니다.'],
-  ['rim_wave_phase_deg', 'phase', 0, 360, 1, 'deg', 'cut', 'wave profile을 rim 둘레 방향으로 회전합니다.'],
-  ['wall_thickness_mm', 'wall', 50, 2500, 10, 'mm', 'rim', 'inner cap을 surface normal 방향으로 offset하는 두께입니다. STL을 닫힌 solid로 만드는 핵심 값입니다.'],
-  ['rim_lift_mm', 'rim lift', 0, 2500, 10, 'mm', 'rim', 'rim plane 쪽으로 올리는 lip 높이입니다. 0이면 추가 lift 없이 기본 stitch만 사용합니다.'],
-  ['tilt_x_deg', 'tilt x', -45, 45, 0.5, 'deg', 'transform', 'local X축 기준 기울기입니다. bowl이 앞뒤 방향으로 누워 보입니다.'],
-  ['tilt_y_deg', 'tilt y', -45, 45, 0.5, 'deg', 'transform', 'local Y축 기준 기울기입니다. bowl이 좌우 방향으로 기울어집니다.'],
-  ['rotation_z_deg', 'rotate z', 0, 360, 1, 'deg', 'transform', 'rim plane 위에서 모듈을 회전합니다. ellipse의 장축 방향을 맞출 때 씁니다.'],
-  ['tx_mm', 'tx', -4000, 4000, 10, 'mm', 'transform', 'base point에서 X 방향으로 추가 이동하는 최적화 위치 변수입니다.'],
-  ['ty_mm', 'ty', -4000, 4000, 10, 'mm', 'transform', 'base point에서 Y 방향으로 추가 이동하는 최적화 위치 변수입니다.'],
-  ['tz_mm', 'tz', -4000, 4000, 10, 'mm', 'transform', 'base point에서 Z 방향으로 추가 이동하는 최적화 위치 변수입니다.']
+  ['opening_x_mm', 'opening x', 500, 16000, 10, 'mm', 'shape', 'local X 방향 rim 전체 폭입니다. 내부 ellipsoid X축은 이 값에서 역산됩니다.'],
+  ['opening_y_mm', 'opening y', 500, 16000, 10, 'mm', 'shape', 'local Y 방향 rim 전체 폭입니다. opening x/y가 입구 타원 비율을 정합니다.'],
+  ['bowl_depth_mm', 'bowl depth', 100, 12000, 10, 'mm', 'shape', 'cut plane 중심에서 bowl bottom까지의 깊이입니다.'],
+  ['curvature_ratio', 'curvature', 1.05, 3.0, 0.01, 'x', 'shape', 'axis z = depth * curvature 입니다. 1에 가까울수록 급하고, 클수록 완만합니다.'],
+  ['cut_tilt_deg', 'cut tilt', 0, 35, 0.5, 'deg', 'cut', 'cut plane이 수평에서 기울어진 각도입니다. 0이면 수평 컷입니다.'],
+  ['cut_azimuth_deg', 'cut azimuth', 0, 360, 1, 'deg', 'cut', 'cut plane이 높아지는 방향입니다. 0도는 +X, 90도는 +Y입니다.'],
+  ['wall_thickness_mm', 'wall', 50, 2500, 10, 'mm', 'rim', 'inner cap을 surface normal 방향으로 offset하는 두께입니다.'],
+  ['rim_lift_mm', 'rim lift', 0, 2500, 10, 'mm', 'rim', 'rim에서 cut plane normal 방향으로 올리는 lip 높이입니다.'],
+  ['tilt_x_deg', 'tilt x', -45, 45, 0.5, 'deg', 'transform', '완성된 모듈을 local X축 기준으로 기울입니다.'],
+  ['tilt_y_deg', 'tilt y', -45, 45, 0.5, 'deg', 'transform', '완성된 모듈을 local Y축 기준으로 기울입니다.'],
+  ['rotation_z_deg', 'rotate z', 0, 360, 1, 'deg', 'transform', '완성된 모듈을 local Z축 기준으로 회전합니다.'],
+  ['tx_mm', 'tx', -4000, 4000, 10, 'mm', 'transform', 'base point에서 X 방향으로 추가 이동합니다.'],
+  ['ty_mm', 'ty', -4000, 4000, 10, 'mm', 'transform', 'base point에서 Y 방향으로 추가 이동합니다.'],
+  ['tz_mm', 'tz', -4000, 4000, 10, 'mm', 'transform', 'base point에서 Z 방향으로 추가 이동합니다.']
 ];
 const RES_CONTROLS = [
-  ['theta_segments', 'theta', 8, 160, 1, 'seg', 'mesh', 'rim 둘레 방향 분할 수입니다. 높이면 rim과 곡면이 더 둥글게 보입니다.'],
-  ['radial_segments', 'radial', 3, 64, 1, 'seg', 'mesh', 'bottom에서 rim까지 깊이 방향 분할 수입니다. 높이면 cap 곡률이 더 부드러워집니다.']
+  ['theta_segments', 'theta', 8, 160, 1, 'seg', 'mesh', 'rim 둘레 방향 분할 수입니다. 높이면 입구와 곡면이 더 둥글게 보입니다.'],
+  ['radial_segments', 'radial', 3, 64, 1, 'seg', 'mesh', 'bottom에서 rim까지 깊이 방향 분할 수입니다.']
 ];
 
 let STATE = null;
@@ -554,45 +551,67 @@ function moduleInfo(idx) {
   return MODULES.find(m => String(m.index) === String(idx));
 }
 
+function derivedGeometry(params) {
+  const depth = Math.max(1, Number(params.bowl_depth_mm || 1));
+  const ratio = Math.max(1.01, Number(params.curvature_ratio || 1.35));
+  const axisZ = depth * ratio;
+  const centerZ = axisZ - depth;
+  const rimP = (0 - centerZ) / axisZ;
+  const factor = Math.max(1e-6, Math.sqrt(Math.max(0, 1 - rimP * rimP)));
+  const axisX = Math.max(1, Number(params.opening_x_mm || 1) * 0.5 / factor);
+  const axisY = Math.max(1, Number(params.opening_y_mm || 1) * 0.5 / factor);
+  const tilt = Number(params.cut_tilt_deg || 0) * Math.PI / 180;
+  const azimuth = Number(params.cut_azimuth_deg || 0) * Math.PI / 180;
+  const slope = Math.tan(tilt);
+  return {
+    axisX, axisY, axisZ, centerZ,
+    slopeX: slope * Math.cos(azimuth),
+    slopeY: slope * Math.sin(azimuth)
+  };
+}
+
+function rimIntersectionP(theta, geom) {
+  const ct = Math.cos(theta);
+  const st = Math.sin(theta);
+  const f = p => {
+    const rf = Math.sqrt(Math.max(0, 1 - p * p));
+    const x = geom.axisX * rf * ct;
+    const y = geom.axisY * rf * st;
+    const z = geom.centerZ + geom.axisZ * p;
+    return z - (geom.slopeX * x + geom.slopeY * y);
+  };
+  let lo = -1 + 1e-7;
+  let hi = 1 - 1e-7;
+  if (f(lo) >= 0) return lo;
+  if (f(hi) <= 0) return hi;
+  for (let i = 0; i < 52; i++) {
+    const mid = (lo + hi) * 0.5;
+    if (f(mid) >= 0) hi = mid;
+    else lo = mid;
+  }
+  return (lo + hi) * 0.5;
+}
+
 function ellipsoidRings(params, thetaSeg, radialSeg) {
-  const c = Number(params.axis_z_mm);
-  const depth = Number(params.cap_depth_mm);
-  const centerZ = c - depth;
-  const rings = [[{x: 0, y: 0, z: centerZ - c}]];
+  const geom = derivedGeometry(params);
+  const thetas = Array.from({length: thetaSeg}, (_, t) => 2 * Math.PI * t / thetaSeg);
+  const rimPs = thetas.map(th => rimIntersectionP(th, geom));
+  const rings = [[{x: 0, y: 0, z: geom.centerZ - geom.axisZ}]];
   for (let r = 1; r <= radialSeg; r++) {
     const ring = [];
     for (let t = 0; t < thetaSeg; t++) {
-      const th = 2 * Math.PI * t / thetaSeg;
-      const rimP = rimProfileP(params, th, centerZ, c);
-      const p = -1 + (rimP + 1) * (r / radialSeg);
+      const th = thetas[t];
+      const p = -1 + (rimPs[t] + 1) * (r / radialSeg);
       const rf = Math.sqrt(Math.max(0, 1 - p * p));
-      const z = centerZ + c * p;
       ring.push({
-        x: params.axis_x_mm * rf * Math.cos(th),
-        y: params.axis_y_mm * rf * Math.sin(th),
-        z
+        x: geom.axisX * rf * Math.cos(th),
+        y: geom.axisY * rf * Math.sin(th),
+        z: geom.centerZ + geom.axisZ * p
       });
     }
     rings.push(ring);
   }
   return rings;
-}
-
-function rimProfileZ(params, theta) {
-  const waveCount = Math.max(0, Math.round(Number(params.rim_wave_count || 0)));
-  const phase = Number(params.rim_wave_phase_deg || 0) * Math.PI / 180;
-  const wave = waveCount > 0
-    ? Number(params.rim_wave_amp_mm || 0) * Math.cos(waveCount * (theta - phase))
-    : 0;
-  return Number(params.cut_slope_x_mm || 0) * Math.cos(theta) +
-    Number(params.cut_slope_y_mm || 0) * Math.sin(theta) +
-    wave;
-}
-
-function rimProfileP(params, theta, centerZ, axisZ) {
-  const eps = Math.max(1e-6, axisZ * 1e-6);
-  const z = clamp(rimProfileZ(params, theta), centerZ - axisZ + eps, centerZ + axisZ - eps);
-  return (z - centerZ) / axisZ;
 }
 
 function transformPoint(p, params, anchor) {

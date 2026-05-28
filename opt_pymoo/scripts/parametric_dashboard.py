@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 import time
 import webbrowser
@@ -40,15 +41,12 @@ META_PATH = RUNS / "_ui_ellipsoid_parametric_meta.json"
 PORT = 8081
 
 PARAM_KEYS = [
-    "axis_x_mm",
-    "axis_y_mm",
-    "axis_z_mm",
-    "cap_depth_mm",
-    "cut_slope_x_mm",
-    "cut_slope_y_mm",
-    "rim_wave_amp_mm",
-    "rim_wave_count",
-    "rim_wave_phase_deg",
+    "opening_x_mm",
+    "opening_y_mm",
+    "bowl_depth_mm",
+    "curvature_ratio",
+    "cut_tilt_deg",
+    "cut_azimuth_deg",
     "wall_thickness_mm",
     "rim_lift_mm",
     "tilt_x_deg",
@@ -135,6 +133,41 @@ def _coerce_int(payload: dict, key: str, default: int) -> int:
     return int(float(value))
 
 
+def _migrate_old_module_params(raw_params: dict, default_params: dict) -> dict:
+    """Best-effort migration from axis/cap/wave params to oblique-cut params."""
+    migrated = dict(default_params)
+    migrated.update({k: raw_params[k] for k in PARAM_KEYS if k in raw_params})
+    if "opening_x_mm" in raw_params and "bowl_depth_mm" in raw_params:
+        return migrated
+
+    try:
+        axis_x = float(raw_params["axis_x_mm"])
+        axis_y = float(raw_params["axis_y_mm"])
+        axis_z = float(raw_params["axis_z_mm"])
+        cap_depth = float(raw_params["cap_depth_mm"])
+        factor, _, _ = pm._rim_factor(axis_z, cap_depth)
+        if factor <= 1.0e-9:
+            factor = 1.0
+        opening_x = max(1.0, 2.0 * axis_x * factor)
+        opening_y = max(1.0, 2.0 * axis_y * factor)
+        migrated["opening_x_mm"] = opening_x
+        migrated["opening_y_mm"] = opening_y
+        migrated["bowl_depth_mm"] = max(1.0, cap_depth)
+        migrated["curvature_ratio"] = max(1.01, axis_z / max(cap_depth, 1.0))
+
+        sx = float(raw_params.get("cut_slope_x_mm", 0.0))
+        sy = float(raw_params.get("cut_slope_y_mm", 0.0))
+        mx = sx / max(opening_x * 0.5, 1.0)
+        my = sy / max(opening_y * 0.5, 1.0)
+        slope = math.hypot(mx, my)
+        if slope > 1.0e-12:
+            migrated["cut_tilt_deg"] = min(35.0, math.degrees(math.atan(slope)))
+            migrated["cut_azimuth_deg"] = (math.degrees(math.atan2(my, mx)) + 360.0) % 360.0
+    except Exception:
+        pass
+    return migrated
+
+
 def _normalize_state(payload: dict | None) -> dict:
     defaults = _default_state()
     if not isinstance(payload, dict):
@@ -152,6 +185,7 @@ def _normalize_state(payload: dict | None) -> dict:
         raw_params = incoming_modules.get(idx, default_params)
         if not isinstance(raw_params, dict):
             raw_params = default_params
+        raw_params = _migrate_old_module_params(raw_params, default_params)
         state["modules"][idx] = {
             key: _coerce_float(raw_params, key, float(default_params[key]))
             for key in PARAM_KEYS
