@@ -55,10 +55,34 @@ EXPERIMENTS = MODULE_ROOT / "experiments"
 RUNS = MODULE_ROOT / "runs"
 STATE_FILE = EXPERIMENTS / "pymoo_state.json"
 MODULES_JSON = RUNS / "_collider_modules.json"
+OPTIMIZATION_LOG = MODULE_ROOT / "_optimization_log.jsonl"
 
 # Used in coupling repair (same baseline as old ga_sequential.py)
 DP_MM = 200.0
 FAIL_F = [1.0, 0.0]  # worst splash + zero dist when a sim fails
+
+
+def append_optimization_log(eval_entry: dict) -> None:
+    """Append one row per individual evaluation. Mirrors _settings_log.jsonl
+    pattern but for GA-level data. issue/notes start null — filled post-hoc."""
+    OPTIMIZATION_LOG.parent.mkdir(parents=True, exist_ok=True)
+    row = {
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "stage": eval_entry.get("stage"),
+        "test_id": eval_entry.get("test_id"),
+        "genes": eval_entry.get("ind"),
+        "objectives": eval_entry.get("F"),
+        "splash_frac": eval_entry.get("splash_frac"),
+        "dist_mm": eval_entry.get("dist_mm"),
+        "wall_s": eval_entry.get("wall_s"),
+        "failed": bool(eval_entry.get("failed", False)),
+        "stage_fail": eval_entry.get("stage_fail"),
+        "error": eval_entry.get("error"),
+        "issue": eval_entry.get("issue"),
+        "notes": eval_entry.get("notes"),
+    }
+    with OPTIMIZATION_LOG.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(row) + "\n")
 
 
 # ---- coupling repair ---------------------------------------------------------
@@ -236,6 +260,7 @@ class SculptureProblem(ElementwiseProblem):
                                 "error": str(e), "F": FAIL_F})
             STATE_FILE.write_text(json.dumps(self.ga_state, indent=2),
                                     encoding="utf-8")
+            append_optimization_log(eval_entry)
             out["F"] = list(FAIL_F)
             return
 
@@ -255,6 +280,7 @@ class SculptureProblem(ElementwiseProblem):
             })
             STATE_FILE.write_text(json.dumps(self.ga_state, indent=2),
                                     encoding="utf-8")
+            append_optimization_log(eval_entry)
             out["F"] = list(FAIL_F)
             return
         dt = time.time() - t0
@@ -280,6 +306,7 @@ class SculptureProblem(ElementwiseProblem):
         })
         STATE_FILE.write_text(json.dumps(self.ga_state, indent=2),
                                 encoding="utf-8")
+        append_optimization_log(eval_entry)
         print(f"splash={splash_frac:.3f} dist={dist_mm:.0f}mm ({dt:.0f}s)")
         out["F"] = [f1, f2]
 

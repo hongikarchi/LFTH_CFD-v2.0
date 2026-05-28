@@ -147,6 +147,9 @@ def append_settings_log(test_id: str, case: dict, result: dict,
         "wall_s": round(wall_s, 2),
         "iter_dir": str(iter_dir).replace("\\", "/"),
         "frames_dir": str(iter_dir / "fx3d_out" / "frames").replace("\\", "/"),
+        # post-run annotations (filled later by dashboard or analyst — start null)
+        "issue": result.get("issue"),
+        "notes": result.get("notes"),
     }
     SETTINGS_LOG.parent.mkdir(parents=True, exist_ok=True)
     with SETTINGS_LOG.open("a", encoding="utf-8") as f:
