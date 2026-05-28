@@ -23,10 +23,14 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 import time
+import uuid
 import webbrowser
 from pathlib import Path
 
@@ -40,6 +44,7 @@ BUILD_CONFIG_PATH = ENV_FX3D / "config" / "build.json"
 SETTINGS_LOG = ENV_FX3D / "_settings_log.jsonl"
 SCRIPTS = ENV_FX3D / "scripts"
 HTML_PATH = REPO_ROOT / "dashboard.html"
+DOCS_MAIN = Path(r"C:\Users\user\Documents\LFTH_CFD v2.0")
 
 PORT = 8080
 
@@ -254,6 +259,463 @@ FILE_STRUCTURE = [
 ]
 
 
+# ---------- git dashboard helpers ----------
+
+SAFE_CODEX_BRANCH = re.compile(r"^codex/[A-Za-z0-9._/-]+$")
+_git_jobs: dict[str, dict] = {}
+_git_jobs_lock = threading.Lock()
+_git_action_lock = threading.Lock()
+
+
+def _creationflags() -> dict:
+    if sys.platform == "win32":
+        return {"creationflags": subprocess.CREATE_NO_WINDOW}
+    return {}
+
+
+def run_cmd(args: list[str], cwd: Path | str = REPO_ROOT,
+            timeout: int = 30) -> dict:
+    try:
+        proc = subprocess.run(
+            args,
+            cwd=str(cwd),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout,
+            **_creationflags(),
+        )
+        return {
+            "ok": proc.returncode == 0,
+            "returncode": proc.returncode,
+            "stdout": proc.stdout or "",
+            "stderr": proc.stderr or "",
+            "cmd": args,
+        }
+    except subprocess.TimeoutExpired as exc:
+        return {
+            "ok": False,
+            "returncode": 124,
+            "stdout": exc.stdout or "",
+            "stderr": f"timed out after {timeout}s",
+            "cmd": args,
+        }
+    except Exception as exc:
+        return {
+            "ok": False,
+            "returncode": 1,
+            "stdout": "",
+            "stderr": str(exc),
+            "cmd": args,
+        }
+
+
+def cmd_text(args: list[str], cwd: Path | str = REPO_ROOT,
+             timeout: int = 30) -> str:
+    result = run_cmd(args, cwd, timeout)
+    if not result["ok"]:
+        raise RuntimeError((result["stderr"] or result["stdout"]).strip())
+    return result["stdout"].strip()
+
+
+def run_logged(log, args: list[str], cwd: Path | str = REPO_ROOT,
+               timeout: int = 120) -> dict:
+    log("$ " + " ".join(args))
+    result = run_cmd(args, cwd, timeout)
+    out = (result["stdout"] + result["stderr"]).strip()
+    if out:
+        log(out[-4000:])
+    if not result["ok"]:
+        raise RuntimeError(f"command failed ({result['returncode']}): {' '.join(args)}")
+    return result
+
+
+def is_safe_codex_branch(branch: str) -> bool:
+    if not SAFE_CODEX_BRANCH.fullmatch(branch or ""):
+        return False
+    return not any(token in branch for token in ("..", "@{", "\\", "//")) and not branch.endswith(("/", "."))
+
+
+def check_summary(rollup) -> dict:
+    if not rollup:
+        return {"state": "none", "total": 0, "blocking": False}
+    failing = {"FAILURE", "ERROR", "CANCELLED", "TIMED_OUT", "ACTION_REQUIRED"}
+    pending = False
+    failed = False
+    total = 0
+    for item in rollup:
+        total += 1
+        conclusion = str(item.get("conclusion") or "").upper()
+        status = str(item.get("status") or item.get("state") or "").upper()
+        if conclusion in failing:
+            failed = True
+        elif status and status not in {"COMPLETED", "SUCCESS"}:
+            pending = True
+        elif not conclusion and status not in {"SUCCESS", "COMPLETED"}:
+            pending = True
+    if failed:
+        return {"state": "failing", "total": total, "blocking": True}
+    if pending:
+        return {"state": "pending", "total": total, "blocking": True}
+    return {"state": "passing", "total": total, "blocking": False}
+
+
+def parse_json_cmd(args: list[str], cwd: Path | str = REPO_ROOT,
+                   timeout: int = 60):
+    result = run_cmd(args, cwd, timeout)
+    if not result["ok"]:
+        return None, (result["stderr"] or result["stdout"]).strip()
+    try:
+        return json.loads(result["stdout"] or "null"), None
+    except json.JSONDecodeError as exc:
+        return None, str(exc)
+
+
+def parse_worktrees() -> dict[str, dict]:
+    result = run_cmd(["git", "worktree", "list", "--porcelain"], REPO_ROOT)
+    if not result["ok"]:
+        return {}
+    out: dict[str, dict] = {}
+    current: dict[str, str] = {}
+    for line in result["stdout"].splitlines() + [""]:
+        if not line.strip():
+            branch = current.get("branch", "")
+            if branch.startswith("refs/heads/"):
+                out[branch.replace("refs/heads/", "", 1)] = {
+                    "path": current.get("worktree"),
+                    "head": current.get("HEAD"),
+                }
+            current = {}
+            continue
+        key, _, value = line.partition(" ")
+        current[key] = value
+    return out
+
+
+def branch_refs(prefix: str) -> dict[str, dict]:
+    fmt = "%(refname:short)|%(objectname:short)|%(committerdate:iso8601)|%(subject)"
+    result = run_cmd(["git", "for-each-ref", prefix, f"--format={fmt}"], REPO_ROOT)
+    refs: dict[str, dict] = {}
+    if not result["ok"]:
+        return refs
+    for line in result["stdout"].splitlines():
+        parts = (line.split("|", 3) + ["", "", "", ""])[:4]
+        name, sha, date, subject = parts
+        branch = name.replace("origin/", "", 1) if name.startswith("origin/codex/") else name
+        if branch.startswith("codex/"):
+            refs[branch] = {"ref": name, "sha": sha, "date": date, "subject": subject}
+    return refs
+
+
+def ahead_behind(ref: str) -> tuple[int | None, int | None]:
+    result = run_cmd(["git", "rev-list", "--left-right", "--count",
+                      f"origin/main...{ref}"], REPO_ROOT)
+    if not result["ok"]:
+        return None, None
+    parts = result["stdout"].split()
+    if len(parts) != 2:
+        return None, None
+    return int(parts[0]), int(parts[1])
+
+
+def worktree_clean(path: str | None) -> tuple[bool | None, str]:
+    if not path:
+        return None, "no worktree"
+    result = run_cmd(["git", "status", "--porcelain"], Path(path))
+    if not result["ok"]:
+        return None, (result["stderr"] or result["stdout"]).strip()
+    return result["stdout"].strip() == "", result["stdout"].strip()
+
+
+def repo_full_name() -> str:
+    url = cmd_text(["git", "remote", "get-url", "origin"], REPO_ROOT)
+    if url.startswith("https://github.com/"):
+        name = url.replace("https://github.com/", "", 1)
+    elif url.startswith("git@github.com:"):
+        name = url.replace("git@github.com:", "", 1)
+    else:
+        raise RuntimeError(f"unsupported origin URL: {url}")
+    if name.endswith(".git"):
+        name = name[:-4]
+    if "/" not in name:
+        raise RuntimeError(f"cannot parse origin URL: {url}")
+    return name
+
+
+def collect_prs() -> tuple[list[dict], str | None]:
+    fields = (
+        "number,title,headRefName,baseRefName,isDraft,mergeable,"
+        "statusCheckRollup,url,updatedAt"
+    )
+    data, error = parse_json_cmd(
+        ["gh", "pr", "list", "--state", "open", "--base", "main",
+         "--json", fields],
+        REPO_ROOT,
+        60,
+    )
+    if error:
+        return [], error
+    prs = []
+    for pr in data or []:
+        if not str(pr.get("headRefName", "")).startswith("codex/"):
+            continue
+        checks = check_summary(pr.get("statusCheckRollup"))
+        pr["checks"] = checks
+        pr["actionable"] = (
+            not pr.get("isDraft")
+            and pr.get("baseRefName") == "main"
+            and is_safe_codex_branch(pr.get("headRefName", ""))
+            and pr.get("mergeable") == "MERGEABLE"
+            and not checks["blocking"]
+        )
+        prs.append(pr)
+    return prs, None
+
+
+def docs_main_status() -> dict:
+    status = {"path": str(DOCS_MAIN), "exists": DOCS_MAIN.exists()}
+    if not DOCS_MAIN.exists():
+        status.update({"clean": None, "error": "Documents main path missing"})
+        return status
+    branch = run_cmd(["git", "branch", "--show-current"], DOCS_MAIN)
+    head = run_cmd(["git", "rev-parse", "--short", "HEAD"], DOCS_MAIN)
+    porcelain = run_cmd(["git", "status", "--porcelain"], DOCS_MAIN)
+    status.update({
+        "branch": branch["stdout"].strip() if branch["ok"] else None,
+        "head": head["stdout"].strip() if head["ok"] else None,
+        "clean": porcelain["ok"] and porcelain["stdout"].strip() == "",
+        "dirty": porcelain["stdout"].strip() if porcelain["ok"] else "",
+        "error": None if branch["ok"] and head["ok"] and porcelain["ok"] else (
+            branch["stderr"] or head["stderr"] or porcelain["stderr"]
+        ).strip(),
+    })
+    return status
+
+
+def collect_git_status() -> dict:
+    prs, gh_error = collect_prs()
+    pr_by_branch = {pr["headRefName"]: pr for pr in prs}
+    local = branch_refs("refs/heads/codex")
+    remote = branch_refs("refs/remotes/origin/codex")
+    worktrees = parse_worktrees()
+    branches = []
+    for branch in sorted(set(local) | set(remote) | set(pr_by_branch)):
+        ref = branch if branch in local else f"origin/{branch}"
+        behind, ahead = ahead_behind(ref)
+        wt = worktrees.get(branch)
+        clean, dirty = worktree_clean(wt.get("path") if wt else None)
+        sync_blocked = ""
+        if not wt:
+            sync_blocked = "no local worktree"
+        elif clean is not True:
+            sync_blocked = "dirty worktree"
+        elif ahead is None:
+            sync_blocked = "cannot compare with origin/main"
+        elif ahead > 0:
+            sync_blocked = "branch has unique commits"
+        elif behind == 0:
+            sync_blocked = "already up to date"
+        branches.append({
+            "name": branch,
+            "local": branch in local,
+            "remote": branch in remote,
+            "sha": (local.get(branch) or remote.get(branch) or {}).get("sha"),
+            "subject": (local.get(branch) or remote.get(branch) or {}).get("subject"),
+            "worktree": wt.get("path") if wt else None,
+            "clean": clean,
+            "dirty": dirty,
+            "behind_main": behind,
+            "ahead_main": ahead,
+            "pr_number": pr_by_branch.get(branch, {}).get("number"),
+            "sync_allowed": bool(wt and clean is True and ahead == 0 and (behind or 0) > 0),
+            "sync_blocked": sync_blocked,
+        })
+    origin_main = run_cmd(["git", "rev-parse", "--short", "origin/main"], REPO_ROOT)
+    head = run_cmd(["git", "rev-parse", "--short", "HEAD"], REPO_ROOT)
+    with _git_jobs_lock:
+        jobs = sorted(_git_jobs.values(), key=lambda j: j.get("created_at", 0), reverse=True)
+        last_job = {k: v for k, v in jobs[0].items() if k != "log"} if jobs else None
+    return {
+        "ok": True,
+        "repo": {
+            "path": str(REPO_ROOT),
+            "head": head["stdout"].strip() if head["ok"] else None,
+            "origin_main": origin_main["stdout"].strip() if origin_main["ok"] else None,
+        },
+        "documents_main": docs_main_status(),
+        "prs": prs,
+        "pr_count": len(prs),
+        "gh_error": gh_error,
+        "branches": branches,
+        "last_job": last_job,
+    }
+
+
+def append_job(job_id: str, message: str) -> None:
+    with _git_jobs_lock:
+        job = _git_jobs.get(job_id)
+        if not job:
+            return
+        ts = time.strftime("%H:%M:%S")
+        job["log"] += f"[{ts}] {message}\n"
+        job["updated_at"] = int(time.time())
+
+
+def start_git_job(kind: str, target: str, runner) -> dict:
+    job_id = uuid.uuid4().hex[:12]
+    with _git_jobs_lock:
+        _git_jobs[job_id] = {
+            "id": job_id,
+            "kind": kind,
+            "target": target,
+            "status": "running",
+            "ok": None,
+            "log": "",
+            "created_at": int(time.time()),
+            "updated_at": int(time.time()),
+        }
+
+    def _thread():
+        acquired = _git_action_lock.acquire(blocking=False)
+        if not acquired:
+            append_job(job_id, "blocked reason: another Git job is already running")
+            with _git_jobs_lock:
+                _git_jobs[job_id]["status"] = "failed"
+                _git_jobs[job_id]["ok"] = False
+            return
+        try:
+            runner(lambda msg: append_job(job_id, msg))
+            with _git_jobs_lock:
+                _git_jobs[job_id]["status"] = "done"
+                _git_jobs[job_id]["ok"] = True
+        except Exception as exc:
+            append_job(job_id, f"blocked reason: {exc}")
+            with _git_jobs_lock:
+                _git_jobs[job_id]["status"] = "failed"
+                _git_jobs[job_id]["ok"] = False
+        finally:
+            _git_action_lock.release()
+
+    threading.Thread(target=_thread, daemon=True).start()
+    return {"ok": True, "job_id": job_id}
+
+
+def ff_documents_main(log) -> None:
+    log(f"Checking Documents main at {DOCS_MAIN}")
+    if not DOCS_MAIN.exists():
+        raise RuntimeError("Documents main path missing")
+    branch = cmd_text(["git", "branch", "--show-current"], DOCS_MAIN)
+    if branch != "main":
+        raise RuntimeError(f"Documents worktree is on {branch!r}, not main")
+    dirty = cmd_text(["git", "status", "--porcelain"], DOCS_MAIN)
+    if dirty:
+        raise RuntimeError("Documents main has uncommitted changes")
+    run_logged(log, ["git", "fetch", "origin", "main"], DOCS_MAIN, 120)
+    run_logged(log, ["git", "merge", "--ff-only", "origin/main"], DOCS_MAIN, 120)
+    log("Documents main fast-forward complete.")
+
+
+def gh_pr_info(number: int) -> dict:
+    fields = (
+        "number,title,headRefName,baseRefName,isDraft,mergeable,"
+        "statusCheckRollup,url,updatedAt,headRefOid"
+    )
+    data, error = parse_json_cmd(
+        ["gh", "pr", "view", str(number), "--json", fields],
+        REPO_ROOT,
+        60,
+    )
+    if error:
+        raise RuntimeError(error)
+    data["checks"] = check_summary(data.get("statusCheckRollup"))
+    return data
+
+
+def review_merge_job(number: int, log) -> None:
+    pr = gh_pr_info(number)
+    branch = pr.get("headRefName") or ""
+    log(f"Reviewing PR #{number}: {pr.get('title')}")
+    if pr.get("baseRefName") != "main":
+        raise RuntimeError("PR base is not main")
+    if not is_safe_codex_branch(branch):
+        raise RuntimeError("PR head branch is not an allowed codex/* branch")
+    if pr.get("isDraft"):
+        raise RuntimeError("PR is draft")
+    if pr.get("mergeable") != "MERGEABLE":
+        raise RuntimeError(f"PR is not mergeable: {pr.get('mergeable')}")
+    if pr["checks"]["blocking"]:
+        raise RuntimeError(f"PR checks are {pr['checks']['state']}")
+    head_sha = pr.get("headRefOid")
+    if not head_sha:
+        raise RuntimeError("PR head SHA missing")
+    run_logged(log, ["git", "fetch", "origin", "main",
+                    f"+refs/heads/{branch}:refs/remotes/origin/{branch}"],
+               REPO_ROOT, 120)
+    tmp_root = Path(tempfile.mkdtemp(prefix=f"lfth_pr_{number}_"))
+    tmp_path = tmp_root / "checkout"
+    try:
+        run_logged(log, ["git", "worktree", "add", "--detach", str(tmp_path), head_sha],
+                   REPO_ROOT, 120)
+        run_logged(log, ["git", "diff", "--check", "origin/main...HEAD"], tmp_path, 120)
+        run_logged(log, [sys.executable, "-m", "compileall", "dashboard.py",
+                         "env_fx3d", "opt_pymoo", "opt_structure"], tmp_path, 180)
+        run_logged(log, [sys.executable, "-m", "unittest",
+                         "opt_structure.tests.smoke_tests"], tmp_path, 180)
+        full_name = repo_full_name()
+        run_logged(
+            log,
+            [
+                "gh", "api", "-X", "PUT",
+                f"repos/{full_name}/pulls/{number}/merge",
+                "-f", "merge_method=merge",
+                "-f", f"sha={head_sha}",
+                "-f", f"commit_title=Merge PR #{number}: {pr.get('title')}",
+                "-f", "commit_message=Validated by dashboard Git gate.",
+            ],
+            REPO_ROOT,
+            120,
+        )
+        log("PR merge complete.")
+    finally:
+        run_cmd(["git", "worktree", "remove", "--force", str(tmp_path)], REPO_ROOT, 120)
+        if tmp_root.exists():
+            shutil.rmtree(tmp_root, ignore_errors=True)
+    try:
+        ff_documents_main(log)
+    except Exception as exc:
+        log(f"Documents main not updated: {exc}")
+
+
+def sync_branch_job(branch: str, log) -> None:
+    if not is_safe_codex_branch(branch):
+        raise RuntimeError("branch is not an allowed codex/* branch")
+    worktrees = parse_worktrees()
+    wt = worktrees.get(branch)
+    if not wt or not wt.get("path"):
+        raise RuntimeError("no local worktree for branch")
+    path = Path(wt["path"])
+    current = cmd_text(["git", "branch", "--show-current"], path)
+    if current != branch:
+        raise RuntimeError(f"worktree is on {current!r}, not {branch!r}")
+    dirty = cmd_text(["git", "status", "--porcelain"], path)
+    if dirty:
+        raise RuntimeError("worktree has uncommitted changes")
+    run_logged(log, ["git", "fetch", "origin", "main"], path, 120)
+    counts = cmd_text(["git", "rev-list", "--left-right", "--count",
+                       "origin/main...HEAD"], path)
+    behind_s, ahead_s = counts.split()
+    behind, ahead = int(behind_s), int(ahead_s)
+    if ahead > 0:
+        raise RuntimeError("branch has unique commits; open/merge its PR first")
+    if behind == 0:
+        log("Branch already matches origin/main.")
+        return
+    run_logged(log, ["git", "merge", "--ff-only", "origin/main"], path, 120)
+    run_logged(log, ["git", "push", "origin", f"HEAD:refs/heads/{branch}"], path, 120)
+    log(f"{branch} synced to origin/main.")
+
+
 # ---------- API routes ----------
 
 @app.route("/")
@@ -261,6 +723,54 @@ def index():
     if not HTML_PATH.exists():
         return Response(f"dashboard.html not found at {HTML_PATH}", status=500, mimetype="text/plain")
     return Response(HTML_PATH.read_text(encoding="utf-8"), mimetype="text/html")
+
+
+@app.route("/api/git/status", methods=["GET"])
+def api_git_status():
+    return jsonify(collect_git_status())
+
+
+@app.route("/api/git/pr/<int:number>/review_merge", methods=["POST"])
+def api_git_review_merge(number: int):
+    return jsonify(start_git_job(
+        "review_merge",
+        f"PR #{number}",
+        lambda log: review_merge_job(number, log),
+    ))
+
+
+@app.route("/api/git/main/ff", methods=["POST"])
+def api_git_main_ff():
+    return jsonify(start_git_job(
+        "main_ff",
+        "Documents main",
+        ff_documents_main,
+    ))
+
+
+@app.route("/api/git/branch/sync", methods=["POST"])
+def api_git_branch_sync():
+    data = request.get_json(force=True) or {}
+    branch = str(data.get("branch") or "")
+    if not is_safe_codex_branch(branch):
+        return jsonify({"ok": False, "error": "expected safe codex/* branch"}), 400
+    return jsonify(start_git_job(
+        "branch_sync",
+        branch,
+        lambda log: sync_branch_job(branch, log),
+    ))
+
+
+@app.route("/api/git/job/<job_id>", methods=["GET"])
+def api_git_job(job_id: str):
+    with _git_jobs_lock:
+        job = _git_jobs.get(job_id)
+        if not job:
+            return jsonify({"ok": False, "error": "job not found"}), 404
+        out = dict(job)
+    out["log_tail"] = out.get("log", "")[-8000:]
+    out.pop("log", None)
+    return jsonify({"ok": True, "job": out})
 
 
 @app.route("/api/config", methods=["GET"])
