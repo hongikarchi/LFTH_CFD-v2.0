@@ -6,12 +6,15 @@ from pathlib import Path
 
 from opt_structure.scripts.fea import analyze_structure
 from opt_structure.scripts.ground_structure import (generate_ground_structure,
+                                                    CandidateMember,
+                                                    GroundStructure,
+                                                    StructureNode,
                                                     seed_connected_design,
                                                     design_from_encoded)
 from opt_structure.scripts.optimize_structure import (_is_feasible,
                                                       run_fallback_search)
 from opt_structure.scripts.profiles import (SteelMaterial, load_profiles,
-                                            profile_by_name)
+                                            profile_by_name, SteelProfile)
 
 
 def synthetic_context() -> dict:
@@ -119,6 +122,49 @@ class OptStructureSmokeTests(unittest.TestCase):
         # run should at least return a finite scored candidate.
         self.assertLess(result.max_utilization, 1.0e6)
         _ = _is_feasible(result, case)
+
+    def test_frame_cantilever_matches_closed_form_deflection(self) -> None:
+        graph = GroundStructure(
+            nodes=[
+                StructureNode("A", (0.0, 0.0, 0.0), "support", fixed=True),
+                StructureNode("B", (3000.0, 0.0, 0.0), "module_target",
+                              fixed=False, load_N=(0.0, 0.0, -1000.0)),
+            ],
+            members=[CandidateMember("M0", "A", "B", 3000.0, "test")],
+            meta={},
+        )
+        profile = SteelProfile(
+            name="TEST",
+            h_mm=200.0,
+            b_mm=100.0,
+            tw_mm=8.0,
+            tf_mm=12.0,
+            A_cm2=50.0,
+            I_strong_cm4=2000.0,
+            I_weak_cm4=500.0,
+            J_cm4=50.0,
+            S_strong_cm3=200.0,
+            S_weak_cm3=50.0,
+            kg_per_m=0.0,
+        )
+        material = SteelMaterial()
+        case = {
+            "constraints": {
+                "max_utilization": 1.0,
+                "max_deflection_mm": 1000.0,
+                "deflection_span_ratio": 1.0e9,
+                "max_slenderness": 1.0e9,
+            },
+            "loads": {"gravity_mps2": 9.81},
+        }
+        result = analyze_structure(
+            graph, {"M0": "TEST"}, {"TEST": profile}, material, case,
+            engine="frame"
+        )
+        expected_m = 1000.0 * 3.0 ** 3 / (3.0 * material.E_Pa * profile.i_weak_m4)
+        self.assertTrue(result.stable, result.error)
+        self.assertAlmostEqual(result.max_displacement_mm, expected_m * 1000.0,
+                               delta=expected_m * 1000.0 * 0.02)
 
 
 if __name__ == "__main__":

@@ -123,6 +123,13 @@ def _random_design(length: int, profile_count: int, rng: random.Random,
     ]
 
 
+def _encoded_for_kinds(graph, allowed_kinds: set[str], profile_index: int) -> list[int]:
+    return [
+        profile_index if member.kind in allowed_kinds else 0
+        for member in graph.members
+    ]
+
+
 def run_fallback_search(graph, profiles, material, case, *,
                         n_eval: int, seed: int, engine: str):
     rng = random.Random(seed)
@@ -135,23 +142,45 @@ def run_fallback_search(graph, profiles, material, case, *,
     )
     best: tuple[list[int], AnalysisResult] | None = None
     evaluated = 0
+    topology_seeds = [
+        base,
+        _encoded_for_kinds(
+            graph,
+            {"support_to_intermediate", "intermediate_to_target",
+             "module_target_tie", "inter_module_brace"},
+            profile_count,
+        ),
+        _encoded_for_kinds(
+            graph,
+            {"support_to_target", "support_to_intermediate",
+             "intermediate_to_target", "module_target_tie",
+             "inter_module_brace"},
+            profile_count,
+        ),
+    ]
 
-    # First try the conservative topology with progressively lighter profiles.
-    for pidx in range(profile_count, 0, -1):
-        trial = [pidx if value > 0 else 0 for value in base]
-        result = evaluate_encoded(trial, graph, profiles, material, case, engine)
-        best = _better(best, (trial, result), case)
-        evaluated += 1
-        _append_log({
-            "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
-            "mode": "fallback",
-            "eval": evaluated,
-            "mass_kg": result.mass_kg,
-            "feasible": _is_feasible(result, case),
-            "constraints": _constraint_values(result, case),
-            "error": result.error,
-        })
-        print(f"fallback {evaluated:04d}: mass={result.mass_kg:.1f} feasible={_is_feasible(result, case)} err={result.error}")
+    # First try deterministic direct and braced topologies with progressively
+    # lighter profiles. The braced seed is important for tall supports: direct
+    # support-to-target members can pass stress/deflection while failing
+    # slenderness because their unbraced lengths are too long.
+    for seed_topology in topology_seeds:
+        for pidx in range(profile_count, 0, -1):
+            if evaluated >= n_eval:
+                break
+            trial = [pidx if value > 0 else 0 for value in seed_topology]
+            result = evaluate_encoded(trial, graph, profiles, material, case, engine)
+            best = _better(best, (trial, result), case)
+            evaluated += 1
+            _append_log({
+                "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                "mode": "fallback",
+                "eval": evaluated,
+                "mass_kg": result.mass_kg,
+                "feasible": _is_feasible(result, case),
+                "constraints": _constraint_values(result, case),
+                "error": result.error,
+            })
+            print(f"fallback {evaluated:04d}: mass={result.mass_kg:.1f} feasible={_is_feasible(result, case)} err={result.error}")
 
     while evaluated < n_eval:
         if best and rng.random() < 0.75:
@@ -305,7 +334,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--profiles", default=str(MODULE_ROOT / "data" / "ks_jis_h_profiles.csv"))
     parser.add_argument("--out", default=str(DEFAULT_OUT))
     parser.add_argument("--graph-out", default=str(DEFAULT_GRAPH_OUT))
-    parser.add_argument("--engine", choices=["auto", "pynite", "truss"], default="auto")
+    parser.add_argument("--engine", choices=["auto", "pynite", "frame", "truss"], default="auto")
     parser.add_argument("--pop", type=int, default=None)
     parser.add_argument("--n-gen", type=int, default=None)
     parser.add_argument("--n-eval", type=int, default=None,
