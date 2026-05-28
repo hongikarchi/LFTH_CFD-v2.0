@@ -60,6 +60,14 @@ OPTIMIZATION_LOG = MODULE_ROOT / "_optimization_log.jsonl"
 # Used in coupling repair (same baseline as old ga_sequential.py)
 DP_MM = 200.0
 FAIL_F = [1.0, 0.0]  # worst splash + zero dist when a sim fails
+SETUP_FAILURE_ISSUES = {
+    "no_floor_contact",
+    "top_locked",
+    "weak_arrival",
+    "source_not_continuous",
+    "top_retention_failure",
+    "insufficient_cascade_progress",
+}
 
 
 def append_optimization_log(eval_entry: dict) -> None:
@@ -73,6 +81,10 @@ def append_optimization_log(eval_entry: dict) -> None:
         "genes": eval_entry.get("ind"),
         "objectives": eval_entry.get("F"),
         "splash_frac": eval_entry.get("splash_frac"),
+        "arrival_score": eval_entry.get("arrival_score"),
+        "arrival_floor_total": eval_entry.get("arrival_floor_total"),
+        "frames_with_floor_contact": eval_entry.get("frames_with_floor_contact"),
+        "target_total": eval_entry.get("target_total"),
         "dist_mm": eval_entry.get("dist_mm"),
         "wall_s": eval_entry.get("wall_s"),
         "failed": bool(eval_entry.get("failed", False)),
@@ -285,13 +297,40 @@ class SculptureProblem(ElementwiseProblem):
             return
         dt = time.time() - t0
 
-        # 4. compute objectives
-        retention = (result.get("retention") or {})
-        total = max(int(retention.get("total", 0)), 1)
-        in_pos = int(retention.get("in_positive", 0))
-        splash_frac = float(total - in_pos) / float(total)
+        # 4. compute objectives. Optimization should only rank geometry once
+        # the simulation produced a usable floor-arrival signal; setup failures
+        # are penalized and kept out of the geometry comparison.
+        issue = result.get("issue")
+        arrival = (result.get("arrival") or {})
+        diagnostics = (result.get("diagnostics") or {})
+        arrival_score = float(arrival.get("score", result.get("arrival_score") or result.get("score") or 0.0))
+        arrival_floor_total = int(arrival.get("floor_total", 0) or 0)
+        frames_with_floor = int(arrival.get("frames_with_floor_contact", 0) or 0)
+        target_total = int(arrival.get("target_total", 0) or 0)
+        in_pos = int(arrival.get("in_positive", 0) or 0)
         dist_mm = dist_from_nozzle_mm(self.stage_idx, ind_dict,
                                         self.modules_info)
+        if issue in SETUP_FAILURE_ISSUES:
+            print(f"SETUP FAIL issue={issue} floor={arrival_floor_total} frames={frames_with_floor} ({dt:.0f}s)")
+            eval_entry.update({
+                "completed": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "wall_s": round(dt, 1), "failed": True,
+                "stage_fail": "fx3d_setup", "issue": issue,
+                "notes": result.get("notes"),
+                "arrival_score": round(arrival_score, 4),
+                "arrival_floor_total": arrival_floor_total,
+                "frames_with_floor_contact": frames_with_floor,
+                "target_total": target_total,
+                "dist_mm": round(dist_mm, 1),
+                "F": FAIL_F,
+            })
+            STATE_FILE.write_text(json.dumps(self.ga_state, indent=2),
+                                    encoding="utf-8")
+            append_optimization_log(eval_entry)
+            out["F"] = list(FAIL_F)
+            return
+
+        splash_frac = 1.0 - max(0.0, min(1.0, arrival_score))
         f1 = splash_frac
         f2 = -dist_mm
 
@@ -299,15 +338,25 @@ class SculptureProblem(ElementwiseProblem):
             "completed": time.strftime("%Y-%m-%d %H:%M:%S"),
             "wall_s": round(dt, 1),
             "splash_frac": round(splash_frac, 4),
+            "arrival_score": round(arrival_score, 4),
+            "arrival_floor_total": arrival_floor_total,
+            "frames_with_floor_contact": frames_with_floor,
+            "target_total": target_total,
+            "issue": issue,
+            "notes": result.get("notes"),
             "dist_mm": round(dist_mm, 1),
             "in_positive": in_pos,
-            "total": total,
+            "in_negative": int(arrival.get("in_negative", 0) or 0),
+            "total": target_total,
+            "final_reached_floor": diagnostics.get("final_reached_floor"),
             "F": [f1, f2],
         })
         STATE_FILE.write_text(json.dumps(self.ga_state, indent=2),
                                 encoding="utf-8")
         append_optimization_log(eval_entry)
-        print(f"splash={splash_frac:.3f} dist={dist_mm:.0f}mm ({dt:.0f}s)")
+        print(f"arrival_score={arrival_score:.3f} splash={splash_frac:.3f} "
+              f"floor={arrival_floor_total} frames={frames_with_floor} "
+              f"issue={issue or 'none'} dist={dist_mm:.0f}mm ({dt:.0f}s)")
         out["F"] = [f1, f2]
 
 

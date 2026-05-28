@@ -58,6 +58,12 @@ FIELD_GROUPS = [
              "desc": "시뮬 길이(초). 물이 도메인을 통과·정착할 시간."},
             {"key": "dt_out_s", "label": "dt_out", "unit": "s", "step": 0.01, "type": "number",
              "desc": "PNG/VTK 출력 간격. 작을수록 부드러운 영상 + 더 많은 디스크 사용."},
+            {"key": "nozzle_refill_dt_s", "label": "source refill", "unit": "s", "step": 0.005, "type": "number",
+             "desc": "노즐 source cell을 다시 TYPE_F|TYPE_E로 찍는 간격. dt_out보다 짧아야 수도꼭지처럼 연속 유입됨."},
+            {"key": "nozzle_refill_col_h", "label": "source throat", "unit": "cells", "step": 1, "type": "number",
+             "desc": "리필 때 계속 채우는 노즐 아래 짧은 목 길이. seed_col_h 전체를 채우면 물기둥이 고정되어 배수가 막힘."},
+            {"key": "nozzle_emit_col_h", "label": "emit slug", "unit": "cells", "step": 1, "type": "number",
+             "desc": "고정 throat 아래로 반복 생성하는 짧은 물줄기 길이. seed_col_h보다 작게 유지해야 전체 물기둥 고정이 되지 않음."},
             {"key": "lbm_u_ref", "label": "LBM u_ref", "unit": "lattice", "step": 0.005, "type": "number",
              "desc": "LBM 속도 스케일 → relaxation time 결정. 크면 빠름·불안정, 작으면 느림·정체 위험."},
             {"key": "side_walls", "label": "side walls", "unit": "", "type": "select", "options": ["E", "S"],
@@ -70,9 +76,23 @@ FIELD_GROUPS = [
         "title": "Inflow (nozzles)",
         "fields": [
             {"key": "nozzle_LPM", "label": "per-nozzle flow", "unit": "L/min", "step": 1, "type": "number",
-             "desc": "각 노즐의 유량(L/min). vz = Q/A 자동 변환.\n"
-                     "60 LPM × dp=0.1 → 0.1 m/s → LBM stability floor 1.0 m/s 적용.\n"
-                     "230 노즐 × 60 LPM = 0.23 m³/s 전체."},
+             "desc": "legacy 유량 fallback. nozzle_velocity_mps가 0일 때만 vz = Q/A 계산에 사용."},
+            {"key": "nozzle_mode", "label": "nozzle mode", "unit": "", "type": "select", "options": ["downstream_edge", "centroid", "index", "stride", "all"],
+             "desc": "Rhino nozzle 샘플 처리 방식. downstream_edge=다음 모듈 방향 보간, centroid=중앙, index=특정 샘플, all=모든 샘플."},
+            {"key": "nozzle_downstream_blend", "label": "edge blend", "unit": "", "step": 0.05, "type": "number",
+             "desc": "downstream_edge 위치 보간. 0=노즐 중앙, 1=다음 모듈 방향 림. 중앙 고임과 옆으로 빗나감을 조절."},
+            {"key": "nozzle_index", "label": "nozzle index", "unit": "", "step": 1, "type": "number",
+             "desc": "nozzle_mode=index일 때 사용할 Rhino nozzle 샘플 번호."},
+            {"key": "nozzle_max_points", "label": "stride points", "unit": "pts", "step": 1, "type": "number",
+             "desc": "nozzle_mode=stride일 때 사용할 최대 source 샘플 수."},
+            {"key": "nozzle_velocity_mps", "label": "inlet velocity", "unit": "m/s", "step": 0.25, "type": "number",
+             "desc": "직접 지정하는 하향 유입 속도. Rhino nozzle layer는 독립 노즐 230개가 아니라 sampled inlet surface라 이 값이 기본 제어값."},
+            {"key": "nozzle_velocity_floor_mps", "label": "velocity floor", "unit": "m/s", "step": 0.25, "type": "number",
+             "desc": "nozzle_LPM에서 속도를 계산할 때 적용하는 최소 하향 속도."},
+            {"key": "nozzle_horizontal_mps", "label": "horizontal speed", "unit": "m/s", "step": 0.25, "type": "number",
+             "desc": "다음 모듈 방향의 수평 유입 속도. 0이면 완전 수직 낙하, 값이 있으면 첫 보울에서 빠져나가는 운동량을 줌."},
+            {"key": "nozzle_horizontal_mode", "label": "horizontal mode", "unit": "", "type": "select", "options": ["toward_next_module", "none", "vector"],
+             "desc": "수평 속도 방향. toward_next_module=상단 모듈에서 다음 모듈 중심 방향."},
             {"key": "nozzle_rho_inflow", "label": "nozzle TYPE_E rho", "unit": "lattice", "step": 0.05, "type": "number",
              "desc": "노즐 TYPE_E cell의 고정 밀도 (lattice unit).\n"
                      "1.0 = 중성 (자연 분출, 기본). >1 = 고압 → 강한 jet (예: 1.05~1.10).\n"
@@ -126,12 +146,18 @@ FIELD_GROUPS = [
             {"key": "score_slab_thickness_m", "label": "score slab", "unit": "m", "step": 0.05, "type": "number",
              "desc": "[POSTPROCESS ONLY] sim 결과 변경 없음.\n"
                      "fx3d_postprocess.py에서 positive/negative 평면 Brep을 슬랩으로 확장하는 두께. score 판정 영역."},
+            {"key": "floor_hit_band_m", "label": "floor hit band", "unit": "m", "step": 0.05, "type": "number",
+             "desc": "[POSTPROCESS ONLY] reached_floor 진단에 쓰는 바닥 위 판정 밴드."},
             {"key": "fluid_threshold", "label": "phi cutoff", "unit": "", "step": 0.05, "type": "number",
              "desc": "[POSTPROCESS ONLY] sim 결과 변경 없음.\n"
                      "fx3d_postprocess.py에서 어느 phi 값부터 '물 셀'로 셀지 (0~1)."},
             {"key": "domain_pad_m", "label": "domain padding", "unit": "m", "step": 0.5, "type": "number",
              "desc": "[POSTPROCESS ONLY] sim 결과 변경 없음 (setup.cpp가 안 읽음).\n"
                      "fx3d_run.py가 domain_bbox_m 계산 시 sculpture 주변 padding으로만 사용."},
+            {"key": "collider_stl_path", "label": "collider STL", "unit": "", "type": "text",
+             "desc": "Optional STL override for fx3d_run.py. Relative paths resolve from repo root."},
+            {"key": "module_bboxes_path", "label": "module bboxes", "unit": "", "type": "text",
+             "desc": "Optional module bbox JSON matching collider_stl_path, used for cascade scoring."},
         ],
     },
     {
@@ -166,7 +192,7 @@ BUILD_FIELD_GROUPS = [
              "desc": "수치 정밀도. FP32 = 정확하지만 VRAM 2배. FP16S = 기본 (속도 2배, VRAM 절반). FP16C = FP16의 정확 변종."},
             {"key": "velocity_set", "label": "velocity set", "type": "select", "options": ["D3Q19", "D3Q27"],
              "desc": "LBM 격자 모델. D3Q19 = 기본 (19 방향). D3Q27 = 더 정확하지만 27% 느림."},
-            {"key": "collision", "label": "collision operator", "type": "select", "options": ["SRT", "TRT"],
+            {"key": "collision", "label": "collision operator", "type": "select", "options": ["SRT"],
              "desc": "충돌 연산자.\n"
                      "SRT (single relaxation) = 기본, 단순/빠름.\n"
                      "TRT (two relaxation) = 벽 근처 정확도 + 안정성 향상, 비용 거의 동일."},
