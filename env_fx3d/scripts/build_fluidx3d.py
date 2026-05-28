@@ -92,6 +92,7 @@ def patch_defines(cfg: dict, interactive: bool) -> str:
     # Required physics extensions
     src = patch_macro_bool(src, "VOLUME_FORCE", True)
     src = patch_macro_bool(src, "EQUILIBRIUM_BOUNDARIES", True)
+    src = patch_macro_bool(src, "MOVING_BOUNDARIES", bool(cfg.get("moving_boundaries", False)))
     src = patch_macro_bool(src, "SURFACE", True)
 
     # Graphics constants
