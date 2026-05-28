@@ -40,7 +40,7 @@ from pymoo.optimize import minimize
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT / "scripts"))
 
-from module_geometry import (DEFAULTS, GENE_BOUNDS, GENE_ORDER,
+from pymoo_gen_module import (DEFAULTS, GENE_BOUNDS, GENE_ORDER,
                               build_modules_combined_stl)
 from fx3d_run import run_experiment
 

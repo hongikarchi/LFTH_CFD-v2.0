@@ -18,7 +18,7 @@ import trimesh
 PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT / "scripts"))
 
-from rhino_mcp_helpers import mcp_call
+from rhino_mcp import mcp_call
 
 RUNS = PROJECT / "runs"
 OUT_JSON = RUNS / "_real_targets.json"

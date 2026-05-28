@@ -31,7 +31,7 @@ PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT / "scripts"))
 
 from fx3d_postprocess import postprocess
-from rhino_mcp_helpers import push_stl_to_rhino_layer
+from rhino_mcp import push_stl_to_rhino_layer
 
 FLUIDX3D_DIR = PROJECT / "external" / "FluidX3D"
 FLUIDX3D_EXE = FLUIDX3D_DIR / "bin" / "FluidX3D.exe"
@@ -181,7 +181,7 @@ def run_experiment(test_id: str,
         raise RuntimeError(
             f"STL {stl_path} is empty/corrupt ({local_stl.stat().st_size} bytes). "
             "Regenerate via extract_targets.py + thicken_collider.py, or "
-            "build parametric STL via module_geometry.")
+            "build parametric STL via pymoo_gen_module.")
     loaded = trimesh.load(local_stl, force="mesh")
     if not isinstance(loaded, trimesh.Trimesh) or loaded.vertices is None or len(loaded.vertices) == 0:
         raise RuntimeError(f"STL {stl_path} did not load as a usable mesh "

@@ -7,7 +7,7 @@ Each FluidX3D run writes:
 
 This script reads the LAST phi VTK, classifies each fluid cell against pond
 and per-module SI bboxes, writes runs/iter_NN/result.json with the
-`retention` dict that pymoo_optimize.py reads (in_positive, in_negative,
+`retention` dict that pymoo_run.py reads (in_positive, in_negative,
 in_column, splash, total).
 
 Cell counts are used (not absolute mass) so ratios match DSPH semantics.
