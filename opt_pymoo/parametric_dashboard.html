@@ -208,6 +208,7 @@ table.grid th {
           <button class="action warn" id="btn_bake">Bake to Rhino</button>
           <button class="action secondary" id="btn_save">Save params</button>
           <button class="action secondary" id="btn_defaults">Load bbox defaults</button>
+          <button class="action secondary" id="btn_boundary">Refresh boundary</button>
           <label class="check"><input type="checkbox" id="auto_bake"> Auto bake</label>
         </div>
         <div class="status-bar" id="status">ready.</div>
@@ -284,6 +285,7 @@ const RES_CONTROLS = [
 
 let STATE = null;
 let MODULES = [];
+let BOUNDARY = null;
 let LATEST_META = null;
 let autoTimer = null;
 let busy = false;
@@ -421,6 +423,7 @@ async function loadInitial() {
   STATE = j.params;
   STATE.selected_index = 'all';
   MODULES = j.modules || [];
+  BOUNDARY = j.boundary || null;
   ACTIVE_MODULE = moduleKeys()[0] || '0';
   renderControls();
   drawPreview();
@@ -431,6 +434,7 @@ async function loadInitial() {
     if (mr.ok) {
       const mj = await mr.json();
       LATEST_META = mj.meta;
+      BOUNDARY = mj.meta.boundary || BOUNDARY;
       renderMeta();
     }
   } catch (_) {}
@@ -442,6 +446,7 @@ async function loadDefaults() {
   STATE = j.params;
   STATE.selected_index = 'all';
   MODULES = j.modules || MODULES;
+  BOUNDARY = j.boundary || BOUNDARY;
   ACTIVE_MODULE = moduleKeys().includes(ACTIVE_MODULE) ? ACTIVE_MODULE : (moduleKeys()[0] || '0');
   VIEW.frame = null;
   renderControls();
@@ -461,6 +466,22 @@ async function saveParams() {
   setStatus(j.ok ? 'saved ' + j.saved : 'save failed: ' + j.error);
 }
 
+async function refreshBoundary() {
+  setBusy(true);
+  setStatus('reading env::boundary from Rhino...');
+  const r = await fetch('/api/boundary', {method: 'POST'});
+  const j = await r.json();
+  setBusy(false);
+  if (!j.ok) {
+    setStatus('boundary refresh failed: ' + (j.error || 'unknown error'));
+    return;
+  }
+  BOUNDARY = j.boundary;
+  VIEW.frame = null;
+  drawPreview();
+  setStatus('boundary loaded: ' + fmtVec(BOUNDARY.bbox_mm[0]) + ' -> ' + fmtVec(BOUNDARY.bbox_mm[1]));
+}
+
 async function preview() {
   setBusy(true);
   setStatus('generating STL...');
@@ -474,9 +495,11 @@ async function preview() {
     return;
   }
   LATEST_META = j.meta;
+  BOUNDARY = j.meta.boundary || BOUNDARY;
   renderMeta();
   renderFiles();
-  setStatus('preview generated. watertight=' + j.meta.watertight + ' bad_edges=' + j.meta.nonmanifold_or_boundary_edges);
+  const boundary = j.meta.boundary_ok === null ? 'boundary=missing' : 'boundary=' + (j.meta.boundary_ok ? 'inside' : 'OUTSIDE');
+  setStatus('preview generated. watertight=' + j.meta.watertight + ' bad_edges=' + j.meta.nonmanifold_or_boundary_edges + ' ' + boundary);
 }
 
 async function bake() {
@@ -493,6 +516,7 @@ async function bake() {
     return;
   }
   LATEST_META = j.meta;
+  BOUNDARY = j.meta.boundary || BOUNDARY;
   renderMeta();
   renderFiles();
   const rhino = (j.meta.rhino || []).join(' | ');
@@ -510,6 +534,7 @@ function renderMeta() {
   }
   const rows = (LATEST_META.modules || []).map(m => {
     const err = m.solid_extent_error_mm || [];
+    const bnd = m.boundary ? (m.boundary.inside ? 'inside' : 'OUT ' + fmtNum(m.boundary.max_violation_mm)) : '';
     return `<tr>
       <td>Module ${m.index}</td>
       <td>${fmtNum(err[0])}</td>
@@ -517,10 +542,11 @@ function renderMeta() {
       <td>${fmtNum(err[2])}</td>
       <td>${m.solid_triangles}</td>
       <td>${m.watertight ? 'true' : 'false'}</td>
+      <td>${bnd}</td>
     </tr>`;
   }).join('');
   document.getElementById('module_table').innerHTML =
-    `<table class="grid"><thead><tr><th>module</th><th>dx mm</th><th>dy mm</th><th>dz mm</th><th>tris</th><th>closed</th></tr></thead><tbody>${rows}</tbody></table>`;
+    `<table class="grid"><thead><tr><th>module</th><th>dx mm</th><th>dy mm</th><th>dz mm</th><th>tris</th><th>closed</th><th>boundary</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function renderFiles(outputs) {
@@ -528,7 +554,8 @@ function renderFiles(outputs) {
     solid_stl: LATEST_META?.solid_stl || 'opt_pymoo/runs/_ui_ellipsoid_parametric.stl',
     viz_stl: LATEST_META?.viz_stl || 'opt_pymoo/runs/_ui_ellipsoid_parametric_viz.stl',
     meta: LATEST_META?.meta_path || 'opt_pymoo/runs/_ui_ellipsoid_parametric_meta.json',
-    params: 'opt_pymoo/runs/_ui_ellipsoid_params.json'
+    params: 'opt_pymoo/runs/_ui_ellipsoid_params.json',
+    boundary: BOUNDARY?.path || 'env_fx3d/runs/_boundary.json'
   };
   document.getElementById('file_list').innerHTML = Object.entries(paths)
     .map(([k, v]) => `<div><b>${esc(k)}</b> ${esc(v)}</div>`).join('');
@@ -546,6 +573,22 @@ function fmtVec(v) {
 
 function moduleInfo(idx) {
   return MODULES.find(m => String(m.index) === String(idx));
+}
+
+function boundaryCorners() {
+  const box = BOUNDARY?.bbox_mm;
+  if (!Array.isArray(box) || box.length !== 2) return [];
+  const mn = box[0], mx = box[1];
+  return [
+    {x: mn[0], y: mn[1], z: mn[2]},
+    {x: mx[0], y: mn[1], z: mn[2]},
+    {x: mx[0], y: mx[1], z: mn[2]},
+    {x: mn[0], y: mx[1], z: mn[2]},
+    {x: mn[0], y: mn[1], z: mx[2]},
+    {x: mx[0], y: mn[1], z: mx[2]},
+    {x: mx[0], y: mx[1], z: mx[2]},
+    {x: mn[0], y: mx[1], z: mx[2]}
+  ];
 }
 
 function derivedGeometry(params) {
@@ -769,6 +812,9 @@ function buildPreviewGeometry() {
     meshes.push({idx, points, faces, rim, rings, ghost});
     allPoints.push(...points);
   }
+  if (BOUNDARY?.bbox_mm) {
+    allPoints.push(...boundaryCorners());
+  }
   return {meshes, allPoints};
 }
 
@@ -874,6 +920,35 @@ function drawGrid(ctx, b, map) {
   }
 }
 
+function drawBoundaryBox(ctx, map) {
+  const corners = boundaryCorners();
+  if (corners.length !== 8) return;
+  const pts = corners.map(map);
+  const edges = [
+    [0, 1], [1, 2], [2, 3], [3, 0],
+    [4, 5], [5, 6], [6, 7], [7, 4],
+    [0, 4], [1, 5], [2, 6], [3, 7]
+  ];
+  const ok = LATEST_META?.boundary_ok;
+  ctx.save();
+  ctx.strokeStyle = ok === false ? 'rgba(207, 34, 46, 0.72)' : 'rgba(31, 111, 235, 0.42)';
+  ctx.lineWidth = ok === false ? 1.8 : 1.25;
+  ctx.setLineDash([6, 5]);
+  for (const [a, c] of edges) {
+    ctx.beginPath();
+    ctx.moveTo(pts[a].x, pts[a].y);
+    ctx.lineTo(pts[c].x, pts[c].y);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  const label = ok === false ? 'boundary OUT' : 'env::boundary';
+  ctx.fillStyle = ok === false ? 'rgba(207, 34, 46, 0.85)' : 'rgba(31, 111, 235, 0.72)';
+  ctx.font = '11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+  const top = pts.reduce((best, p) => p.y < best.y ? p : best, pts[0]);
+  ctx.fillText(label, top.x + 6, top.y - 6);
+  ctx.restore();
+}
+
 function drawArrow(ctx, x1, y1, x2, y2, color) {
   const angle = Math.atan2(y2 - y1, x2 - x1);
   const head = 6;
@@ -962,6 +1037,7 @@ function drawPreview() {
   ctx.fillStyle = '#f8fbff';
   ctx.fillRect(0, 0, w, h);
   drawGrid(ctx, b, map);
+  drawBoundaryBox(ctx, map);
 
   const ghostFaces = [];
   const faces = [];
@@ -1132,6 +1208,7 @@ document.getElementById('btn_defaults').addEventListener('click', loadDefaults);
 document.getElementById('btn_save').addEventListener('click', saveParams);
 document.getElementById('btn_preview').addEventListener('click', preview);
 document.getElementById('btn_bake').addEventListener('click', bake);
+document.getElementById('btn_boundary').addEventListener('click', refreshBoundary);
 
 const previewCanvas = document.getElementById('preview_canvas');
 previewCanvas.addEventListener('pointerdown', e => {

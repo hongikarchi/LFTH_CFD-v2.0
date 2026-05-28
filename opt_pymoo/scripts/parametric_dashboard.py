@@ -34,6 +34,7 @@ import parametric_module as pm
 HTML_PATH = MODULE_ROOT / "parametric_dashboard.html"
 RUNS = MODULE_ROOT / "runs"
 MODULES_JSON = REPO_ROOT / "env_fx3d" / "runs" / "_collider_modules.json"
+BOUNDARY_JSON = REPO_ROOT / "env_fx3d" / "runs" / "_boundary.json"
 PARAMS_PATH = RUNS / "_ui_ellipsoid_params.json"
 SOLID_STL = RUNS / "_ui_ellipsoid_parametric.stl"
 VIZ_STL = RUNS / "_ui_ellipsoid_parametric_viz.stl"
@@ -53,6 +54,7 @@ PARAM_KEYS = [
     "ty_mm",
     "tz_mm",
 ]
+BOUNDARY_LAYER = "env::boundary"
 
 if HAS_FLASK:
     app = Flask(__name__, static_folder=None)
@@ -114,6 +116,119 @@ def _read_saved_state() -> dict | None:
         return _normalize_state(data)
     except Exception:
         return None
+
+
+def _bbox_boundary_check(bounds: list[list[float]], boundary_bounds: list[list[float]]) -> dict:
+    min_margin = [bounds[0][i] - boundary_bounds[0][i] for i in range(3)]
+    max_margin = [boundary_bounds[1][i] - bounds[1][i] for i in range(3)]
+    violations = [max(0.0, -min_margin[i], -max_margin[i]) for i in range(3)]
+    max_violation = max(violations) if violations else 0.0
+    return {
+        "inside": max_violation <= 1.0e-6,
+        "min_margin_mm": pm._round_nested(min_margin),
+        "max_margin_mm": pm._round_nested(max_margin),
+        "axis_violation_mm": pm._round_nested(violations),
+        "max_violation_mm": round(max_violation, 3),
+    }
+
+
+def _read_boundary() -> dict | None:
+    if not BOUNDARY_JSON.exists():
+        return None
+    try:
+        data = json.loads(BOUNDARY_JSON.read_text(encoding="utf-8"))
+        bounds = data.get("bbox_mm")
+        if (
+            isinstance(bounds, list)
+            and len(bounds) == 2
+            and all(isinstance(row, list) and len(row) == 3 for row in bounds)
+        ):
+            data["bbox_mm"] = [[float(v) for v in row] for row in bounds]
+            return data
+    except Exception:
+        return None
+    return None
+
+
+def _fetch_boundary_from_rhino() -> dict:
+    sys.path.insert(0, str(REPO_ROOT / "env_fx3d" / "scripts"))
+    from rhino_mcp import mcp_call
+
+    code = f'''
+import scriptcontext as sc
+doc = sc.doc
+target = "{BOUNDARY_LAYER}"
+
+def layer_full_path(layer_index):
+    layer = doc.Layers[layer_index]
+    names = [layer.Name]
+    parent_id = layer.ParentLayerId
+    while parent_id != System.Guid.Empty:
+        parent = doc.Layers.FindId(parent_id)
+        if parent is None:
+            break
+        names.append(parent.Name)
+        parent_id = parent.ParentLayerId
+    return "::".join(reversed(names))
+
+import System
+bb_min = [1e30, 1e30, 1e30]
+bb_max = [-1e30, -1e30, -1e30]
+cnt = 0
+for o in doc.Objects:
+    fp = layer_full_path(o.Attributes.LayerIndex)
+    if fp != target and not fp.startswith(target + "::"):
+        continue
+    b = o.Geometry.GetBoundingBox(True)
+    if b.IsValid:
+        for k, v in enumerate([b.Min.X, b.Min.Y, b.Min.Z]):
+            bb_min[k] = min(bb_min[k], v)
+        for k, v in enumerate([b.Max.X, b.Max.Y, b.Max.Z]):
+            bb_max[k] = max(bb_max[k], v)
+        cnt += 1
+print("BOUNDARY_BBOX " + str(cnt) + " " + " ".join(str(v) for v in bb_min + bb_max))
+'''
+    result = mcp_call(code, timeout=60)
+    if result.get("status") != "success":
+        raise RuntimeError(f"Rhino MCP boundary fetch failed: {result}")
+    out = result.get("result", {}).get("output", "")
+    for line in out.splitlines():
+        line = line.strip()
+        if not line.startswith("BOUNDARY_BBOX "):
+            continue
+        parts = line.split()
+        count = int(parts[1])
+        if count <= 0:
+            raise RuntimeError(f"{BOUNDARY_LAYER} has no objects")
+        values = [float(v) for v in parts[2:8]]
+        boundary = {
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "layer": BOUNDARY_LAYER,
+            "source": "rhino_mcp",
+            "object_count": count,
+            "bbox_mm": [values[0:3], values[3:6]],
+            "path": str(BOUNDARY_JSON).replace("\\", "/"),
+        }
+        BOUNDARY_JSON.parent.mkdir(parents=True, exist_ok=True)
+        BOUNDARY_JSON.write_text(json.dumps(boundary, indent=2), encoding="utf-8")
+        return boundary
+    raise RuntimeError(f"no BOUNDARY_BBOX line in Rhino output: {out[-500:]}")
+
+
+def _boundary_payload(refresh: bool = False) -> dict:
+    if refresh:
+        boundary = _fetch_boundary_from_rhino()
+    else:
+        boundary = _read_boundary()
+    if boundary is None:
+        return {
+            "ok": False,
+            "boundary": None,
+            "path": str(BOUNDARY_JSON).replace("\\", "/"),
+            "layer": BOUNDARY_LAYER,
+            "error": "boundary cache missing; refresh from Rhino env::boundary",
+        }
+    return {"ok": True, "boundary": boundary}
 
 
 def _coerce_float(payload: dict, key: str, default: float) -> float:
@@ -250,6 +365,7 @@ def _write_meta(meta: dict) -> None:
 
 def _build_preview(state: dict) -> dict:
     modules = _load_modules()
+    boundary = _read_boundary()
     params_by_index = _state_to_module_params(state)
     solid, viz, meta_modules = pm.build_modules_from_infos(
         modules,
@@ -263,6 +379,16 @@ def _build_preview(state: dict) -> dict:
 
     edge_counts = pm.edge_incidence(solid)
     bad_edges = sum(1 for count in edge_counts.values() if count != 2)
+    solid_bbox = pm._bbox(solid.vertices)
+    viz_bbox = pm._bbox(viz.vertices)
+    boundary_check = None
+    if boundary:
+        boundary_bounds = boundary["bbox_mm"]
+        boundary_check = _bbox_boundary_check(solid_bbox, boundary_bounds)
+        for module_meta in meta_modules:
+            module_meta["boundary"] = _bbox_boundary_check(
+                module_meta["solid_bbox_mm"], boundary_bounds
+            )
     meta = {
         "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "generator": "ui ellipsoid-cut parametric module",
@@ -280,10 +406,13 @@ def _build_preview(state: dict) -> dict:
         "solid_triangles": len(solid.faces),
         "viz_vertices": len(viz.vertices),
         "viz_triangles": len(viz.faces),
-        "solid_bbox_mm": pm._round_nested(pm._bbox(solid.vertices)),
-        "viz_bbox_mm": pm._round_nested(pm._bbox(viz.vertices)),
+        "solid_bbox_mm": pm._round_nested(solid_bbox),
+        "viz_bbox_mm": pm._round_nested(viz_bbox),
         "watertight": pm.is_watertight(solid),
         "nonmanifold_or_boundary_edges": bad_edges,
+        "boundary": boundary,
+        "boundary_check": boundary_check,
+        "boundary_ok": None if boundary_check is None else boundary_check["inside"],
         "modules": meta_modules,
     }
     _write_meta(meta)
@@ -296,11 +425,13 @@ def _defaults_payload() -> dict:
         "ok": True,
         "params": _default_state(),
         "modules": _module_summary(modules),
+        "boundary": _read_boundary(),
         "outputs": {
             "solid_stl": str(SOLID_STL).replace("\\", "/"),
             "viz_stl": str(VIZ_STL).replace("\\", "/"),
             "meta": str(META_PATH).replace("\\", "/"),
             "params": str(PARAMS_PATH).replace("\\", "/"),
+            "boundary": str(BOUNDARY_JSON).replace("\\", "/"),
         },
     }
 
@@ -308,7 +439,12 @@ def _defaults_payload() -> dict:
 def _params_payload() -> dict:
     modules = _load_modules()
     state = _read_saved_state() or _default_state()
-    return {"ok": True, "params": state, "modules": _module_summary(modules)}
+    return {
+        "ok": True,
+        "params": state,
+        "modules": _module_summary(modules),
+        "boundary": _read_boundary(),
+    }
 
 
 def _save_params_payload(payload: dict | None) -> dict:
@@ -385,6 +521,14 @@ def api_meta():
         abort(404)
 
 
+@app.route("/api/boundary", methods=["GET", "POST"])
+def api_boundary():
+    try:
+        return jsonify(_boundary_payload(refresh=request.method == "POST"))
+    except Exception as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 400
+
+
 class _StdlibHandler(BaseHTTPRequestHandler):
     server_version = "ParametricDashboard/1.0"
 
@@ -422,6 +566,8 @@ class _StdlibHandler(BaseHTTPRequestHandler):
                 self._send_json(200, _params_payload())
             elif path == "/api/meta":
                 self._send_json(200, _meta_payload())
+            elif path == "/api/boundary":
+                self._send_json(200, _boundary_payload(refresh=False))
             else:
                 self._send_json(404, {"ok": False, "error": "not found"})
         except FileNotFoundError as exc:
@@ -439,6 +585,8 @@ class _StdlibHandler(BaseHTTPRequestHandler):
                 self._send_json(200, _preview_payload(payload))
             elif path == "/api/bake":
                 self._send_json(200, _bake_payload(payload))
+            elif path == "/api/boundary":
+                self._send_json(200, _boundary_payload(refresh=True))
             else:
                 self._send_json(404, {"ok": False, "error": "not found"})
         except Exception as exc:
