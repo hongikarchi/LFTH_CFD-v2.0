@@ -43,11 +43,9 @@ PORT = 8081
 PARAM_KEYS = [
     "b_mm",
     "h_mm",
-    "cut_tilt_deg",
+    "ellipsoid_tilt_deg",
     "wall_thickness_mm",
     "rim_lift_mm",
-    "tilt_x_deg",
-    "tilt_y_deg",
     "rotation_z_deg",
     "tx_mm",
     "ty_mm",
@@ -134,7 +132,7 @@ def _migrate_old_module_params(raw_params: dict, default_params: dict) -> dict:
     """Best-effort migration from earlier param sets to b/h tangent-cut params."""
     migrated = dict(default_params)
     migrated.update({k: raw_params[k] for k in PARAM_KEYS if k in raw_params})
-    if "b_mm" in raw_params and "h_mm" in raw_params:
+    if "b_mm" in raw_params and "h_mm" in raw_params and "ellipsoid_tilt_deg" in raw_params:
         return migrated
 
     try:
@@ -156,15 +154,28 @@ def _migrate_old_module_params(raw_params: dict, default_params: dict) -> dict:
             migrated["b_mm"] = max(1.0, (opening_x + opening_y) * 0.25)
             migrated["h_mm"] = max(1.0, cap_depth)
 
-        if "cut_tilt_deg" in raw_params:
-            migrated["cut_tilt_deg"] = min(35.0, max(0.0, float(raw_params["cut_tilt_deg"])))
+        if "ellipsoid_tilt_deg" in raw_params:
+            migrated["ellipsoid_tilt_deg"] = min(
+                35.0, max(0.0, float(raw_params["ellipsoid_tilt_deg"]))
+            )
+        elif "cut_tilt_deg" in raw_params:
+            migrated["ellipsoid_tilt_deg"] = min(35.0, max(0.0, float(raw_params["cut_tilt_deg"])))
+        elif "tilt_y_deg" in raw_params or "tilt_x_deg" in raw_params:
+            tx = float(raw_params.get("tilt_x_deg", 0.0))
+            ty = float(raw_params.get("tilt_y_deg", 0.0))
+            migrated["ellipsoid_tilt_deg"] = min(35.0, math.hypot(tx, ty))
+            if math.hypot(tx, ty) > 1.0e-9:
+                direction = (math.degrees(math.atan2(-tx, ty)) + 360.0) % 360.0
+                migrated["rotation_z_deg"] = (
+                    float(migrated.get("rotation_z_deg", 0.0)) + direction
+                ) % 360.0
         else:
             sx = float(raw_params.get("cut_slope_x_mm", 0.0))
             sy = float(raw_params.get("cut_slope_y_mm", 0.0))
             scale = max(float(migrated.get("b_mm", default_params["b_mm"])), 1.0)
             slope = math.hypot(sx / scale, sy / scale)
             if slope > 1.0e-12:
-                migrated["cut_tilt_deg"] = min(35.0, math.degrees(math.atan(slope)))
+                migrated["ellipsoid_tilt_deg"] = min(35.0, math.degrees(math.atan(slope)))
 
         old_azimuth = float(raw_params.get("cut_azimuth_deg", 0.0))
         if abs(old_azimuth) > 1.0e-9:

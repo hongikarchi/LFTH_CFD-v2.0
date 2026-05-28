@@ -1,10 +1,10 @@
 """Ellipsoid oblique-cut parametric module generator.
 
-Builds bowl-like modules from the lower cap of a spheroid. The rim is the
-intersection between the ellipsoid and an oblique local cut plane anchored at
-the +X vertical-tangent point. The simulation STL is a closed solid: inner cap,
-outer normal-offset cap, and stitched rim. All geometry is authored in
-millimeters; STL export scales vertices to meters for FluidX3D.
+Builds bowl-like modules from the lower cap of a spheroid. The spheroid is
+tilted first, then cut by the water/global-horizontal plane through the +X
+vertical-tangent point. The simulation STL is a closed solid: inner cap, outer
+normal-offset cap, and stitched rim. All geometry is authored in millimeters;
+STL export scales vertices to meters for FluidX3D.
 """
 from __future__ import annotations
 
@@ -40,11 +40,9 @@ class Mesh:
 class ModuleParams:
     b_mm: float
     h_mm: float
-    cut_tilt_deg: float = 0.0
+    ellipsoid_tilt_deg: float = 0.0
     wall_thickness_mm: float = 500.0
     rim_lift_mm: float = 0.0
-    tilt_x_deg: float = 0.0
-    tilt_y_deg: float = 0.0
     rotation_z_deg: float = 0.0
     tx_mm: float = 0.0
     ty_mm: float = 0.0
@@ -108,8 +106,8 @@ def _validate_params(params: ModuleParams) -> None:
         raise ValueError("b_mm must be positive")
     if params.h_mm <= 0.0:
         raise ValueError("h_mm must be positive")
-    if not (0.0 <= params.cut_tilt_deg < 60.0):
-        raise ValueError("cut_tilt_deg must be in [0, 60)")
+    if not (0.0 <= params.ellipsoid_tilt_deg < 60.0):
+        raise ValueError("ellipsoid_tilt_deg must be in [0, 60)")
     if params.wall_thickness_mm <= 0.0:
         raise ValueError("wall_thickness_mm must be positive")
     if params.rim_lift_mm < 0.0:
@@ -121,18 +119,24 @@ def derived_geometry(params: ModuleParams) -> dict[str, float | tuple[float, flo
     _validate_params(params)
     b = float(params.b_mm)
     h = float(params.h_mm)
-    tilt = math.radians(float(params.cut_tilt_deg))
+    tilt = math.radians(float(params.ellipsoid_tilt_deg))
     slope = math.tan(tilt)
+    denom = math.sqrt(b * b + h * h * slope * slope)
+    tangent_x = b * b / denom
+    tangent_z = h * h * slope / denom
+    cut_world_z = -tangent_x * math.sin(tilt) + tangent_z * math.cos(tilt)
+    cut_offset_z = tangent_z - slope * tangent_x
     plane_normal = _normalize((-slope, 0.0, 1.0))
     return {
         "axis_x_mm": b,
         "axis_y_mm": b,
         "axis_z_mm": h,
         "center_z_mm": 0.0,
-        "vertical_tangent_point_mm": (b, 0.0, 0.0),
+        "vertical_tangent_point_mm": (tangent_x, 0.0, tangent_z),
         "cut_slope_x": slope,
         "cut_slope_y": 0.0,
-        "cut_offset_z_mm": -slope * b,
+        "cut_offset_z_mm": cut_offset_z,
+        "cut_world_z_mm": cut_world_z,
         "cut_plane_normal": plane_normal,
     }
 
@@ -378,10 +382,8 @@ def _stitch_two_loops(faces: list[Face], inner_loop: list[int], outer_loop: list
 
 
 def _transform_vertices(vertices: list[Vec3], anchor_mm: Vec3, params: ModuleParams) -> list[Vec3]:
-    rx = math.radians(params.tilt_x_deg)
-    ry = math.radians(params.tilt_y_deg)
+    ry = math.radians(params.ellipsoid_tilt_deg)
     rz = math.radians(params.rotation_z_deg)
-    sx, cx = math.sin(rx), math.cos(rx)
     sy, cy = math.sin(ry), math.cos(ry)
     sz, cz = math.sin(rz), math.cos(rz)
     tx = anchor_mm[0] + params.tx_mm
@@ -390,7 +392,6 @@ def _transform_vertices(vertices: list[Vec3], anchor_mm: Vec3, params: ModulePar
 
     out: list[Vec3] = []
     for x, y, z in vertices:
-        y, z = y * cx - z * sx, y * sx + z * cx
         x, z = x * cy + z * sy, -x * sy + z * cy
         x, y = x * cz - y * sz, x * sz + y * cz
         out.append((x + tx, y + ty, z + tz))
@@ -455,7 +456,7 @@ def build_modules_from_infos(
     params_by_index: dict[int, ModuleParams] | None = None,
     wall_thickness_mm: float = 500.0,
     rim_lift_mm: float = 0.0,
-    cut_tilt_deg: float = 0.0,
+    ellipsoid_tilt_deg: float = 0.0,
     theta_segments: int = 64,
     radial_segments: int = 16,
 ) -> tuple[Mesh, Mesh, list[dict]]:
@@ -475,7 +476,7 @@ def build_modules_from_infos(
                 wall_thickness_mm=wall_thickness_mm,
                 rim_lift_mm=rim_lift_mm,
             )
-            params.cut_tilt_deg = float(cut_tilt_deg)
+            params.ellipsoid_tilt_deg = float(ellipsoid_tilt_deg)
         anchor = tuple(float(v) for v in module["base_point_mm"])
         solid = build_module_mesh(
             params,
@@ -515,10 +516,12 @@ def build_modules_from_infos(
                     derived["vertical_tangent_point_mm"]
                 ),
                 "cut_plane": {
-                    "equation": "z = sx*x + offset",
+                    "equation_local_before_tilt": "z = sx*x + offset",
+                    "equation_after_tilt": "z = cut_world_z",
                     "slope_x": round(float(derived["cut_slope_x"]), 6),
                     "slope_y": 0.0,
                     "offset_z_mm": round(float(derived["cut_offset_z_mm"]), 6),
+                    "world_z_mm": round(float(derived["cut_world_z_mm"]), 6),
                     "normal": _round_nested(derived["cut_plane_normal"], 6),
                 },
                 "target_bbox_mm": _round_nested(target_bbox),
@@ -588,7 +591,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--radial-segments", type=int, default=16)
     parser.add_argument("--wall-thickness-mm", type=float, default=500.0)
     parser.add_argument("--rim-lift-mm", type=float, default=0.0)
-    parser.add_argument("--cut-tilt-deg", type=float, default=0.0)
+    parser.add_argument(
+        "--ellipsoid-tilt-deg",
+        "--cut-tilt-deg",
+        dest="ellipsoid_tilt_deg",
+        type=float,
+        default=0.0,
+        help="tilt the ellipsoid first, then cut it by the global-horizontal plane",
+    )
     parser.add_argument("--push-rhino", action="store_true")
     args = parser.parse_args(argv)
 
@@ -604,7 +614,7 @@ def main(argv: list[str] | None = None) -> int:
         indices=indices,
         wall_thickness_mm=args.wall_thickness_mm,
         rim_lift_mm=args.rim_lift_mm,
-        cut_tilt_deg=args.cut_tilt_deg,
+        ellipsoid_tilt_deg=args.ellipsoid_tilt_deg,
         theta_segments=args.theta_segments,
         radial_segments=args.radial_segments,
     )

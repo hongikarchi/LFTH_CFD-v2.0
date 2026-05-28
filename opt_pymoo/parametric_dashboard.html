@@ -242,8 +242,8 @@ const PARAM_GROUPS = [
   {
     key: 'cut',
     label: '컷 라인',
-    title: '수직 접점 컷',
-    desc: '컷 평면은 +X 방향의 수직 접점 (b,0,0)을 지나갑니다. 방향은 별도 변수 없이 rotate z로 돌립니다.'
+    title: '기울이고 자르기',
+    desc: 'ellipsoid를 먼저 기울인 뒤, 물 기준 수평면으로 자릅니다. 컷은 기울어진 ellipsoid의 수직 접점을 지나갑니다.'
   },
   {
     key: 'rim',
@@ -255,7 +255,7 @@ const PARAM_GROUPS = [
     key: 'transform',
     label: '위치 / 회전',
     title: '위치와 회전',
-    desc: '기존 base point를 기준으로 모듈별 위치 보정과 자세를 조절합니다.'
+    desc: '기존 base point 기준 위치와 평면 방향만 조절합니다. 입사각에 영향을 주는 기울기는 컷 라인 탭에서 먼저 적용됩니다.'
   },
   {
     key: 'mesh',
@@ -267,12 +267,10 @@ const PARAM_GROUPS = [
 const PARAM_CONTROLS = [
   ['b_mm', 'b', 500, 10000, 10, 'mm', 'shape', 'ellipsoid의 수평 반지름입니다. 수평 컷 기준 입구 폭은 2b가 됩니다.'],
   ['h_mm', 'h', 100, 12000, 10, 'mm', 'shape', 'ellipsoid의 수직 반지름입니다. 수평 컷 기준 bowl bottom까지의 깊이입니다.'],
-  ['cut_tilt_deg', 'cut tilt', 0, 35, 0.5, 'deg', 'cut', '+X 쪽 수직 접점을 기준으로 cut plane을 기울입니다. 물이 닿는 앞쪽 rim을 세우는 변수입니다.'],
+  ['ellipsoid_tilt_deg', 'tilt before cut', 0, 35, 0.5, 'deg', 'cut', 'ellipsoid를 먼저 기울이는 각도입니다. 그 다음 물 기준 수평면으로 잘라 앞쪽 rim이 수직 접점에 걸리게 합니다.'],
   ['wall_thickness_mm', 'wall', 50, 2500, 10, 'mm', 'rim', 'inner cap을 surface normal 방향으로 offset하는 두께입니다.'],
   ['rim_lift_mm', 'rim lift', 0, 2500, 10, 'mm', 'rim', 'rim에서 cut plane normal 방향으로 올리는 lip 높이입니다.'],
-  ['tilt_x_deg', 'tilt x', -45, 45, 0.5, 'deg', 'transform', '완성된 모듈을 local X축 기준으로 기울입니다.'],
-  ['tilt_y_deg', 'tilt y', -45, 45, 0.5, 'deg', 'transform', '완성된 모듈을 local Y축 기준으로 기울입니다.'],
-  ['rotation_z_deg', 'rotate z', 0, 360, 1, 'deg', 'transform', '완성된 모듈을 local Z축 기준으로 회전합니다.'],
+  ['rotation_z_deg', 'rotate z', 0, 360, 1, 'deg', 'transform', '기울이고 자르는 방향을 평면상에서 돌립니다. cut azimuth 대신 이 값 하나를 씁니다.'],
   ['tx_mm', 'tx', -4000, 4000, 10, 'mm', 'transform', 'base point에서 X 방향으로 추가 이동합니다.'],
   ['ty_mm', 'ty', -4000, 4000, 10, 'mm', 'transform', 'base point에서 Y 방향으로 추가 이동합니다.'],
   ['tz_mm', 'tz', -4000, 4000, 10, 'mm', 'transform', 'base point에서 Z 방향으로 추가 이동합니다.']
@@ -551,8 +549,13 @@ function moduleInfo(idx) {
 function derivedGeometry(params) {
   const b = Math.max(1, Number(params.b_mm || 1));
   const h = Math.max(1, Number(params.h_mm || 1));
-  const tilt = Number(params.cut_tilt_deg || 0) * Math.PI / 180;
+  const tilt = Number(params.ellipsoid_tilt_deg || 0) * Math.PI / 180;
   const slope = Math.tan(tilt);
+  const denom = Math.sqrt(b * b + h * h * slope * slope);
+  const tangentX = b * b / denom;
+  const tangentZ = h * h * slope / denom;
+  const cutWorldZ = -tangentX * Math.sin(tilt) + tangentZ * Math.cos(tilt);
+  const offsetZ = tangentZ - slope * tangentX;
   return {
     axisX: b,
     axisY: b,
@@ -560,7 +563,10 @@ function derivedGeometry(params) {
     centerZ: 0,
     slopeX: slope,
     slopeY: 0,
-    offsetZ: -slope * b
+    offsetZ,
+    cutWorldZ,
+    tangentX,
+    tangentZ
   };
 }
 
@@ -658,13 +664,10 @@ function fullEllipsoidSurface(params, thetaSeg, latSeg) {
 }
 
 function transformPoint(p, params, anchor) {
-  const rx = params.tilt_x_deg * Math.PI / 180;
-  const ry = params.tilt_y_deg * Math.PI / 180;
+  const ry = params.ellipsoid_tilt_deg * Math.PI / 180;
   const rz = params.rotation_z_deg * Math.PI / 180;
   let x = p.x, y = p.y, z = p.z;
-  let cy = Math.cos(rx), sy = Math.sin(rx);
-  [y, z] = [y * cy - z * sy, y * sy + z * cy];
-  cy = Math.cos(ry); sy = Math.sin(ry);
+  let cy = Math.cos(ry), sy = Math.sin(ry);
   [x, z] = [x * cy + z * sy, -x * sy + z * cy];
   cy = Math.cos(rz); sy = Math.sin(rz);
   [x, y] = [x * cy - y * sy, x * sy + y * cy];
