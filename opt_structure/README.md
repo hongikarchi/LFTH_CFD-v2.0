@@ -30,7 +30,11 @@ python opt_structure/scripts/optimize_structure.py --n-eval 80
 # 3) Bake final result back to Rhino
 python opt_structure/scripts/bake_structure.py
 
-# 4) Local smoke tests
+# 4) Structure optimization dashboard
+python opt_structure/scripts/structure_dashboard.py
+# -> http://localhost:8082
+
+# 5) Local smoke tests
 python -m unittest opt_structure.tests.smoke_tests
 ```
 
