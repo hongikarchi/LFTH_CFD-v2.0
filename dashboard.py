@@ -1,14 +1,14 @@
-"""LFTH_CFD dashboard server (Flask + sliders).
+"""LFTH_CFD main dashboard server.
 
 Run:
     python dashboard.py    # from repo root
     -> opens browser at http://localhost:8080
 
-Tabs:
-    Settings   edit env_fx3d/config/case.json with sliders + Save / Save & Run buttons
-    History    sortable table of env_fx3d/_settings_log.jsonl
-    Charts     scatter plots (dp vs score, etc)
+Main UI:
     Files      project file structure + roles
+
+Legacy CFD APIs are kept for now so the CFD setting UI can be split into its
+own worktree-specific app without losing the existing backend behavior.
 
 API:
     GET  /api/config              -> env_fx3d/config/case.json
@@ -229,7 +229,7 @@ BUILD_FIELD_GROUPS = [
 ]
 
 
-FILE_STRUCTURE = [
+_LEGACY_FILE_STRUCTURE = [
     {"path": "dashboard.py", "role": "이 서버 (Flask). 포트 8080. repo root."},
     {"path": "dashboard.html", "role": "대시보드 UI markup. dashboard.py가 GET /로 serve."},
     {"path": "CLAUDE.md", "role": "프로젝트 가이드 (디렉토리 맵 + 진입점 + 학습 인덱스)."},
@@ -256,6 +256,44 @@ FILE_STRUCTURE = [
     {"path": "opt_pymoo/experiments/pymoo_state.json", "role": "GA 진행 snapshot (resumable). stage·gen·population."},
     {"path": "opt_pymoo/runs/iter_*/", "role": "GA 실험 산출물 (env_fx3d/runs와 분리)."},
     {"path": "opt_pymoo/_optimization_log.jsonl", "role": "append-only 개체별 DB. issue/notes 필드."},
+]
+
+
+FILE_STRUCTURE = [
+    {"path": "dashboard.py", "role": "main dashboard Flask server. Port 8080. Files-only UI."},
+    {"path": "dashboard.html", "role": "main dashboard markup. Shows project file structure only."},
+    {"path": ".codex/config.toml", "role": "project-local Codex connector config."},
+    {"path": "env_fx3d/config/case.json", "role": "CFD runtime settings. Treat as experiment data; edit from the CFD setting worktree."},
+    {"path": "env_fx3d/config/build.json", "role": "CFD compile-time settings. Requires FluidX3D rebuild when changed."},
+    {"path": "env_fx3d/_settings_log.jsonl", "role": "CFD experiment log written by setting/run workflows."},
+    {"path": "env_fx3d/runs/_real_targets.json", "role": "Rhino-exported positive/negative targets and nozzle coordinates."},
+    {"path": "env_fx3d/runs/_real_collider.stl", "role": "Rhino env::collider source STL."},
+    {"path": "env_fx3d/runs/_real_collider_thickened.stl", "role": "Closed collider STL produced by thicken_collider.py."},
+    {"path": "env_fx3d/runs/iter_*/", "role": "CFD run outputs: case snapshot, geometry, result JSON, frames, and VTK."},
+    {"path": "env_fx3d/patches/fluidx3d_lfth_source.patch", "role": "FluidX3D source patch for the LFTH inlet/source behavior."},
+    {"path": "env_fx3d/scripts/fx3d_run.py", "role": "CFD runner and experiment orchestration entrypoint."},
+    {"path": "env_fx3d/scripts/build_fluidx3d.py", "role": "Applies build config and builds PNG/interactive FluidX3D binaries."},
+    {"path": "env_fx3d/scripts/fx3d_postprocess.py", "role": "Postprocesses VTK output into scoring and diagnostics JSON."},
+    {"path": "env_fx3d/scripts/fx3d_acceptance.py", "role": "CFD acceptance and source/cascade smoke scenarios."},
+    {"path": "env_fx3d/scripts/thicken_collider.py", "role": "Converts open collider meshes into closed manifolds."},
+    {"path": "env_fx3d/scripts/rhino_export/extract_targets.py", "role": "Exports targets and collider geometry from Rhino through MCP."},
+    {"path": "env_fx3d/external/FluidX3D/src/setup.cpp", "role": "FluidX3D simulation setup logic. Rebuild after source changes."},
+    {"path": "env_fx3d/external/FluidX3D/src/defines.hpp", "role": "FluidX3D compile-time macro baseline managed by build_fluidx3d.py."},
+    {"path": "env_fx3d/external/FluidX3D/bin/FluidX3D.exe", "role": "Background PNG/VTK FluidX3D binary."},
+    {"path": "env_fx3d/external/FluidX3D/bin/FluidX3D_interactive.exe", "role": "Interactive FluidX3D binary for GUI inspection."},
+    {"path": "opt_structure/config/structure_case.json", "role": "Structure optimization settings and load assumptions."},
+    {"path": "opt_structure/scripts/optimize_structure.py", "role": "Structure optimization runner."},
+    {"path": "opt_structure/scripts/fea.py", "role": "Structure FEA helpers and fallback analysis path."},
+    {"path": "opt_structure/scripts/structure_dashboard.py", "role": "Structure setting dashboard server."},
+    {"path": "opt_structure/structure_dashboard.html", "role": "Structure setting dashboard UI."},
+    {"path": "opt_structure/tests/smoke_tests.py", "role": "Structure smoke tests."},
+    {"path": "opt_pymoo/scripts/parametric_module.py", "role": "Parametric module geometry generator."},
+    {"path": "opt_pymoo/scripts/parametric_dashboard.py", "role": "Module setting dashboard server."},
+    {"path": "opt_pymoo/parametric_dashboard.html", "role": "Module setting dashboard UI."},
+    {"path": "opt_pymoo/scripts/pymoo_run.py", "role": "pymoo optimization loop."},
+    {"path": "opt_pymoo/experiments/pymoo_state.json", "role": "Resumable optimization state snapshot."},
+    {"path": "opt_pymoo/runs/iter_*/", "role": "Module/optimization run outputs."},
+    {"path": "opt_pymoo/_optimization_log.jsonl", "role": "Optimization candidate log."},
 ]
 
 
