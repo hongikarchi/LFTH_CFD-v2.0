@@ -41,8 +41,9 @@ META_PATH = RUNS / "_ui_ellipsoid_parametric_meta.json"
 PORT = 8081
 
 PARAM_KEYS = [
-    "b_mm",
-    "h_mm",
+    "axis_x_mm",
+    "axis_y_mm",
+    "axis_z_mm",
     "ellipsoid_tilt_deg",
     "cut_drop_deg",
     "wall_thickness_mm",
@@ -130,35 +131,37 @@ def _coerce_int(payload: dict, key: str, default: int) -> int:
 
 
 def _migrate_old_module_params(raw_params: dict, default_params: dict) -> dict:
-    """Best-effort migration from earlier param sets to b/h tangent-cut params."""
+    """Best-effort migration from earlier param sets to xyz-axis tangent-cut params."""
     migrated = dict(default_params)
     migrated.update({k: raw_params[k] for k in PARAM_KEYS if k in raw_params})
     if (
-        "b_mm" in raw_params
-        and "h_mm" in raw_params
+        "axis_x_mm" in raw_params
+        and "axis_y_mm" in raw_params
+        and "axis_z_mm" in raw_params
         and "ellipsoid_tilt_deg" in raw_params
         and "cut_drop_deg" in raw_params
     ):
         return migrated
 
     try:
-        if "opening_x_mm" in raw_params and "opening_y_mm" in raw_params:
+        if "b_mm" in raw_params and "h_mm" in raw_params:
+            b = float(raw_params["b_mm"])
+            h = float(raw_params["h_mm"])
+            migrated["axis_x_mm"] = max(1.0, b)
+            migrated["axis_y_mm"] = max(1.0, h)
+            migrated["axis_z_mm"] = max(1.0, h)
+        elif "opening_x_mm" in raw_params and "opening_y_mm" in raw_params:
             opening_x = float(raw_params["opening_x_mm"])
             opening_y = float(raw_params["opening_y_mm"])
-            migrated["b_mm"] = max(1.0, max(opening_x, opening_y) * 0.5)
-            migrated["h_mm"] = max(1.0, min(opening_x, opening_y) * 0.5)
-        elif {"axis_x_mm", "axis_y_mm", "axis_z_mm", "cap_depth_mm"} <= set(raw_params):
-            axis_x = float(raw_params["axis_x_mm"])
-            axis_y = float(raw_params["axis_y_mm"])
-            axis_z = float(raw_params["axis_z_mm"])
-            cap_depth = float(raw_params["cap_depth_mm"])
-            center_z = axis_z - cap_depth
-            rim_p = (0.0 - center_z) / max(axis_z, 1.0)
-            factor = math.sqrt(max(0.0, 1.0 - rim_p * rim_p)) or 1.0
-            opening_x = 2.0 * axis_x * factor
-            opening_y = 2.0 * axis_y * factor
-            migrated["b_mm"] = max(1.0, max(opening_x, opening_y) * 0.5)
-            migrated["h_mm"] = max(1.0, min(opening_x, opening_y) * 0.5)
+            migrated["axis_x_mm"] = max(1.0, opening_x * 0.5)
+            migrated["axis_y_mm"] = max(1.0, opening_y * 0.5)
+            migrated["axis_z_mm"] = max(
+                1.0, float(raw_params.get("bowl_depth_mm", default_params["axis_z_mm"]))
+            )
+        elif {"axis_x_mm", "axis_y_mm", "axis_z_mm"} <= set(raw_params):
+            migrated["axis_x_mm"] = max(1.0, float(raw_params["axis_x_mm"]))
+            migrated["axis_y_mm"] = max(1.0, float(raw_params["axis_y_mm"]))
+            migrated["axis_z_mm"] = max(1.0, float(raw_params["axis_z_mm"]))
 
         if "ellipsoid_tilt_deg" in raw_params:
             migrated["ellipsoid_tilt_deg"] = min(
@@ -178,7 +181,7 @@ def _migrate_old_module_params(raw_params: dict, default_params: dict) -> dict:
         else:
             sx = float(raw_params.get("cut_slope_x_mm", 0.0))
             sy = float(raw_params.get("cut_slope_y_mm", 0.0))
-            scale = max(float(migrated.get("b_mm", default_params["b_mm"])), 1.0)
+            scale = max(float(migrated.get("axis_x_mm", default_params["axis_x_mm"])), 1.0)
             slope = math.hypot(sx / scale, sy / scale)
             if slope > 1.0e-12:
                 migrated["ellipsoid_tilt_deg"] = min(35.0, math.degrees(math.atan(slope)))

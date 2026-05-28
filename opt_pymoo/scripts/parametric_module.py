@@ -1,7 +1,7 @@
 """Ellipsoid oblique-cut parametric module generator.
 
-Builds bowl-like modules from the lower cap of a spheroid. The spheroid uses
-axes b x h x h, is tilted first, then cut by a plane hinged at the +X
+Builds bowl-like modules from the lower cap of an ellipsoid. The ellipsoid uses
+independent X/Y/Z axes, is tilted first, then cut by a plane hinged at the +X
 vertical-tangent point. The simulation STL is a closed solid: inner cap, outer
 normal-offset cap, and stitched rim. All geometry is authored in millimeters;
 STL export scales vertices to meters for FluidX3D.
@@ -38,8 +38,9 @@ class Mesh:
 
 @dataclass
 class ModuleParams:
-    b_mm: float
-    h_mm: float
+    axis_x_mm: float
+    axis_y_mm: float
+    axis_z_mm: float
     ellipsoid_tilt_deg: float = 0.0
     cut_drop_deg: float = 0.0
     wall_thickness_mm: float = 500.0
@@ -103,10 +104,12 @@ def _round_nested(value, digits: int = 3):
 
 
 def _validate_params(params: ModuleParams) -> None:
-    if params.b_mm <= 0.0:
-        raise ValueError("b_mm must be positive")
-    if params.h_mm <= 0.0:
-        raise ValueError("h_mm must be positive")
+    if params.axis_x_mm <= 0.0:
+        raise ValueError("axis_x_mm must be positive")
+    if params.axis_y_mm <= 0.0:
+        raise ValueError("axis_y_mm must be positive")
+    if params.axis_z_mm <= 0.0:
+        raise ValueError("axis_z_mm must be positive")
     if not (0.0 <= params.ellipsoid_tilt_deg < 60.0):
         raise ValueError("ellipsoid_tilt_deg must be in [0, 60)")
     if not (0.0 <= params.cut_drop_deg <= 35.0):
@@ -120,27 +123,28 @@ def _validate_params(params: ModuleParams) -> None:
 
 
 def derived_geometry(params: ModuleParams) -> dict[str, float | tuple[float, float, float]]:
-    """Return internal spheroid axes and local cut plane values."""
+    """Return internal ellipsoid axes and local cut plane values."""
     _validate_params(params)
-    b = float(params.b_mm)
-    h = float(params.h_mm)
+    axis_x = float(params.axis_x_mm)
+    axis_y = float(params.axis_y_mm)
+    axis_z = float(params.axis_z_mm)
     tilt = math.radians(float(params.ellipsoid_tilt_deg))
     drop = math.radians(float(params.cut_drop_deg))
     local_cut_angle = tilt + drop
     tangent_slope = math.tan(tilt)
     slope = math.tan(local_cut_angle)
     drop_slope = math.tan(drop)
-    denom = math.sqrt(b * b + h * h * tangent_slope * tangent_slope)
-    tangent_x = b * b / denom
-    tangent_z = h * h * tangent_slope / denom
+    denom = math.sqrt(axis_x * axis_x + axis_z * axis_z * tangent_slope * tangent_slope)
+    tangent_x = axis_x * axis_x / denom
+    tangent_z = axis_z * axis_z * tangent_slope / denom
     cut_world_z = -tangent_x * math.sin(tilt) + tangent_z * math.cos(tilt)
     cut_offset_z = tangent_z - slope * tangent_x
     plane_normal = _normalize((-slope, 0.0, 1.0))
     world_tangent_x = tangent_x * math.cos(tilt) + tangent_z * math.sin(tilt)
     return {
-        "axis_x_mm": b,
-        "axis_y_mm": h,
-        "axis_z_mm": h,
+        "axis_x_mm": axis_x,
+        "axis_y_mm": axis_y,
+        "axis_z_mm": axis_z,
         "center_z_mm": 0.0,
         "vertical_tangent_point_mm": (tangent_x, 0.0, tangent_z),
         "world_tangent_point_mm": (world_tangent_x, 0.0, cut_world_z),
@@ -214,14 +218,13 @@ def default_params_from_module(
     bounds = module_info["bbox_mm"]
     ext = [bounds[1][i] - bounds[0][i] for i in range(3)]
     wall = min(float(wall_thickness_mm), max(50.0, ext[2] * 0.35))
-    h = max(100.0, ext[2] - wall - float(rim_lift_mm))
-    opening_x = max(200.0, ext[0] - 2.0 * wall)
-    opening_y = max(200.0, ext[1] - 2.0 * wall)
-    b = max(opening_x, opening_y) * 0.5
-    h = min(h, max(100.0, min(opening_x, opening_y) * 0.5))
+    axis_x = max(100.0, (ext[0] - 2.0 * wall) * 0.5)
+    axis_y = max(100.0, (ext[1] - 2.0 * wall) * 0.5)
+    axis_z = max(100.0, ext[2] - wall - float(rim_lift_mm))
     return ModuleParams(
-        b_mm=b,
-        h_mm=h,
+        axis_x_mm=axis_x,
+        axis_y_mm=axis_y,
+        axis_z_mm=axis_z,
         wall_thickness_mm=wall,
         rim_lift_mm=float(rim_lift_mm),
     )
