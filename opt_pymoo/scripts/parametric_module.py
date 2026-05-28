@@ -1,10 +1,10 @@
 """Ellipsoid oblique-cut parametric module generator.
 
-Builds bowl-like modules from the lower cap of an ellipsoid. The rim is the
-intersection between the ellipsoid and an oblique local cut plane. The
-simulation STL is a closed solid: inner cap, outer normal-offset cap, and
-stitched rim. All geometry is authored in millimeters; STL export scales
-vertices to meters for FluidX3D.
+Builds bowl-like modules from the lower cap of a spheroid. The rim is the
+intersection between the ellipsoid and an oblique local cut plane anchored at
+the +X vertical-tangent point. The simulation STL is a closed solid: inner cap,
+outer normal-offset cap, and stitched rim. All geometry is authored in
+millimeters; STL export scales vertices to meters for FluidX3D.
 """
 from __future__ import annotations
 
@@ -38,12 +38,9 @@ class Mesh:
 
 @dataclass
 class ModuleParams:
-    opening_x_mm: float
-    opening_y_mm: float
-    bowl_depth_mm: float
-    curvature_ratio: float = 1.35
+    b_mm: float
+    h_mm: float
     cut_tilt_deg: float = 0.0
-    cut_azimuth_deg: float = 0.0
     wall_thickness_mm: float = 500.0
     rim_lift_mm: float = 0.0
     tilt_x_deg: float = 0.0
@@ -107,57 +104,46 @@ def _round_nested(value, digits: int = 3):
 
 
 def _validate_params(params: ModuleParams) -> None:
-    if params.opening_x_mm <= 0.0 or params.opening_y_mm <= 0.0:
-        raise ValueError("opening_x_mm and opening_y_mm must be positive")
-    if params.bowl_depth_mm <= 0.0:
-        raise ValueError("bowl_depth_mm must be positive")
-    if params.curvature_ratio <= 1.0:
-        raise ValueError("curvature_ratio must be greater than 1")
-    if not (0.0 <= params.cut_tilt_deg < 89.0):
-        raise ValueError("cut_tilt_deg must be in [0, 89)")
+    if params.b_mm <= 0.0:
+        raise ValueError("b_mm must be positive")
+    if params.h_mm <= 0.0:
+        raise ValueError("h_mm must be positive")
+    if not (0.0 <= params.cut_tilt_deg < 60.0):
+        raise ValueError("cut_tilt_deg must be in [0, 60)")
     if params.wall_thickness_mm <= 0.0:
         raise ValueError("wall_thickness_mm must be positive")
     if params.rim_lift_mm < 0.0:
         raise ValueError("rim_lift_mm must be non-negative")
 
 
-def _rim_factor(axis_z_mm: float, bowl_depth_mm: float) -> tuple[float, float, float]:
-    """Return (rim_radius_factor, rim_p, center_z_mm)."""
-    center_z = axis_z_mm - bowl_depth_mm
-    rim_p = (0.0 - center_z) / axis_z_mm
-    factor = math.sqrt(max(0.0, 1.0 - rim_p * rim_p))
-    return factor, rim_p, center_z
-
-
 def derived_geometry(params: ModuleParams) -> dict[str, float | tuple[float, float, float]]:
-    """Return internal ellipsoid axes and local cut plane values."""
+    """Return internal spheroid axes and local cut plane values."""
     _validate_params(params)
-    axis_z = float(params.bowl_depth_mm) * float(params.curvature_ratio)
-    rim_factor, rim_p, center_z = _rim_factor(axis_z, float(params.bowl_depth_mm))
-    if rim_factor <= 1.0e-9:
-        rim_factor = 1.0
-    axis_x = float(params.opening_x_mm) * 0.5 / rim_factor
-    axis_y = float(params.opening_y_mm) * 0.5 / rim_factor
+    b = float(params.b_mm)
+    h = float(params.h_mm)
     tilt = math.radians(float(params.cut_tilt_deg))
-    azimuth = math.radians(float(params.cut_azimuth_deg))
     slope = math.tan(tilt)
-    plane_normal = _normalize((-slope * math.cos(azimuth), -slope * math.sin(azimuth), 1.0))
+    plane_normal = _normalize((-slope, 0.0, 1.0))
     return {
-        "axis_x_mm": axis_x,
-        "axis_y_mm": axis_y,
-        "axis_z_mm": axis_z,
-        "center_z_mm": center_z,
-        "reference_rim_p": rim_p,
-        "reference_rim_factor": rim_factor,
-        "cut_slope_x": slope * math.cos(azimuth),
-        "cut_slope_y": slope * math.sin(azimuth),
+        "axis_x_mm": b,
+        "axis_y_mm": b,
+        "axis_z_mm": h,
+        "center_z_mm": 0.0,
+        "vertical_tangent_point_mm": (b, 0.0, 0.0),
+        "cut_slope_x": slope,
+        "cut_slope_y": 0.0,
+        "cut_offset_z_mm": -slope * b,
         "cut_plane_normal": plane_normal,
     }
 
 
 def _cut_plane_z(params: ModuleParams, x: float, y: float) -> float:
     geom = derived_geometry(params)
-    return float(geom["cut_slope_x"]) * x + float(geom["cut_slope_y"]) * y
+    return (
+        float(geom["cut_slope_x"]) * x
+        + float(geom["cut_slope_y"]) * y
+        + float(geom["cut_offset_z_mm"])
+    )
 
 
 def _cut_plane_normal(params: ModuleParams) -> Vec3:
@@ -172,6 +158,7 @@ def _rim_intersection_p(params: ModuleParams, theta: float, geom: dict[str, floa
     center_z = float(geom["center_z_mm"])
     sx = float(geom["cut_slope_x"])
     sy = float(geom["cut_slope_y"])
+    offset_z = float(geom["cut_offset_z_mm"])
     ct = math.cos(theta)
     st = math.sin(theta)
 
@@ -180,7 +167,7 @@ def _rim_intersection_p(params: ModuleParams, theta: float, geom: dict[str, floa
         x = a * radius_factor * ct
         y = b * radius_factor * st
         z = center_z + c * p
-        return z - (sx * x + sy * y)
+        return z - (sx * x + sy * y + offset_z)
 
     eps = max(1.0e-7, c * 1.0e-12)
     lo = -1.0 + eps
@@ -210,14 +197,12 @@ def default_params_from_module(
     bounds = module_info["bbox_mm"]
     ext = [bounds[1][i] - bounds[0][i] for i in range(3)]
     wall = min(float(wall_thickness_mm), max(50.0, ext[2] * 0.35))
-    bowl_depth = max(100.0, ext[2] - wall - float(rim_lift_mm))
-    opening_x = max(200.0, ext[0] - 2.0 * wall)
-    opening_y = max(200.0, ext[1] - 2.0 * wall)
+    h = max(100.0, ext[2] - wall - float(rim_lift_mm))
+    avg_opening = max(200.0, (ext[0] + ext[1]) * 0.5 - 2.0 * wall)
+    b = max(100.0, avg_opening * 0.5)
     return ModuleParams(
-        opening_x_mm=opening_x,
-        opening_y_mm=opening_y,
-        bowl_depth_mm=bowl_depth,
-        curvature_ratio=1.35,
+        b_mm=b,
+        h_mm=h,
         wall_thickness_mm=wall,
         rim_lift_mm=float(rim_lift_mm),
     )
@@ -471,8 +456,6 @@ def build_modules_from_infos(
     wall_thickness_mm: float = 500.0,
     rim_lift_mm: float = 0.0,
     cut_tilt_deg: float = 0.0,
-    cut_azimuth_deg: float = 0.0,
-    curvature_ratio: float = 1.35,
     theta_segments: int = 64,
     radial_segments: int = 16,
 ) -> tuple[Mesh, Mesh, list[dict]]:
@@ -493,8 +476,6 @@ def build_modules_from_infos(
                 rim_lift_mm=rim_lift_mm,
             )
             params.cut_tilt_deg = float(cut_tilt_deg)
-            params.cut_azimuth_deg = float(cut_azimuth_deg)
-            params.curvature_ratio = float(curvature_ratio)
         anchor = tuple(float(v) for v in module["base_point_mm"])
         solid = build_module_mesh(
             params,
@@ -523,17 +504,21 @@ def build_modules_from_infos(
                 "source_name": module.get("name"),
                 "anchor_mm": list(anchor),
                 "params": asdict(params),
-                "derived_axis_x_y_z_mm": _round_nested(
+                "derived_ellipsoid_axes_mm": _round_nested(
                     [
                         float(derived["axis_x_mm"]),
                         float(derived["axis_y_mm"]),
                         float(derived["axis_z_mm"]),
                     ]
                 ),
+                "vertical_tangent_point_mm": _round_nested(
+                    derived["vertical_tangent_point_mm"]
+                ),
                 "cut_plane": {
-                    "equation": "z = sx*x + sy*y",
+                    "equation": "z = sx*x + offset",
                     "slope_x": round(float(derived["cut_slope_x"]), 6),
-                    "slope_y": round(float(derived["cut_slope_y"]), 6),
+                    "slope_y": 0.0,
+                    "offset_z_mm": round(float(derived["cut_offset_z_mm"]), 6),
                     "normal": _round_nested(derived["cut_plane_normal"], 6),
                 },
                 "target_bbox_mm": _round_nested(target_bbox),
@@ -603,9 +588,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--radial-segments", type=int, default=16)
     parser.add_argument("--wall-thickness-mm", type=float, default=500.0)
     parser.add_argument("--rim-lift-mm", type=float, default=0.0)
-    parser.add_argument("--curvature-ratio", type=float, default=1.35)
     parser.add_argument("--cut-tilt-deg", type=float, default=0.0)
-    parser.add_argument("--cut-azimuth-deg", type=float, default=0.0)
     parser.add_argument("--push-rhino", action="store_true")
     args = parser.parse_args(argv)
 
@@ -621,9 +604,7 @@ def main(argv: list[str] | None = None) -> int:
         indices=indices,
         wall_thickness_mm=args.wall_thickness_mm,
         rim_lift_mm=args.rim_lift_mm,
-        curvature_ratio=args.curvature_ratio,
         cut_tilt_deg=args.cut_tilt_deg,
-        cut_azimuth_deg=args.cut_azimuth_deg,
         theta_segments=args.theta_segments,
         radial_segments=args.radial_segments,
     )

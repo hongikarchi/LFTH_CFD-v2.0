@@ -236,14 +236,14 @@ const PARAM_GROUPS = [
   {
     key: 'shape',
     label: '형상',
-    title: '입구와 곡률',
-    desc: '사용자가 직접 만지는 4개의 bowl 기본값입니다. ellipsoid의 axis 값은 여기서 내부 계산됩니다.'
+    title: '타원 b / h',
+    desc: 'b는 ellipsoid의 수평 반지름, h는 수직 반지름입니다. 수평 컷에서는 b가 입구 반폭, h가 bowl 깊이가 됩니다.'
   },
   {
     key: 'cut',
     label: '컷 라인',
-    title: '사선 컷 평면',
-    desc: 'ellipsoid를 자르는 local plane을 기울기와 방향으로 정의합니다.'
+    title: '수직 접점 컷',
+    desc: '컷 평면은 +X 방향의 수직 접점 (b,0,0)을 지나갑니다. 방향은 별도 변수 없이 rotate z로 돌립니다.'
   },
   {
     key: 'rim',
@@ -265,12 +265,9 @@ const PARAM_GROUPS = [
   }
 ];
 const PARAM_CONTROLS = [
-  ['opening_x_mm', 'opening x', 500, 16000, 10, 'mm', 'shape', 'local X 방향 rim 전체 폭입니다. 내부 ellipsoid X축은 이 값에서 역산됩니다.'],
-  ['opening_y_mm', 'opening y', 500, 16000, 10, 'mm', 'shape', 'local Y 방향 rim 전체 폭입니다. opening x/y가 입구 타원 비율을 정합니다.'],
-  ['bowl_depth_mm', 'bowl depth', 100, 12000, 10, 'mm', 'shape', 'cut plane 중심에서 bowl bottom까지의 깊이입니다.'],
-  ['curvature_ratio', 'curvature', 1.05, 3.0, 0.01, 'x', 'shape', 'axis z = depth * curvature 입니다. 1에 가까울수록 급하고, 클수록 완만합니다.'],
-  ['cut_tilt_deg', 'cut tilt', 0, 35, 0.5, 'deg', 'cut', 'cut plane이 수평에서 기울어진 각도입니다. 0이면 수평 컷입니다.'],
-  ['cut_azimuth_deg', 'cut azimuth', 0, 360, 1, 'deg', 'cut', 'cut plane이 높아지는 방향입니다. 0도는 +X, 90도는 +Y입니다.'],
+  ['b_mm', 'b', 500, 10000, 10, 'mm', 'shape', 'ellipsoid의 수평 반지름입니다. 수평 컷 기준 입구 폭은 2b가 됩니다.'],
+  ['h_mm', 'h', 100, 12000, 10, 'mm', 'shape', 'ellipsoid의 수직 반지름입니다. 수평 컷 기준 bowl bottom까지의 깊이입니다.'],
+  ['cut_tilt_deg', 'cut tilt', 0, 35, 0.5, 'deg', 'cut', '+X 쪽 수직 접점을 기준으로 cut plane을 기울입니다. 물이 닿는 앞쪽 rim을 세우는 변수입니다.'],
   ['wall_thickness_mm', 'wall', 50, 2500, 10, 'mm', 'rim', 'inner cap을 surface normal 방향으로 offset하는 두께입니다.'],
   ['rim_lift_mm', 'rim lift', 0, 2500, 10, 'mm', 'rim', 'rim에서 cut plane normal 방향으로 올리는 lip 높이입니다.'],
   ['tilt_x_deg', 'tilt x', -45, 45, 0.5, 'deg', 'transform', '완성된 모듈을 local X축 기준으로 기울입니다.'],
@@ -552,21 +549,18 @@ function moduleInfo(idx) {
 }
 
 function derivedGeometry(params) {
-  const depth = Math.max(1, Number(params.bowl_depth_mm || 1));
-  const ratio = Math.max(1.01, Number(params.curvature_ratio || 1.35));
-  const axisZ = depth * ratio;
-  const centerZ = axisZ - depth;
-  const rimP = (0 - centerZ) / axisZ;
-  const factor = Math.max(1e-6, Math.sqrt(Math.max(0, 1 - rimP * rimP)));
-  const axisX = Math.max(1, Number(params.opening_x_mm || 1) * 0.5 / factor);
-  const axisY = Math.max(1, Number(params.opening_y_mm || 1) * 0.5 / factor);
+  const b = Math.max(1, Number(params.b_mm || 1));
+  const h = Math.max(1, Number(params.h_mm || 1));
   const tilt = Number(params.cut_tilt_deg || 0) * Math.PI / 180;
-  const azimuth = Number(params.cut_azimuth_deg || 0) * Math.PI / 180;
   const slope = Math.tan(tilt);
   return {
-    axisX, axisY, axisZ, centerZ,
-    slopeX: slope * Math.cos(azimuth),
-    slopeY: slope * Math.sin(azimuth)
+    axisX: b,
+    axisY: b,
+    axisZ: h,
+    centerZ: 0,
+    slopeX: slope,
+    slopeY: 0,
+    offsetZ: -slope * b
   };
 }
 
@@ -578,7 +572,7 @@ function rimIntersectionP(theta, geom) {
     const x = geom.axisX * rf * ct;
     const y = geom.axisY * rf * st;
     const z = geom.centerZ + geom.axisZ * p;
-    return z - (geom.slopeX * x + geom.slopeY * y);
+    return z - (geom.slopeX * x + geom.slopeY * y + geom.offsetZ);
   };
   let lo = -1 + 1e-7;
   let hi = 1 - 1e-7;
