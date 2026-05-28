@@ -44,6 +44,7 @@ PARAM_KEYS = [
     "b_mm",
     "h_mm",
     "ellipsoid_tilt_deg",
+    "cut_drop_deg",
     "wall_thickness_mm",
     "rim_lift_mm",
     "rotation_z_deg",
@@ -132,15 +133,20 @@ def _migrate_old_module_params(raw_params: dict, default_params: dict) -> dict:
     """Best-effort migration from earlier param sets to b/h tangent-cut params."""
     migrated = dict(default_params)
     migrated.update({k: raw_params[k] for k in PARAM_KEYS if k in raw_params})
-    if "b_mm" in raw_params and "h_mm" in raw_params and "ellipsoid_tilt_deg" in raw_params:
+    if (
+        "b_mm" in raw_params
+        and "h_mm" in raw_params
+        and "ellipsoid_tilt_deg" in raw_params
+        and "cut_drop_deg" in raw_params
+    ):
         return migrated
 
     try:
         if "opening_x_mm" in raw_params and "opening_y_mm" in raw_params:
             opening_x = float(raw_params["opening_x_mm"])
             opening_y = float(raw_params["opening_y_mm"])
-            migrated["b_mm"] = max(1.0, (opening_x + opening_y) * 0.25)
-            migrated["h_mm"] = max(1.0, float(raw_params.get("bowl_depth_mm", default_params["h_mm"])))
+            migrated["b_mm"] = max(1.0, max(opening_x, opening_y) * 0.5)
+            migrated["h_mm"] = max(1.0, min(opening_x, opening_y) * 0.5)
         elif {"axis_x_mm", "axis_y_mm", "axis_z_mm", "cap_depth_mm"} <= set(raw_params):
             axis_x = float(raw_params["axis_x_mm"])
             axis_y = float(raw_params["axis_y_mm"])
@@ -151,8 +157,8 @@ def _migrate_old_module_params(raw_params: dict, default_params: dict) -> dict:
             factor = math.sqrt(max(0.0, 1.0 - rim_p * rim_p)) or 1.0
             opening_x = 2.0 * axis_x * factor
             opening_y = 2.0 * axis_y * factor
-            migrated["b_mm"] = max(1.0, (opening_x + opening_y) * 0.25)
-            migrated["h_mm"] = max(1.0, cap_depth)
+            migrated["b_mm"] = max(1.0, max(opening_x, opening_y) * 0.5)
+            migrated["h_mm"] = max(1.0, min(opening_x, opening_y) * 0.5)
 
         if "ellipsoid_tilt_deg" in raw_params:
             migrated["ellipsoid_tilt_deg"] = min(
@@ -176,6 +182,11 @@ def _migrate_old_module_params(raw_params: dict, default_params: dict) -> dict:
             slope = math.hypot(sx / scale, sy / scale)
             if slope > 1.0e-12:
                 migrated["ellipsoid_tilt_deg"] = min(35.0, math.degrees(math.atan(slope)))
+
+        if "cut_drop_deg" in raw_params:
+            migrated["cut_drop_deg"] = min(35.0, max(0.0, float(raw_params["cut_drop_deg"])))
+        else:
+            migrated["cut_drop_deg"] = 0.0
 
         old_azimuth = float(raw_params.get("cut_azimuth_deg", 0.0))
         if abs(old_azimuth) > 1.0e-9:

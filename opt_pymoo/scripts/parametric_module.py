@@ -1,7 +1,7 @@
 """Ellipsoid oblique-cut parametric module generator.
 
-Builds bowl-like modules from the lower cap of a spheroid. The spheroid is
-tilted first, then cut by the water/global-horizontal plane through the +X
+Builds bowl-like modules from the lower cap of a spheroid. The spheroid uses
+axes b x h x h, is tilted first, then cut by a plane hinged at the +X
 vertical-tangent point. The simulation STL is a closed solid: inner cap, outer
 normal-offset cap, and stitched rim. All geometry is authored in millimeters;
 STL export scales vertices to meters for FluidX3D.
@@ -41,6 +41,7 @@ class ModuleParams:
     b_mm: float
     h_mm: float
     ellipsoid_tilt_deg: float = 0.0
+    cut_drop_deg: float = 0.0
     wall_thickness_mm: float = 500.0
     rim_lift_mm: float = 0.0
     rotation_z_deg: float = 0.0
@@ -108,6 +109,10 @@ def _validate_params(params: ModuleParams) -> None:
         raise ValueError("h_mm must be positive")
     if not (0.0 <= params.ellipsoid_tilt_deg < 60.0):
         raise ValueError("ellipsoid_tilt_deg must be in [0, 60)")
+    if not (0.0 <= params.cut_drop_deg <= 35.0):
+        raise ValueError("cut_drop_deg must be in [0, 35]")
+    if params.ellipsoid_tilt_deg + params.cut_drop_deg >= 75.0:
+        raise ValueError("ellipsoid_tilt_deg + cut_drop_deg must be < 75")
     if params.wall_thickness_mm <= 0.0:
         raise ValueError("wall_thickness_mm must be positive")
     if params.rim_lift_mm < 0.0:
@@ -120,22 +125,30 @@ def derived_geometry(params: ModuleParams) -> dict[str, float | tuple[float, flo
     b = float(params.b_mm)
     h = float(params.h_mm)
     tilt = math.radians(float(params.ellipsoid_tilt_deg))
-    slope = math.tan(tilt)
-    denom = math.sqrt(b * b + h * h * slope * slope)
+    drop = math.radians(float(params.cut_drop_deg))
+    local_cut_angle = tilt + drop
+    tangent_slope = math.tan(tilt)
+    slope = math.tan(local_cut_angle)
+    drop_slope = math.tan(drop)
+    denom = math.sqrt(b * b + h * h * tangent_slope * tangent_slope)
     tangent_x = b * b / denom
-    tangent_z = h * h * slope / denom
+    tangent_z = h * h * tangent_slope / denom
     cut_world_z = -tangent_x * math.sin(tilt) + tangent_z * math.cos(tilt)
     cut_offset_z = tangent_z - slope * tangent_x
     plane_normal = _normalize((-slope, 0.0, 1.0))
+    world_tangent_x = tangent_x * math.cos(tilt) + tangent_z * math.sin(tilt)
     return {
         "axis_x_mm": b,
-        "axis_y_mm": b,
+        "axis_y_mm": h,
         "axis_z_mm": h,
         "center_z_mm": 0.0,
         "vertical_tangent_point_mm": (tangent_x, 0.0, tangent_z),
+        "world_tangent_point_mm": (world_tangent_x, 0.0, cut_world_z),
+        "local_cut_angle_deg": math.degrees(local_cut_angle),
         "cut_slope_x": slope,
         "cut_slope_y": 0.0,
         "cut_offset_z_mm": cut_offset_z,
+        "cut_drop_slope": drop_slope,
         "cut_world_z_mm": cut_world_z,
         "cut_plane_normal": plane_normal,
     }
@@ -202,8 +215,10 @@ def default_params_from_module(
     ext = [bounds[1][i] - bounds[0][i] for i in range(3)]
     wall = min(float(wall_thickness_mm), max(50.0, ext[2] * 0.35))
     h = max(100.0, ext[2] - wall - float(rim_lift_mm))
-    avg_opening = max(200.0, (ext[0] + ext[1]) * 0.5 - 2.0 * wall)
-    b = max(100.0, avg_opening * 0.5)
+    opening_x = max(200.0, ext[0] - 2.0 * wall)
+    opening_y = max(200.0, ext[1] - 2.0 * wall)
+    b = max(opening_x, opening_y) * 0.5
+    h = min(h, max(100.0, min(opening_x, opening_y) * 0.5))
     return ModuleParams(
         b_mm=b,
         h_mm=h,
@@ -457,6 +472,7 @@ def build_modules_from_infos(
     wall_thickness_mm: float = 500.0,
     rim_lift_mm: float = 0.0,
     ellipsoid_tilt_deg: float = 0.0,
+    cut_drop_deg: float = 0.0,
     theta_segments: int = 64,
     radial_segments: int = 16,
 ) -> tuple[Mesh, Mesh, list[dict]]:
@@ -477,6 +493,7 @@ def build_modules_from_infos(
                 rim_lift_mm=rim_lift_mm,
             )
             params.ellipsoid_tilt_deg = float(ellipsoid_tilt_deg)
+            params.cut_drop_deg = float(cut_drop_deg)
         anchor = tuple(float(v) for v in module["base_point_mm"])
         solid = build_module_mesh(
             params,
@@ -515,12 +532,17 @@ def build_modules_from_infos(
                 "vertical_tangent_point_mm": _round_nested(
                     derived["vertical_tangent_point_mm"]
                 ),
+                "world_tangent_point_mm": _round_nested(
+                    derived["world_tangent_point_mm"]
+                ),
                 "cut_plane": {
                     "equation_local_before_tilt": "z = sx*x + offset",
-                    "equation_after_tilt": "z = cut_world_z",
+                    "equation_after_tilt": "z = cut_world_z + drop_slope*(x - tangent_x)",
+                    "local_cut_angle_deg": round(float(derived["local_cut_angle_deg"]), 6),
                     "slope_x": round(float(derived["cut_slope_x"]), 6),
                     "slope_y": 0.0,
                     "offset_z_mm": round(float(derived["cut_offset_z_mm"]), 6),
+                    "drop_slope": round(float(derived["cut_drop_slope"]), 6),
                     "world_z_mm": round(float(derived["cut_world_z_mm"]), 6),
                     "normal": _round_nested(derived["cut_plane_normal"], 6),
                 },
@@ -597,7 +619,13 @@ def main(argv: list[str] | None = None) -> int:
         dest="ellipsoid_tilt_deg",
         type=float,
         default=0.0,
-        help="tilt the ellipsoid first, then cut it by the global-horizontal plane",
+        help="tilt the ellipsoid before applying the hinged cut plane",
+    )
+    parser.add_argument(
+        "--cut-drop-deg",
+        type=float,
+        default=0.0,
+        help="rotate the cut plane downward around the vertical-tangent point",
     )
     parser.add_argument("--push-rhino", action="store_true")
     args = parser.parse_args(argv)
@@ -615,6 +643,7 @@ def main(argv: list[str] | None = None) -> int:
         wall_thickness_mm=args.wall_thickness_mm,
         rim_lift_mm=args.rim_lift_mm,
         ellipsoid_tilt_deg=args.ellipsoid_tilt_deg,
+        cut_drop_deg=args.cut_drop_deg,
         theta_segments=args.theta_segments,
         radial_segments=args.radial_segments,
     )
