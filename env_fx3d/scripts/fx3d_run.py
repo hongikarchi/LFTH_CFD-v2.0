@@ -99,6 +99,17 @@ def select_nozzles(nozzles_m: list, cfg: dict) -> list:
     mode = str(cfg.get("nozzle_mode", "centroid")).lower()
     if mode == "all" or len(nozzles_m) <= 1:
         return nozzles_m
+    if mode in {"analytic_circle", "analytic_disk", "analytic_ring", "circle", "disk", "ring"}:
+        center = cfg.get("nozzle_center_m")
+        if isinstance(center, list) and len(center) >= 2:
+            z = float(center[2]) if len(center) >= 3 else max(float(p[2]) for p in nozzles_m)
+            return [[float(center[0]), float(center[1]), z]]
+        n = float(len(nozzles_m))
+        return [[
+            sum(float(p[0]) for p in nozzles_m) / n,
+            sum(float(p[1]) for p in nozzles_m) / n,
+            max(float(p[2]) for p in nozzles_m),
+        ]]
     if mode == "index":
         idx = int(cfg.get("nozzle_index", 0) or 0) % len(nozzles_m)
         return [nozzles_m[idx]]
@@ -144,7 +155,10 @@ def select_nozzles(nozzles_m: list, cfg: dict) -> list:
         step = max(len(nozzles_m) / float(max_points), 1.0)
         return [nozzles_m[min(int(round(i * step)), len(nozzles_m) - 1)]
                 for i in range(max_points)]
-    raise ValueError(f"unknown nozzle_mode={mode!r}; expected all, centroid, downstream_edge, index, or stride")
+    raise ValueError(
+        f"unknown nozzle_mode={mode!r}; expected all, centroid, downstream_edge, "
+        "index, stride, analytic_circle, analytic_disk, or analytic_ring"
+    )
 
 
 def pick_default_stl() -> Path:
@@ -301,6 +315,9 @@ def append_settings_log(test_id: str, case: dict, result: dict,
         "raw_n_nozzles": cfg.get("_raw_n_nozzles"),
         "nozzle_mode": cfg.get("nozzle_mode"),
         "nozzle_max_points": cfg.get("nozzle_max_points"),
+        "nozzle_shape": cfg.get("nozzle_shape"),
+        "nozzle_diameter_m": cfg.get("nozzle_diameter_m"),
+        "nozzle_ring_width_m": cfg.get("nozzle_ring_width_m"),
         "nozzle_LPM": cfg.get("nozzle_LPM"),
         "nozzle_velocity_mps": cfg.get("nozzle_velocity_mps"),
         "nozzle_velocity_floor_mps": cfg.get("nozzle_velocity_floor_mps"),
@@ -430,6 +447,9 @@ def run_experiment(test_id: str,
         "lbm_u_ref": cfg.get("lbm_u_ref", 0.05),
         "nozzle_rho_inflow": cfg.get("nozzle_rho_inflow", 1.0),
         "nozzle_area_cells": cfg.get("nozzle_area_cells", 1),
+        "nozzle_shape": cfg.get("nozzle_shape", "square"),
+        "nozzle_diameter_m": cfg.get("nozzle_diameter_m", 0.0),
+        "nozzle_ring_width_m": cfg.get("nozzle_ring_width_m", 0.0),
         "pond_prefill_z_m": cfg.get("pond_prefill_z_m", 0),
         "pond_prefill_z_bot_m": cfg.get("pond_prefill_z_bot_m", 0),
         "pond_prefill_xy_bbox_m": cfg.get("pond_prefill_xy_bbox_m", [0, 0, 0, 0]),
@@ -475,6 +495,10 @@ def run_experiment(test_id: str,
         "nozzle_LPM": cfg["nozzle_LPM"],
         "nozzle_velocity_mps": cfg.get("nozzle_velocity_mps", 0),
         "nozzle_velocity_floor_mps": cfg.get("nozzle_velocity_floor_mps", 1.0),
+        "nozzle_shape": cfg.get("nozzle_shape", "square"),
+        "nozzle_diameter_m": cfg.get("nozzle_diameter_m", 0.0),
+        "nozzle_ring_width_m": cfg.get("nozzle_ring_width_m", 0.0),
+        "nozzle_center_m": nozzles_m[0] if nozzles_m else None,
         "nozzle_refill_dt_s": cfg.get("nozzle_refill_dt_s", cfg["dt_out_s"]),
         "nozzle_refill_col_h": cfg.get("nozzle_refill_col_h", 3),
         "nozzle_emit_col_h": cfg.get("nozzle_emit_col_h", cfg.get("nozzle_refill_col_h", 3)),

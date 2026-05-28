@@ -354,6 +354,7 @@ def postprocess(iter_dir: Path, fluid_threshold: float | None = None) -> dict:
                                                 DEFAULT_SOURCE_PULSE_MIN_LATE_EVENTS))
     source_pulse_min_depths = int(case.get("source_pulse_min_depths",
                                            DEFAULT_SOURCE_PULSE_MIN_DEPTHS))
+    nozzle_pulse_layers = int(case.get("nozzle_pulse_layers", 0) or 0)
     source_log_rows = load_source_log(iter_dir)
     sim_time_s = float(case.get("timemax_s", 0.0) or 0.0)
     source_late_time_s = sim_time_s * 0.5 if sim_time_s > 0.0 else 0.0
@@ -482,8 +483,11 @@ def postprocess(iter_dir: Path, fluid_threshold: float | None = None) -> dict:
     )
     source_pulse_ok = bool(
         not nozzles_m
-        or source_pulse_late_events == 0
-        or len(source_pulse_late_depths) >= source_pulse_min_depths
+        or nozzle_pulse_layers <= 0
+        or (
+            source_pulse_late_events >= source_pulse_min_late_events
+            and len(source_pulse_late_depths) >= source_pulse_min_depths
+        )
     )
     source_tail_ok = bool(
         not nozzles_m
@@ -493,8 +497,8 @@ def postprocess(iter_dir: Path, fluid_threshold: float | None = None) -> dict:
 
     if not continuous_source:
         issue = "source_not_continuous"
-        notes = ("Nozzle source did not show both late pulse events and late VTK fluid "
-                 "below the fixed top/throat region.")
+        notes = ("Nozzle source did not show repeated late source events plus late VTK "
+                 "fluid below the fixed top/throat region.")
     elif top_retention_failure:
         issue = "top_retention_failure"
         notes = ("Fluid remains concentrated in the top module at the final frame; "
@@ -617,6 +621,7 @@ def postprocess(iter_dir: Path, fluid_threshold: float | None = None) -> dict:
             "source_anchor_depth_m": source_anchor_depth_m,
             "source_tail_depth_m": source_tail_depth_m,
             "source_pulse_log_rows": len(source_log_rows),
+            "nozzle_pulse_layers": nozzle_pulse_layers,
             "source_pulse_late_time_s": source_late_time_s,
             "source_pulse_late_events": source_pulse_late_events,
             "source_boundary_late_events": source_boundary_late_events,

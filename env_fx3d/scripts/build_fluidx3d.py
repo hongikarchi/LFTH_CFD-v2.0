@@ -27,12 +27,53 @@ DEFINES_HPP = FLUIDX3D_DIR / "src" / "defines.hpp"
 VCXPROJ = FLUIDX3D_DIR / "FluidX3D.vcxproj"
 BIN_DIR = FLUIDX3D_DIR / "bin"
 CONFIG_PATH = MODULE_ROOT / "config" / "build.json"
+FLUIDX3D_PATCH = MODULE_ROOT / "patches" / "fluidx3d_lfth_source.patch"
 
 MSBUILD = Path("C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/MSBuild/Current/Bin/MSBuild.exe")
 
 PRECISION_OPTIONS = {"FP16S", "FP16C"}     # if neither: pure FP32
 VELOCITY_OPTIONS = {"D2Q9", "D3Q15", "D3Q19", "D3Q27"}
 COLLISION_OPTIONS = {"SRT", "TRT"}         # exactly one must be active
+
+
+def _patch_process(extra_args: list[str]) -> subprocess.CompletedProcess:
+    target_dir = FLUIDX3D_DIR.relative_to(REPO_ROOT).as_posix()
+    cmd = [
+        "git",
+        "-c", f"safe.directory={REPO_ROOT.as_posix()}",
+        "apply",
+        "--whitespace=nowarn",
+        f"--directory={target_dir}",
+        *extra_args,
+        str(FLUIDX3D_PATCH),
+    ]
+    return subprocess.run(
+        cmd,
+        cwd=str(REPO_ROOT),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+
+
+def apply_fluidx3d_patch() -> None:
+    """Apply the LFTH FluidX3D source patch once, before patching defines.hpp."""
+    if not FLUIDX3D_PATCH.exists():
+        return
+    reverse = _patch_process(["--reverse", "--check"])
+    if reverse.returncode == 0:
+        print(f"FluidX3D LFTH source patch already applied: {FLUIDX3D_PATCH.name}")
+        return
+    check = _patch_process(["--check"])
+    if check.returncode != 0:
+        last = "\n".join((check.stdout + check.stderr).splitlines()[-25:])
+        raise RuntimeError(f"FluidX3D LFTH source patch does not apply cleanly:\n{last}")
+    applied = _patch_process([])
+    if applied.returncode != 0:
+        last = "\n".join((applied.stdout + applied.stderr).splitlines()[-25:])
+        raise RuntimeError(f"FluidX3D LFTH source patch apply failed:\n{last}")
+    print(f"Applied FluidX3D LFTH source patch: {FLUIDX3D_PATCH.name}")
 
 
 def patch_macro_bool(content: str, name: str, enable: bool) -> str:
@@ -92,7 +133,7 @@ def patch_defines(cfg: dict, interactive: bool) -> str:
     # Required physics extensions
     src = patch_macro_bool(src, "VOLUME_FORCE", True)
     src = patch_macro_bool(src, "EQUILIBRIUM_BOUNDARIES", True)
-    src = patch_macro_bool(src, "MOVING_BOUNDARIES", True)
+    src = patch_macro_bool(src, "MOVING_BOUNDARIES", bool(cfg.get("moving_boundaries", False)))
     src = patch_macro_bool(src, "SURFACE", True)
 
     # Graphics constants
@@ -142,6 +183,9 @@ def msbuild_once(out_name: str) -> Path:
 
 
 def main() -> int:
+    if not FLUIDX3D_DIR.exists():
+        print(f"ERROR: {FLUIDX3D_DIR} missing"); return 1
+    apply_fluidx3d_patch()
     if not DEFINES_HPP.exists():
         print(f"ERROR: {DEFINES_HPP} missing"); return 1
     if not VCXPROJ.exists():
