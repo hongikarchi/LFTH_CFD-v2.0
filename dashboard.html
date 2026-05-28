@@ -424,9 +424,12 @@ async function loadRuns() {
 }
 
 const HIST_COLS = [
-  ['ts', 'ts'], ['test_id', 'id'], ['side_walls','walls'],
-  ['dp_m','dp'], ['timemax_s','tmax'], ['nozzle_LPM','LPM'], ['thicken_thickness_m','thick'],
-  ['score','score'], ['in_positive','pos'], ['in_negative','neg'], ['in_column','col'],
+  ['ts', 'ts'], ['test_id', 'id'], ['solver_collision','solver'], ['issue','issue'], ['side_walls','walls'],
+  ['dp_m','dp'], ['timemax_s','tmax'], ['nozzle_mode','nz_mode'], ['n_nozzles','nz'], ['nozzle_horizontal_mps','h_mps'], ['nozzle_LPM','LPM'], ['thicken_thickness_m','thick'],
+  ['score','score'], ['arrival_score','arr_score'], ['arrival_floor_total','floor'], ['frames_with_floor_contact','frames_floor'],
+  ['source_tail_late_frames','src_late'], ['continuous_source','src_ok'],
+  ['top_module_final_cells','top_cells'], ['top_module_final_ratio','top_ratio'], ['modules_with_fluid','modules'],
+  ['final_reached_floor','final_floor'], ['in_positive','pos'], ['in_negative','neg'], ['in_column','col'],
   ['splash','splash'], ['total','total'], ['wall_s','wall'],
 ];
 
