@@ -334,7 +334,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--profiles", default=str(MODULE_ROOT / "data" / "ks_jis_h_profiles.csv"))
     parser.add_argument("--out", default=str(DEFAULT_OUT))
     parser.add_argument("--graph-out", default=str(DEFAULT_GRAPH_OUT))
-    parser.add_argument("--engine", choices=["auto", "pynite", "frame", "truss"], default="auto")
+    parser.add_argument("--engine", choices=["auto", "pynite", "frame", "truss"], default=None)
     parser.add_argument("--pop", type=int, default=None)
     parser.add_argument("--n-gen", type=int, default=None)
     parser.add_argument("--n-eval", type=int, default=None,
@@ -358,21 +358,23 @@ def main(argv: list[str] | None = None) -> int:
     n_gen = int(args.n_gen or opt_cfg.get("default_n_gen", 30))
     n_eval = int(args.n_eval or opt_cfg.get("fallback_n_eval", 120))
     seed = int(args.seed if args.seed is not None else opt_cfg.get("seed", 42))
+    engine = args.engine or str(case.get("analysis", {}).get("engine", "auto"))
 
     print(f"graph: nodes={len(graph.nodes)} members={len(graph.members)} meta={graph.meta}")
     print(f"profiles: {len(profiles)} from {profile_path}")
+    print(f"engine: {engine}")
 
     if args.force_fallback or not _pymoo_available():
         print("using fallback random/local search")
         best_encoded, best_result = run_fallback_search(
             graph, profiles, material, case, n_eval=n_eval, seed=seed,
-            engine=args.engine,
+            engine=engine,
         )
     else:
         print(f"using pymoo GA pop={pop} n_gen={n_gen}")
         best_encoded, best_result = run_pymoo(
             graph, profiles, material, case, pop=pop, n_gen=n_gen,
-            seed=seed, engine=args.engine,
+            seed=seed, engine=engine,
         )
 
     write_solution(args.out, graph, best_encoded, profiles, best_result,

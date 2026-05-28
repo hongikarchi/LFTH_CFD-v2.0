@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import importlib.util
 from pathlib import Path
 
 from opt_structure.scripts.fea import analyze_structure
@@ -165,6 +166,48 @@ class OptStructureSmokeTests(unittest.TestCase):
         self.assertTrue(result.stable, result.error)
         self.assertAlmostEqual(result.max_displacement_mm, expected_m * 1000.0,
                                delta=expected_m * 1000.0 * 0.02)
+
+    @unittest.skipUnless(importlib.util.find_spec("Pynite"), "PyNiteFEA not installed")
+    def test_pynite_cantilever_runs(self) -> None:
+        graph = GroundStructure(
+            nodes=[
+                StructureNode("A", (0.0, 0.0, 0.0), "support", fixed=True),
+                StructureNode("B", (3000.0, 0.0, 0.0), "module_target",
+                              fixed=False, load_N=(0.0, 0.0, -1000.0)),
+            ],
+            members=[CandidateMember("M0", "A", "B", 3000.0, "test")],
+            meta={},
+        )
+        profile = SteelProfile(
+            name="TEST",
+            h_mm=200.0,
+            b_mm=100.0,
+            tw_mm=8.0,
+            tf_mm=12.0,
+            A_cm2=50.0,
+            I_strong_cm4=2000.0,
+            I_weak_cm4=500.0,
+            J_cm4=50.0,
+            S_strong_cm3=200.0,
+            S_weak_cm3=50.0,
+            kg_per_m=0.0,
+        )
+        case = {
+            "constraints": {
+                "max_utilization": 1.0,
+                "max_deflection_mm": 1000.0,
+                "deflection_span_ratio": 1.0e9,
+                "max_slenderness": 1.0e9,
+            },
+            "loads": {"gravity_mps2": 9.81},
+        }
+        result = analyze_structure(
+            graph, {"M0": "TEST"}, {"TEST": profile}, SteelMaterial(), case,
+            engine="pynite"
+        )
+        self.assertEqual(result.engine, "pynite")
+        self.assertTrue(result.stable, result.error)
+        self.assertGreater(result.max_displacement_mm, 0.0)
 
 
 if __name__ == "__main__":

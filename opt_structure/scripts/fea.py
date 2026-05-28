@@ -603,12 +603,12 @@ def analyze_pynite(graph: GroundStructure, selected_profiles: dict[str, str],
                              profile_map, "PyNite is not installed",
                              connected)
     # PyNite API has changed across releases. Build the model for real analysis,
-    # then compute the same utilization envelope from recovered nodal
-    # translations when available.
+    # then compute a simple AISC-style elastic stress envelope from recovered
+    # member forces.
     try:
         model = FEModel3D()
         model.add_material(material.name, material.E_Pa, material.G_Pa,
-                           material.nu, material.density_kgpm3)
+                           material.nu, material.density_kgpm3, material.Fy_Pa)
         for profile in profile_map.values():
             model.add_section(profile.name, profile.area_m2, profile.i_weak_m4,
                               profile.i_strong_m4, profile.j_m4)
@@ -630,6 +630,8 @@ def analyze_pynite(graph: GroundStructure, selected_profiles: dict[str, str],
             w = profile.kg_per_m * (member.length_mm * 0.001) * g
             model.add_node_load(member.i, "FZ", -0.5 * w, "DL")
             model.add_node_load(member.j, "FZ", -0.5 * w, "DL")
+        if not model.load_combos:
+            model.add_load_combo("Combo 1", {"DL": 1.0})
         if hasattr(model, "analyze_linear"):
             model.analyze_linear()
         else:
@@ -639,12 +641,14 @@ def analyze_pynite(graph: GroundStructure, selected_profiles: dict[str, str],
                              profile_map, f"PyNite analysis failed: {exc}",
                              _connected_to_supports(graph, selected_profiles))
 
-    # Recovering result dictionaries is intentionally defensive. If a PyNite
-    # release changes names, the truss fallback still gives deterministic
-    # screening rather than crashing the optimizer.
     displacements: dict[str, list[float]] = {}
     try:
-        for node_id, node_obj in model.nodes.items():
+        max_disp_mm = 0.0
+        for node in graph.nodes:
+            node_obj = model.nodes.get(node.id)
+            if node_obj is None:
+                displacements[node.id] = [0.0, 0.0, 0.0]
+                continue
             disp = []
             for attr in ("DX", "DY", "DZ"):
                 raw = getattr(node_obj, attr, 0.0)
@@ -652,17 +656,78 @@ def analyze_pynite(graph: GroundStructure, selected_profiles: dict[str, str],
                     val = raw.get("Combo 1", raw.get("DL", next(iter(raw.values()), 0.0)))
                 else:
                     val = raw
-                disp.append(float(val))
-            displacements[node_id] = disp
+                disp.append(float(val) * 1000.0)
+            displacements[node.id] = disp
+            if node.kind == "module_target":
+                max_disp_mm = max(max_disp_mm, _vec_len(disp))
     except Exception:
-        return analyze_truss(graph, selected_profiles, profile_map, material, case)
+        return analyze_frame(graph, selected_profiles, profile_map, material, case)
 
-    # Convert PyNite displacements into a result using the same member envelope.
-    truss_like = analyze_truss(graph, selected_profiles, profile_map, material, case)
-    if not truss_like.stable:
-        return truss_like
-    truss_like.engine = "pynite"
-    return truss_like
+    member_results: list[MemberResult] = []
+    max_util = 0.0
+    max_slender = 0.0
+    try:
+        for member, profile in _selected_members(graph, selected_profiles, profile_map):
+            m_obj = model.members.get(member.id)
+            if m_obj is None:
+                continue
+            try:
+                axial_max = abs(float(m_obj.max_axial("Combo 1")))
+                axial_min = abs(float(m_obj.min_axial("Combo 1")))
+                axial_N = max(axial_max, axial_min)
+            except Exception:
+                axial_N = max(abs(float(m_obj.axial(0.0, "Combo 1"))),
+                              abs(float(m_obj.axial(member.length_mm * 0.001, "Combo 1"))))
+            moment_y = max(
+                abs(float(m_obj.max_moment("My", "Combo 1"))),
+                abs(float(m_obj.min_moment("My", "Combo 1"))),
+            )
+            moment_z = max(
+                abs(float(m_obj.max_moment("Mz", "Combo 1"))),
+                abs(float(m_obj.min_moment("Mz", "Combo 1"))),
+            )
+            axial_stress = axial_N / max(profile.area_m2, 1.0e-12)
+            bending_stress = (
+                moment_y / max(profile.s_weak_m3, 1.0e-12)
+                + moment_z / max(profile.s_strong_m3, 1.0e-12)
+            )
+            stress = axial_stress + bending_stress
+            util = stress / material.Fy_Pa
+            # Compression-only slenderness from end axial signs. PyNite's
+            # positive/negative convention is model-local, so use a conservative
+            # check when either end reports compression-like sign.
+            try:
+                compression_like = (
+                    float(m_obj.axial(0.0, "Combo 1")) > 0.0
+                    or float(m_obj.axial(member.length_mm * 0.001, "Combo 1")) < 0.0
+                )
+            except Exception:
+                compression_like = True
+            slender = (
+                (member.length_mm * 0.001) / max(profile.r_min_m, 1.0e-9)
+                if compression_like else 0.0
+            )
+            max_util = max(max_util, util)
+            max_slender = max(max_slender, slender)
+            member_results.append(
+                MemberResult(member.id, profile.name, axial_N, stress, util,
+                             slender, member.length_mm)
+            )
+    except Exception:
+        return analyze_frame(graph, selected_profiles, profile_map, material, case)
+
+    return AnalysisResult(
+        engine="pynite",
+        stable=True,
+        connected=True,
+        mass_kg=_mass_kg(graph, selected_profiles, profile_map),
+        max_displacement_mm=max_disp_mm,
+        displacement_limit_mm=_deflection_limit_mm(graph, case, selected_profiles),
+        max_utilization=max_util,
+        max_slenderness=max_slender,
+        member_results=member_results,
+        node_displacements_mm=displacements,
+    )
 
 
 def analyze_structure(graph: GroundStructure, selected_profiles: dict[str, str],

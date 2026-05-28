@@ -20,6 +20,13 @@
     "water_dynamic_factor": 2.0,
     "gravity_mps2": 9.81
   },
+  "analysis": {
+    "engine": "pynite",
+    "fallback_engine": "frame",
+    "member_model": "3d_beam_column",
+    "support_model": "fixed",
+    "load_combo": "DL"
+  },
   "constraints": {
     "max_utilization": 1.0,
     "max_deflection_mm": 25.0,

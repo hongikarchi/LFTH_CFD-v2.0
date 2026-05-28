@@ -42,5 +42,23 @@ python -m unittest opt_structure.tests.smoke_tests
   `Fy=275 MPa`, `density=7850 kg/m3`.
 - Water load uses `water_dynamic_factor=2.0` until CFD time-history pressure
   loads are wired in.
+- `structure_case.json` defaults to `analysis.engine = "pynite"`. If PyNite is
+  not installed, use `--engine frame` for the pure-Python 3D frame fallback.
 - The bundled KS/JIS H-section CSV is a seed library. Replace it with a
   certified fabricator/Tekla export before final engineering checks.
+
+## Optimization setup knobs
+
+Before large runs, calibrate these inputs with a few small `--n-eval` tests:
+
+- `loads.module_dead_kg`, `loads.module_water_kg`, and
+  `loads.water_dynamic_factor`: load magnitude usually dominates member size.
+- `analysis.support_model`: current extraction treats `env::structure_start`
+  and existing structure endpoints as fixed supports.
+- `ground_structure.intermediate_levels`: adding bracing levels can reduce
+  slenderness more effectively than simply using heavier H-sections.
+- `constraints.max_deflection_mm`, `constraints.deflection_span_ratio`,
+  `constraints.max_slenderness`: these decide whether the optimizer spends
+  material on stiffness, strength, or unbraced length.
+- Profile CSV contents: use the final KS/JIS/Tekla profile list before trusting
+  the ranking of alternatives.
