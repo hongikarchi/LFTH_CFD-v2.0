@@ -118,16 +118,72 @@ def _read_saved_state() -> dict | None:
         return None
 
 
-def _bbox_boundary_check(bounds: list[list[float]], boundary_bounds: list[list[float]]) -> dict:
-    min_margin = [bounds[0][i] - boundary_bounds[0][i] for i in range(3)]
-    max_margin = [boundary_bounds[1][i] - bounds[1][i] for i in range(3)]
-    violations = [max(0.0, -min_margin[i], -max_margin[i]) for i in range(3)]
-    max_violation = max(violations) if violations else 0.0
+def _point_in_polygon_xy(x: float, y: float, polygon: list[list[float]]) -> bool:
+    inside = False
+    n = len(polygon)
+    if n < 3:
+        return False
+    j = n - 1
+    for i in range(n):
+        xi, yi = polygon[i]
+        xj, yj = polygon[j]
+        if ((yi > y) != (yj > y)) and (
+            x < (xj - xi) * (y - yi) / max(yj - yi, 1.0e-30) + xi
+        ):
+            inside = not inside
+        j = i
+    return inside
+
+
+def _point_segment_distance_xy(
+    px: float, py: float, ax: float, ay: float, bx: float, by: float
+) -> float:
+    vx, vy = bx - ax, by - ay
+    wx, wy = px - ax, py - ay
+    denom = vx * vx + vy * vy
+    if denom <= 1.0e-30:
+        return math.hypot(px - ax, py - ay)
+    t = max(0.0, min(1.0, (wx * vx + wy * vy) / denom))
+    qx, qy = ax + t * vx, ay + t * vy
+    return math.hypot(px - qx, py - qy)
+
+
+def _polygon_distance_xy(x: float, y: float, polygon: list[list[float]]) -> float:
+    if len(polygon) < 2:
+        return 0.0
+    best = float("inf")
+    for i, a in enumerate(polygon):
+        b = polygon[(i + 1) % len(polygon)]
+        best = min(best, _point_segment_distance_xy(x, y, a[0], a[1], b[0], b[1]))
+    return 0.0 if best == float("inf") else best
+
+
+def _points_boundary_check(points: list[list[float]], boundary: dict) -> dict:
+    polygon = boundary.get("xy_curve_mm") or []
+    z_min = float(boundary.get("z_min_mm", -float("inf")))
+    z_max = float(boundary.get("z_max_mm", float("inf")))
+    outside_xy = 0
+    outside_z = 0
+    max_xy_violation = 0.0
+    max_z_violation = 0.0
+    for point in points:
+        x, y, z = float(point[0]), float(point[1]), float(point[2])
+        if not _point_in_polygon_xy(x, y, polygon):
+            outside_xy += 1
+            max_xy_violation = max(max_xy_violation, _polygon_distance_xy(x, y, polygon))
+        z_violation = max(z_min - z, z - z_max, 0.0)
+        if z_violation > 0.0:
+            outside_z += 1
+            max_z_violation = max(max_z_violation, z_violation)
+    max_violation = max(max_xy_violation, max_z_violation)
     return {
+        "mode": "rim_curve_xy_extrusion",
         "inside": max_violation <= 1.0e-6,
-        "min_margin_mm": pm._round_nested(min_margin),
-        "max_margin_mm": pm._round_nested(max_margin),
-        "axis_violation_mm": pm._round_nested(violations),
+        "sample_count": len(points),
+        "outside_xy_count": outside_xy,
+        "outside_z_count": outside_z,
+        "max_xy_violation_mm": round(max_xy_violation, 3),
+        "max_z_violation_mm": round(max_z_violation, 3),
         "max_violation_mm": round(max_violation, 3),
     }
 
@@ -137,13 +193,17 @@ def _read_boundary() -> dict | None:
         return None
     try:
         data = json.loads(BOUNDARY_JSON.read_text(encoding="utf-8"))
-        bounds = data.get("bbox_mm")
+        polygon = data.get("xy_curve_mm")
         if (
-            isinstance(bounds, list)
-            and len(bounds) == 2
-            and all(isinstance(row, list) and len(row) == 3 for row in bounds)
+            data.get("mode") == "xy_curve_extrusion"
+            and isinstance(polygon, list)
+            and len(polygon) >= 3
         ):
-            data["bbox_mm"] = [[float(v) for v in row] for row in bounds]
+            data["xy_curve_mm"] = [[float(v[0]), float(v[1])] for v in polygon]
+            data["z_min_mm"] = float(data["z_min_mm"])
+            data["z_max_mm"] = float(data["z_max_mm"])
+            if "bbox_mm" in data:
+                data["bbox_mm"] = [[float(v) for v in row] for row in data["bbox_mm"]]
             return data
     except Exception:
         return None
@@ -156,6 +216,7 @@ def _fetch_boundary_from_rhino() -> dict:
 
     code = f'''
 import scriptcontext as sc
+import Rhino, System, json, math
 doc = sc.doc
 target = "{BOUNDARY_LAYER}"
 
@@ -170,23 +231,97 @@ def layer_full_path(layer_index):
         names.append(parent.Name)
         parent_id = parent.ParentLayerId
     return "::".join(reversed(names))
-
-import System
 bb_min = [1e30, 1e30, 1e30]
 bb_max = [-1e30, -1e30, -1e30]
 cnt = 0
-for o in doc.Objects:
+curves = []
+
+def add_curve(c):
+    if c is None:
+        return
+    try:
+        length = c.GetLength()
+    except Exception:
+        length = 0.0
+    if length <= 1.0:
+        return
+    n = max(48, min(512, int(length / 150.0)))
+    params = c.DivideByCount(n, True)
+    if not params:
+        dom = c.Domain
+        params = [dom.T0 + (dom.T1 - dom.T0) * i / n for i in range(n)]
+    pts = []
+    zmin = 1e30
+    zmax = -1e30
+    for t in params:
+        p = c.PointAt(t)
+        pts.append([float(p.X), float(p.Y), float(p.Z)])
+        zmin = min(zmin, float(p.Z))
+        zmax = max(zmax, float(p.Z))
+    if len(pts) >= 2:
+        dx = pts[0][0] - pts[-1][0]
+        dy = pts[0][1] - pts[-1][1]
+        dz = pts[0][2] - pts[-1][2]
+        if math.sqrt(dx*dx + dy*dy + dz*dz) < 1.0:
+            pts = pts[:-1]
+    if len(pts) < 3:
+        return
+    area = 0.0
+    for i, p in enumerate(pts):
+        q = pts[(i + 1) % len(pts)]
+        area += p[0] * q[1] - q[0] * p[1]
+    curves.append({{
+        "points": pts,
+        "xy_area": area * 0.5,
+        "length": length,
+        "z_min": zmin,
+        "z_max": zmax,
+        "closed": bool(c.IsClosed)
+    }})
+
+settings = Rhino.DocObjects.ObjectEnumeratorSettings()
+settings.NormalObjects = True
+settings.LockedObjects = True
+settings.HiddenObjects = True
+settings.ReferenceObjects = True
+settings.IncludeLights = False
+
+for o in doc.Objects.GetObjectList(settings):
     fp = layer_full_path(o.Attributes.LayerIndex)
     if fp != target and not fp.startswith(target + "::"):
         continue
+    cnt += 1
     b = o.Geometry.GetBoundingBox(True)
     if b.IsValid:
         for k, v in enumerate([b.Min.X, b.Min.Y, b.Min.Z]):
             bb_min[k] = min(bb_min[k], v)
         for k, v in enumerate([b.Max.X, b.Max.Y, b.Max.Z]):
             bb_max[k] = max(bb_max[k], v)
-        cnt += 1
-print("BOUNDARY_BBOX " + str(cnt) + " " + " ".join(str(v) for v in bb_min + bb_max))
+    g = o.Geometry
+    if isinstance(g, Rhino.Geometry.Curve):
+        add_curve(g.DuplicateCurve())
+    elif isinstance(g, Rhino.Geometry.Extrusion):
+        g = g.ToBrep()
+        for edge in g.Edges:
+            c = edge.DuplicateCurve()
+            if c:
+                cb = c.GetBoundingBox(True)
+                if cb.IsValid and abs(cb.Max.Z - cb.Min.Z) < 5.0:
+                    add_curve(c)
+    elif isinstance(g, Rhino.Geometry.Brep):
+        for edge in g.Edges:
+            c = edge.DuplicateCurve()
+            if c:
+                cb = c.GetBoundingBox(True)
+                if cb.IsValid and abs(cb.Max.Z - cb.Min.Z) < 5.0:
+                    add_curve(c)
+
+payload = {{
+    "object_count": cnt,
+    "bbox_mm": [bb_min, bb_max],
+    "curves": curves
+}}
+print("BOUNDARY_CURVE_JSON " + json.dumps(payload))
 '''
     result = mcp_call(code, timeout=60)
     if result.get("status") != "success":
@@ -194,25 +329,42 @@ print("BOUNDARY_BBOX " + str(cnt) + " " + " ".join(str(v) for v in bb_min + bb_m
     out = result.get("result", {}).get("output", "")
     for line in out.splitlines():
         line = line.strip()
-        if not line.startswith("BOUNDARY_BBOX "):
+        if not line.startswith("BOUNDARY_CURVE_JSON "):
             continue
-        parts = line.split()
-        count = int(parts[1])
+        payload = json.loads(line[len("BOUNDARY_CURVE_JSON "):])
+        count = int(payload.get("object_count", 0))
         if count <= 0:
             raise RuntimeError(f"{BOUNDARY_LAYER} has no objects")
-        values = [float(v) for v in parts[2:8]]
+        curves = payload.get("curves") or []
+        if not curves:
+            raise RuntimeError(f"{BOUNDARY_LAYER} has no curve geometry")
+        curve = max(curves, key=lambda c: abs(float(c.get("xy_area", 0.0))))
+        points3 = curve.get("points") or []
+        polygon = [[float(p[0]), float(p[1])] for p in points3]
+        if len(polygon) < 3:
+            raise RuntimeError(f"{BOUNDARY_LAYER} curve has too few samples")
+        bbox = payload.get("bbox_mm")
+        z_min = float(bbox[0][2])
+        z_max = float(bbox[1][2])
         boundary = {
             "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
             "layer": BOUNDARY_LAYER,
             "source": "rhino_mcp",
+            "mode": "xy_curve_extrusion",
             "object_count": count,
-            "bbox_mm": [values[0:3], values[3:6]],
+            "curve_count": len(curves),
+            "sample_count": len(polygon),
+            "xy_curve_mm": polygon,
+            "xy_area_mm2": round(float(curve.get("xy_area", 0.0)), 3),
+            "z_min_mm": z_min,
+            "z_max_mm": z_max,
+            "bbox_mm": bbox,
             "path": str(BOUNDARY_JSON).replace("\\", "/"),
         }
         BOUNDARY_JSON.parent.mkdir(parents=True, exist_ok=True)
         BOUNDARY_JSON.write_text(json.dumps(boundary, indent=2), encoding="utf-8")
         return boundary
-    raise RuntimeError(f"no BOUNDARY_BBOX line in Rhino output: {out[-500:]}")
+    raise RuntimeError(f"no BOUNDARY_CURVE_JSON line in Rhino output: {out[-500:]}")
 
 
 def _boundary_payload(refresh: bool = False) -> dict:
@@ -383,12 +535,12 @@ def _build_preview(state: dict) -> dict:
     viz_bbox = pm._bbox(viz.vertices)
     boundary_check = None
     if boundary:
-        boundary_bounds = boundary["bbox_mm"]
-        boundary_check = _bbox_boundary_check(solid_bbox, boundary_bounds)
+        all_rim_points: list[list[float]] = []
         for module_meta in meta_modules:
-            module_meta["boundary"] = _bbox_boundary_check(
-                module_meta["solid_bbox_mm"], boundary_bounds
-            )
+            rim_points = module_meta.get("rim_curve_mm") or []
+            all_rim_points.extend(rim_points)
+            module_meta["boundary"] = _points_boundary_check(rim_points, boundary)
+        boundary_check = _points_boundary_check(all_rim_points, boundary)
     meta = {
         "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "generator": "ui ellipsoid-cut parametric module",

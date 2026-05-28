@@ -207,7 +207,6 @@ table.grid th {
           <button class="action" id="btn_preview">Preview STL</button>
           <button class="action warn" id="btn_bake">Bake to Rhino</button>
           <button class="action secondary" id="btn_save">Save params</button>
-          <button class="action secondary" id="btn_defaults">Load bbox defaults</button>
           <button class="action secondary" id="btn_boundary">Refresh boundary</button>
           <label class="check"><input type="checkbox" id="auto_bake"> Auto bake</label>
         </div>
@@ -479,7 +478,7 @@ async function refreshBoundary() {
   BOUNDARY = j.boundary;
   VIEW.frame = null;
   drawPreview();
-  setStatus('boundary loaded: ' + fmtVec(BOUNDARY.bbox_mm[0]) + ' -> ' + fmtVec(BOUNDARY.bbox_mm[1]));
+  setStatus('boundary loaded: ' + (BOUNDARY.xy_curve_mm || []).length + ' xy samples, z=' + fmtNum(BOUNDARY.z_min_mm) + '..' + fmtNum(BOUNDARY.z_max_mm));
 }
 
 async function preview() {
@@ -575,20 +574,19 @@ function moduleInfo(idx) {
   return MODULES.find(m => String(m.index) === String(idx));
 }
 
-function boundaryCorners() {
-  const box = BOUNDARY?.bbox_mm;
-  if (!Array.isArray(box) || box.length !== 2) return [];
-  const mn = box[0], mx = box[1];
-  return [
-    {x: mn[0], y: mn[1], z: mn[2]},
-    {x: mx[0], y: mn[1], z: mn[2]},
-    {x: mx[0], y: mx[1], z: mn[2]},
-    {x: mn[0], y: mx[1], z: mn[2]},
-    {x: mn[0], y: mn[1], z: mx[2]},
-    {x: mx[0], y: mn[1], z: mx[2]},
-    {x: mx[0], y: mx[1], z: mx[2]},
-    {x: mn[0], y: mx[1], z: mx[2]}
-  ];
+function boundaryLoops() {
+  const curve = BOUNDARY?.xy_curve_mm;
+  if (!Array.isArray(curve) || curve.length < 3) return null;
+  const zMin = Number(BOUNDARY.z_min_mm ?? 0);
+  const zMax = Number(BOUNDARY.z_max_mm ?? zMin);
+  const bottom = curve.map(p => ({x: Number(p[0]), y: Number(p[1]), z: zMin}));
+  const top = curve.map(p => ({x: Number(p[0]), y: Number(p[1]), z: zMax}));
+  return {bottom, top};
+}
+
+function boundaryPreviewPoints() {
+  const loops = boundaryLoops();
+  return loops ? loops.bottom.concat(loops.top) : [];
 }
 
 function derivedGeometry(params) {
@@ -812,9 +810,7 @@ function buildPreviewGeometry() {
     meshes.push({idx, points, faces, rim, rings, ghost});
     allPoints.push(...points);
   }
-  if (BOUNDARY?.bbox_mm) {
-    allPoints.push(...boundaryCorners());
-  }
+  allPoints.push(...boundaryPreviewPoints());
   return {meshes, allPoints};
 }
 
@@ -920,32 +916,40 @@ function drawGrid(ctx, b, map) {
   }
 }
 
-function drawBoundaryBox(ctx, map) {
-  const corners = boundaryCorners();
-  if (corners.length !== 8) return;
-  const pts = corners.map(map);
-  const edges = [
-    [0, 1], [1, 2], [2, 3], [3, 0],
-    [4, 5], [5, 6], [6, 7], [7, 4],
-    [0, 4], [1, 5], [2, 6], [3, 7]
-  ];
+function drawPolyline(ctx, pts, close = true) {
+  if (!pts.length) return;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  if (close) ctx.closePath();
+  ctx.stroke();
+}
+
+function drawBoundaryRegion(ctx, map) {
+  const loops = boundaryLoops();
+  if (!loops) return;
+  const bottom = loops.bottom.map(map);
+  const top = loops.top.map(map);
   const ok = LATEST_META?.boundary_ok;
   ctx.save();
   ctx.strokeStyle = ok === false ? 'rgba(207, 34, 46, 0.72)' : 'rgba(31, 111, 235, 0.42)';
   ctx.lineWidth = ok === false ? 1.8 : 1.25;
   ctx.setLineDash([6, 5]);
-  for (const [a, c] of edges) {
+  drawPolyline(ctx, bottom);
+  drawPolyline(ctx, top);
+  const stride = Math.max(1, Math.floor(top.length / 24));
+  for (let i = 0; i < top.length; i += stride) {
     ctx.beginPath();
-    ctx.moveTo(pts[a].x, pts[a].y);
-    ctx.lineTo(pts[c].x, pts[c].y);
+    ctx.moveTo(bottom[i].x, bottom[i].y);
+    ctx.lineTo(top[i].x, top[i].y);
     ctx.stroke();
   }
   ctx.setLineDash([]);
   const label = ok === false ? 'boundary OUT' : 'env::boundary';
   ctx.fillStyle = ok === false ? 'rgba(207, 34, 46, 0.85)' : 'rgba(31, 111, 235, 0.72)';
   ctx.font = '11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
-  const top = pts.reduce((best, p) => p.y < best.y ? p : best, pts[0]);
-  ctx.fillText(label, top.x + 6, top.y - 6);
+  const labelPoint = top.reduce((best, p) => p.y < best.y ? p : best, top[0]);
+  ctx.fillText(label, labelPoint.x + 6, labelPoint.y - 6);
   ctx.restore();
 }
 
@@ -1037,7 +1041,7 @@ function drawPreview() {
   ctx.fillStyle = '#f8fbff';
   ctx.fillRect(0, 0, w, h);
   drawGrid(ctx, b, map);
-  drawBoundaryBox(ctx, map);
+  drawBoundaryRegion(ctx, map);
 
   const ghostFaces = [];
   const faces = [];
@@ -1204,7 +1208,6 @@ document.addEventListener('click', e => {
     setStatus('Module ' + ACTIVE_MODULE + ' 편집 중 | group=' + activeGroupConfig().label);
   }
 });
-document.getElementById('btn_defaults').addEventListener('click', loadDefaults);
 document.getElementById('btn_save').addEventListener('click', saveParams);
 document.getElementById('btn_preview').addEventListener('click', preview);
 document.getElementById('btn_bake').addEventListener('click', bake);

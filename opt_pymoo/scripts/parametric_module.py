@@ -386,6 +386,20 @@ def build_module_mesh(
     return Mesh(_transform_vertices(vertices, anchor_mm, params), faces)
 
 
+def build_module_rim_points(
+    params: ModuleParams,
+    *,
+    anchor_mm: Vec3 = (0.0, 0.0, 0.0),
+    theta_segments: int = 64,
+) -> list[Vec3]:
+    """Return transformed samples of the ellipsoid/cut-plane intersection curve."""
+    vertices, _, _, rim_loop = _inner_cap(
+        params, theta_segments=theta_segments, radial_segments=3
+    )
+    transformed = _transform_vertices(vertices, anchor_mm, params)
+    return [transformed[idx] for idx in rim_loop]
+
+
 def _stitch_two_loops(faces: list[Face], inner_loop: list[int], outer_loop: list[int]) -> None:
     if len(inner_loop) != len(outer_loop):
         raise ValueError("loop sizes must match")
@@ -518,6 +532,11 @@ def build_modules_from_infos(
         target_bbox = module["bbox_mm"]
         solid_bbox = _bbox(solid.vertices)
         viz_bbox = _bbox(viz.vertices)
+        rim_points = build_module_rim_points(
+            params,
+            anchor_mm=anchor,
+            theta_segments=theta_segments,
+        )
         derived = derived_geometry(params)
         meta_modules.append(
             {
@@ -551,6 +570,8 @@ def build_modules_from_infos(
                 },
                 "target_bbox_mm": _round_nested(target_bbox),
                 "solid_bbox_mm": _round_nested(solid_bbox),
+                "rim_curve_mm": _round_nested(rim_points),
+                "rim_bbox_mm": _round_nested(_bbox(rim_points)),
                 "solid_bbox_error_mm": _round_nested(
                     [
                         [solid_bbox[0][i] - target_bbox[0][i] for i in range(3)],
