@@ -2,751 +2,239 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<title>LFTH_CFD · dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LFTH_CFD Files</title>
 <style>
 :root {
-  --bg: #f6f8fa; --panel: #ffffff; --border: #d0d7de; --border-soft: #e5e8eb;
-  --text: #1f2328; --text-soft: #57606a; --text-faint: #8c959f;
-  --accent: #0969da; --accent-soft: #ddf4ff;
-  --green: #1a7f37; --green-bg: #dafbe1;
-  --grey: #6e7781; --grey-bg: #eaeef2;
-  --amber: #bf8700; --amber-bg: #fff8c5;
+  --bg: #f6f8fa;
+  --panel: #ffffff;
+  --border: #d0d7de;
+  --border-soft: #eaeef2;
+  --text: #1f2328;
+  --text-soft: #57606a;
+  --text-faint: #8c959f;
+  --accent: #0969da;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
-body { font-family: var(--sans); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+}
 code, .mono { font-family: var(--mono); }
-
-header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 18px 28px 14px; }
-header .title { font-size: 19px; font-weight: 600; margin: 0 0 6px; }
-header .meta { display: flex; flex-wrap: wrap; gap: 6px 10px; font-size: 12.5px; color: var(--text-soft); }
-header .chip { display: inline-flex; align-items: center; gap: 5px; background: var(--bg);
-               border: 1px solid var(--border-soft); border-radius: 999px; padding: 2px 9px; }
+header {
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 18px 28px 14px;
+}
+header .title {
+  font-size: 19px;
+  font-weight: 650;
+  margin: 0 0 6px;
+}
+header .meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  font-size: 12.5px;
+  color: var(--text-soft);
+}
+header .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg);
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
 header .chip b { color: var(--text); font-weight: 600; }
-
-.wrap { max-width: 1200px; margin: 0 auto; padding: 0 28px 60px; }
-
-.tabbar { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--border);
-          position: sticky; top: 0; background: var(--bg); z-index: 5; padding-top: 14px; }
-.tab-btn { appearance: none; border: none; background: transparent; font-family: var(--sans);
-           font-size: 13.5px; font-weight: 500; color: var(--text-soft);
-           padding: 9px 14px 8px; cursor: pointer; border-bottom: 2.5px solid transparent;
-           margin-bottom: -1px; border-radius: 6px 6px 0 0; }
-.tab-btn:hover { background: var(--panel); color: var(--text); }
-.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--panel); }
-.panel { display: none; padding-top: 22px; }
-.panel.active { display: block; }
-
-.section-title { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-                 color: var(--text-faint); margin: 26px 0 10px; }
-.section-title:first-child { margin-top: 0; }
-
-.card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
-
-/* form: label | input | unit | desc_ko */
-.fld { display: grid; grid-template-columns: 180px 120px 70px 1fr; align-items: center; gap: 12px;
-       padding: 7px 0; border-bottom: 1px dashed var(--border-soft); }
-.fld:last-child { border-bottom: none; }
-.fld label { color: var(--text); font-size: 13px; font-weight: 500; }
-.fld .desc-ko { color: var(--text-soft); font-size: 12px; line-height: 1.5; white-space: pre-line; }
-.fld input[type=number], .fld input[type=text], .fld select {
-  font-family: var(--mono); font-size: 12.5px;
-  border: 1px solid var(--border); border-radius: 5px; padding: 4px 6px; background: var(--panel); color: var(--text); width: 100%; }
-.fld .unit { font-family: var(--mono); color: var(--text-faint); font-size: 11.5px; }
-.fld input[type=checkbox] { width: 18px; height: 18px; }
-.chip-row { display: flex; flex-wrap: wrap; gap: 4px; }
-.chip-toggle { font-family: var(--mono); font-size: 11px; padding: 3px 9px;
-               border: 1px solid var(--border); background: var(--bg);
-               color: var(--text-soft); border-radius: 999px; cursor: pointer; }
-.chip-toggle:hover { background: var(--border-soft); color: var(--text); }
-.chip-toggle.on { background: var(--accent-soft); border-color: var(--accent);
-                  color: var(--accent); font-weight: 600; }
-
-.btnrow { display: flex; gap: 10px; margin: 20px 0 12px; flex-wrap: wrap; }
-button.action { background: var(--accent); color: white; border: none; border-radius: 6px;
-                padding: 8px 16px; font-weight: 600; cursor: pointer; }
-button.action:hover { filter: brightness(1.1); }
-button.action.secondary { background: var(--grey-bg); color: var(--text); }
-button.action.secondary:hover { background: var(--border); }
-button.action.danger { background: #cf222e; }
-.status-bar { font-family: var(--mono); font-size: 12px; color: var(--text-soft); padding: 6px 10px;
-              background: var(--grey-bg); border-radius: 5px; margin-top: 12px; min-height: 22px; }
-
-table.grid { width: 100%; border-collapse: collapse; background: var(--panel);
-             border: 1px solid var(--border); border-radius: 8px; overflow: hidden; font-size: 12.5px; }
-table.grid th, table.grid td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
-table.grid th:first-child, table.grid td:first-child,
-table.grid th:nth-child(2), table.grid td:nth-child(2) { text-align: left; }
-table.grid th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
-                color: var(--text-faint); background: var(--bg); cursor: pointer; user-select: none; }
-table.grid tr.best td { background: var(--green-bg); font-weight: 600; }
-table.grid tr:hover td { background: var(--bg); }
-table.grid img { height: 50px; border-radius: 3px; vertical-align: middle; }
-.git-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-.git-metric { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; min-height: 78px; }
-.git-metric .label { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
-.git-metric .value { margin-top: 5px; font-size: 17px; font-weight: 650; overflow-wrap: anywhere; }
-.git-metric .sub { margin-top: 3px; color: var(--text-soft); font-family: var(--mono); font-size: 11.5px; overflow-wrap: anywhere; }
-.badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 700; border: 1px solid var(--border); background: var(--grey-bg); color: var(--text-soft); }
-.badge.ok { background: var(--green-bg); color: var(--green); border-color: #8ddb9d; }
-.badge.warn { background: var(--amber-bg); color: var(--amber); border-color: #d4a72c; }
-.badge.bad { background: #ffebe9; color: #cf222e; border-color: #ffb3ad; }
-.git-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-.git-log { margin-top: 10px; font-family: var(--mono); font-size: 11.5px; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 10px; max-height: 280px; overflow: auto; white-space: pre-wrap; }
-button.action:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
-
-.charts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 20px; }
-.charts h3 { margin: 0 0 6px 0; font-size: 12px; font-weight: 700;
-             color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; }
-.charts canvas { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; max-height: 260px; }
-
-.tree-wrap { font-family: var(--mono); font-size: 12.5px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; overflow-x: auto; }
-.tree-line { display: grid; grid-template-columns: minmax(360px, max-content) 1fr; gap: 18px; padding: 3px 0; align-items: baseline; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 22px 28px 60px; }
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.section-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.search {
+  width: min(360px, 100%);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 9px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  background: var(--panel);
+  color: var(--text);
+}
+.tree-wrap {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 18px;
+  overflow-x: auto;
+}
+.tree-line {
+  display: grid;
+  grid-template-columns: minmax(360px, max-content) minmax(280px, 1fr);
+  gap: 18px;
+  padding: 4px 0;
+  align-items: baseline;
+  border-bottom: 1px solid transparent;
+}
+.tree-line:hover { border-bottom-color: var(--border-soft); }
 .tree-line .path { color: var(--text); white-space: pre; }
-.tree-line .path .seg-dir { color: var(--accent); font-weight: 600; }
+.tree-line .path .seg-dir { color: var(--accent); font-weight: 650; }
 .tree-line .path .seg-file { color: var(--text); }
 .tree-line .path .branch { color: var(--text-faint); }
-.tree-line .role { color: var(--text-soft); font-family: var(--sans); font-size: 12.5px; line-height: 1.4; }
-
-.q { padding: 4px 8px; font-size: 13px; border: 1px solid var(--border); border-radius: 5px; width: 280px; }
+.tree-line .role {
+  color: var(--text-soft);
+  font-family: var(--sans);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.empty {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-soft);
+  padding: 14px 16px;
+}
+@media (max-width: 720px) {
+  header { padding: 16px 18px 12px; }
+  .wrap { padding: 18px 16px 44px; }
+  .toolbar { align-items: stretch; flex-direction: column; }
+  .search { width: 100%; }
+  .tree-line { grid-template-columns: minmax(280px, max-content); gap: 3px; }
+}
 </style>
 </head>
 <body>
 <header>
-  <h1 class="title">LFTH_CFD · dashboard</h1>
+  <h1 class="title">LFTH_CFD Files</h1>
   <div class="meta">
     <span class="chip">port <b class="mono">8080</b></span>
-    <span class="chip">config <b class="mono">env_fx3d/config/case.json</b></span>
-    <span class="chip">db <b class="mono">env_fx3d/_settings_log.jsonl</b></span>
+    <span class="chip">role <b>main dashboard</b></span>
+    <span class="chip">view <b>Files</b></span>
   </div>
 </header>
 
-<div class="wrap">
-  <nav class="tabbar">
-    <button class="tab-btn active" data-tab="git">Git</button>
-    <button class="tab-btn" data-tab="settings">Settings</button>
-    <button class="tab-btn" data-tab="build">Build</button>
-    <button class="tab-btn" data-tab="history">History</button>
-    <button class="tab-btn" data-tab="charts">Charts</button>
-    <button class="tab-btn" data-tab="files">Files</button>
-  </nav>
-
-  <section class="panel active" id="panel-git">
-    <div class="btnrow">
-      <button class="action secondary" id="btn_git_refresh">Refresh Git status</button>
-      <button class="action" id="btn_git_main_ff">Fast-forward Documents main</button>
-      <span class="status-bar" id="git_status" style="margin: 0;">ready.</span>
-    </div>
-    <div class="git-summary" id="git_summary"></div>
-    <div class="section-title">Open codex/* pull requests</div>
-    <div id="git_prs"></div>
-    <div class="section-title">codex/* branches</div>
-    <div id="git_branches"></div>
-    <div class="section-title">Git job log</div>
-    <pre class="git-log" id="git_log">No Git job has run yet.</pre>
-  </section>
-
-  <section class="panel" id="panel-settings">
-    <div id="form_groups"></div>
-    <div class="btnrow">
-      <button class="action" id="btn_save">Save config</button>
-      <button class="action" id="btn_save_run">Save + Run (simulation)</button>
-      <button class="action" id="btn_save_run_int" style="background:#bf8700">Save + Run (interactive)</button>
-      <button class="action secondary" id="btn_thicken">Re-thicken collider</button>
-      <button class="action secondary" id="btn_reload">Reload from disk</button>
-    </div>
-    <div class="status-bar" id="status_bar">ready.</div>
-  </section>
-
-  <section class="panel" id="panel-build">
-    <div id="build_form_groups"></div>
-    <div class="btnrow">
-      <button class="action" id="btn_build_save">Save build config</button>
-      <button class="action" id="btn_build_run">Save + Rebuild (~1 min)</button>
-      <button class="action secondary" id="btn_build_reload">Reload from disk</button>
-    </div>
-    <div class="status-bar" id="build_status">ready.</div>
-    <pre id="build_log" style="margin-top:10px; font-family:var(--mono); font-size:11.5px; background:var(--panel); border:1px solid var(--border); border-radius:6px; padding:10px; max-height:240px; overflow:auto; white-space:pre-wrap;"></pre>
-  </section>
-
-  <section class="panel" id="panel-history">
-    <div class="btnrow">
-      <input class="q" id="q_history" placeholder="filter (case-insensitive)" />
-      <button class="action secondary" id="btn_refresh_runs">Refresh</button>
-      <span class="status-bar" id="history_count" style="margin: 0;"></span>
-    </div>
-    <div id="history_table"></div>
-  </section>
-
-  <section class="panel" id="panel-charts">
-    <div class="btnrow">
-      <button class="action secondary" id="btn_refresh_charts">Refresh</button>
-    </div>
-    <div class="charts">
-      <div><h3>dp vs score</h3><canvas id="c_dp"></canvas></div>
-      <div><h3>timemax vs score</h3><canvas id="c_t"></canvas></div>
-      <div><h3>nozzle_LPM vs score</h3><canvas id="c_l"></canvas></div>
-      <div><h3>thicken vs score</h3><canvas id="c_th"></canvas></div>
-    </div>
-  </section>
-
-  <section class="panel" id="panel-files">
+<main class="wrap">
+  <div class="toolbar">
     <div class="section-title">Project structure</div>
-    <div id="file_list"></div>
-  </section>
-</div>
+    <input class="search" id="file_search" placeholder="filter paths or roles">
+  </div>
+  <div id="file_list" class="empty">Loading files...</div>
+</main>
 
 <script>
-// ---------- tab switching ----------
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
-    if (btn.dataset.tab === 'git') loadGitStatus();
-    if (btn.dataset.tab === 'history') loadRuns();
-    if (btn.dataset.tab === 'charts') loadCharts();
-    if (btn.dataset.tab === 'files') loadFiles();
-    if (btn.dataset.tab === 'build') loadBuildConfig();
-  });
-});
+let ALL_FILES = [];
 
-// ---------- helpers ----------
-function setStatus(msg) { document.getElementById('status_bar').textContent = msg; }
-function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-// ---------- git dashboard ----------
-let CURRENT_GIT_JOB = null;
-let GIT_POLL_TIMER = null;
-
-function badge(text, kind) {
-  return '<span class="badge ' + (kind || '') + '">' + esc(text) + '</span>';
-}
-
-function shortSha(s) {
-  return s ? String(s).slice(0, 7) : '';
-}
-
-function setGitStatus(msg) {
-  document.getElementById('git_status').textContent = msg;
-}
-
-async function loadGitStatus() {
-  setGitStatus('loading...');
-  const rootSummary = document.getElementById('git_summary');
-  try {
-    const r = await fetch('/api/git/status');
-    const j = await r.json();
-    if (!j.ok) throw new Error(j.error || 'status failed');
-    renderGitSummary(j);
-    renderGitPrs(j.prs || [], j.gh_error);
-    renderGitBranches(j.branches || []);
-    setGitStatus('ready. ' + (j.pr_count || 0) + ' open PR(s).');
-  } catch (err) {
-    rootSummary.innerHTML = '<div class="card">Git status failed: ' + esc(err.message || err) + '</div>';
-    setGitStatus('FAILED');
-  }
-}
-
-function renderGitSummary(j) {
-  const docs = j.documents_main || {};
-  const docKind = docs.clean ? 'ok' : 'warn';
-  const docState = docs.clean ? 'clean' : 'dirty / blocked';
-  const last = j.last_job ? (j.last_job.kind + ' ' + j.last_job.status) : 'none';
-  const ffBtn = document.getElementById('btn_git_main_ff');
-  const ffReady = docs.clean === true && docs.branch === 'main';
-  ffBtn.disabled = !ffReady;
-  ffBtn.title = ffReady ? 'Fast-forward Documents main from origin/main' : (docs.error || docs.dirty || 'Documents main is not ready');
-  document.getElementById('git_summary').innerHTML = [
-    ['origin/main', shortSha(j.repo?.origin_main), j.repo?.path || ''],
-    ['Documents main', docState, (docs.branch || '?') + ' @ ' + shortSha(docs.head)],
-    ['Open PRs', String(j.pr_count || 0), j.gh_error ? 'gh error: ' + j.gh_error : 'codex/* -> main'],
-    ['Last job', last, j.last_job ? (j.last_job.target || '') : 'No Git job has run yet.'],
-  ].map((m, i) => (
-    '<div class="git-metric">'
-    + '<div class="label">' + esc(m[0]) + '</div>'
-    + '<div class="value">' + (i === 1 ? badge(m[1], docKind) : esc(m[1])) + '</div>'
-    + '<div class="sub">' + esc(m[2]) + '</div>'
-    + '</div>'
-  )).join('');
-}
-
-function renderGitPrs(prs, ghError) {
-  const root = document.getElementById('git_prs');
-  if (ghError) {
-    root.innerHTML = '<div class="card">GitHub CLI error: <span class="mono">' + esc(ghError) + '</span></div>';
-    return;
-  }
-  if (!prs.length) {
-    root.innerHTML = '<div class="card">No open codex/* PRs targeting main.</div>';
-    return;
-  }
-  const rows = prs.map(pr => {
-    const checks = pr.checks || {};
-    const checkKind = checks.blocking ? 'bad' : (checks.state === 'none' ? 'warn' : 'ok');
-    const ready = pr.actionable;
-    return '<tr>'
-      + '<td><a href="' + esc(pr.url) + '" target="_blank">#' + esc(pr.number) + '</a></td>'
-      + '<td>' + esc(pr.title) + '</td>'
-      + '<td class="mono">' + esc(pr.headRefName) + '</td>'
-      + '<td>' + (pr.isDraft ? badge('draft', 'warn') : badge('ready', 'ok')) + '</td>'
-      + '<td>' + badge(pr.mergeable || 'unknown', pr.mergeable === 'MERGEABLE' ? 'ok' : 'bad') + '</td>'
-      + '<td>' + badge((checks.state || 'none') + ' ' + (checks.total || 0), checkKind) + '</td>'
-      + '<td class="mono">' + esc(pr.updatedAt || '') + '</td>'
-      + '<td><div class="git-actions"><button class="action git-review" data-pr="' + esc(pr.number) + '"' + (ready ? '' : ' disabled title="Blocked by PR state"') + '>Review + merge</button></div></td>'
-      + '</tr>';
-  }).join('');
-  root.innerHTML = '<table class="grid"><thead><tr><th>PR</th><th>title</th><th>branch</th><th>draft</th><th>mergeable</th><th>checks</th><th>updated</th><th>action</th></tr></thead><tbody>' + rows + '</tbody></table>';
-}
-
-function renderGitBranches(branches) {
-  const root = document.getElementById('git_branches');
-  if (!branches.length) {
-    root.innerHTML = '<div class="card">No codex/* branches found.</div>';
-    return;
-  }
-  const rows = branches.map(b => {
-    const cleanText = b.clean === true ? 'clean' : (b.clean === false ? 'dirty' : 'n/a');
-    const cleanKind = b.clean === true ? 'ok' : (b.clean === false ? 'bad' : 'warn');
-    const pr = b.pr_number ? ('#' + b.pr_number) : '';
-    const syncTitle = b.sync_allowed ? 'Sync this branch to origin/main' : (b.sync_blocked || 'blocked');
-    return '<tr>'
-      + '<td class="mono">' + esc(b.name) + '</td>'
-      + '<td>' + badge(cleanText, cleanKind) + '</td>'
-      + '<td>' + esc(b.behind_main ?? '') + '</td>'
-      + '<td>' + esc(b.ahead_main ?? '') + '</td>'
-      + '<td class="mono">' + esc(b.worktree || '-') + '</td>'
-      + '<td>' + esc(pr) + '</td>'
-      + '<td class="mono">' + esc(shortSha(b.sha)) + '</td>'
-      + '<td><div class="git-actions"><button class="action secondary git-sync" data-branch="' + esc(b.name) + '"' + (b.sync_allowed ? '' : ' disabled title="' + esc(syncTitle) + '"') + '>Sync with main</button></div></td>'
-      + '</tr>';
-  }).join('');
-  root.innerHTML = '<table class="grid"><thead><tr><th>branch</th><th>state</th><th>behind</th><th>ahead</th><th>worktree</th><th>PR</th><th>sha</th><th>action</th></tr></thead><tbody>' + rows + '</tbody></table>';
-}
-
-async function startGitJob(url, payload) {
-  setGitStatus('starting job...');
-  const r = await fetch(url, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(payload || {})
-  });
-  const j = await r.json();
-  if (!j.ok) {
-    setGitStatus('job start FAILED: ' + (j.error || 'unknown'));
-    return;
-  }
-  CURRENT_GIT_JOB = j.job_id;
-  pollGitJob(j.job_id);
-}
-
-function pollGitJob(jobId) {
-  if (GIT_POLL_TIMER) clearInterval(GIT_POLL_TIMER);
-  setGitStatus('job ' + jobId + ' running...');
-  GIT_POLL_TIMER = setInterval(async () => {
-    const r = await fetch('/api/git/job/' + jobId);
-    const j = await r.json();
-    if (!j.ok) {
-      clearInterval(GIT_POLL_TIMER);
-      setGitStatus('job lookup FAILED');
-      return;
-    }
-    const job = j.job || {};
-    document.getElementById('git_log').textContent = job.log_tail || '';
-    setGitStatus(job.kind + ' ' + job.status + ' (' + job.target + ')');
-    if (job.status !== 'running') {
-      clearInterval(GIT_POLL_TIMER);
-      await loadGitStatus();
-    }
-  }, 2000);
-}
-
-document.getElementById('btn_git_refresh').addEventListener('click', loadGitStatus);
-document.getElementById('btn_git_main_ff').addEventListener('click', () => startGitJob('/api/git/main/ff', {}));
-document.addEventListener('click', e => {
-  const review = e.target.closest('.git-review');
-  if (review) startGitJob('/api/git/pr/' + review.dataset.pr + '/review_merge', {});
-  const sync = e.target.closest('.git-sync');
-  if (sync) startGitJob('/api/git/branch/sync', {branch: sync.dataset.branch});
-});
-
-// ---------- settings form ----------
-let CURRENT_GROUPS = [];
-let CURRENT_CONFIG = {};
-
-async function loadConfig() {
-  const r = await fetch('/api/config'); const j = await r.json();
-  CURRENT_CONFIG = j.config; CURRENT_GROUPS = j.groups; renderForm();
-}
-
-function renderForm() {
-  const root = document.getElementById('form_groups'); root.innerHTML = '';
-  for (const grp of CURRENT_GROUPS) {
-    const sec = document.createElement('div');
-    sec.innerHTML = `<div class="section-title">${esc(grp.title)}</div>`;
-    const card = document.createElement('div'); card.className = 'card';
-    for (const f of grp.fields) {
-      const val = CURRENT_CONFIG[f.key];
-      const row = document.createElement('div'); row.className = 'fld';
-      row.innerHTML = renderField(f, val);
-      card.appendChild(row);
-    }
-    sec.appendChild(card); root.appendChild(sec);
-  }
-}
-
-function renderField(f, val) {
-  const label = `<label>${esc(f.label)}</label>`;
-  const desc = `<div class="desc-ko">${esc(f.desc || '')}</div>`;
-  const unit = `<span class="unit">${esc(f.unit || '')}</span>`;
-  if (f.type === 'number') {
-    const step = f.step !== undefined ? `step="${f.step}"` : '';
-    return label + `<input type="number" data-key="${f.key}" ${step} value="${val ?? ''}">` + unit + desc;
-  }
-  if (f.type === 'select') {
-    const opts = f.options.map(o => `<option value="${esc(o)}"${val === o ? ' selected' : ''}>${esc(o)}</option>`).join('');
-    return label + `<select data-key="${f.key}">${opts}</select>` + unit + desc;
-  }
-  if (f.type === 'bool') {
-    return label + `<input type="checkbox" data-key="${f.key}"${val ? ' checked' : ''}>` + unit + desc;
-  }
-  if (f.type === 'vec4') {
-    const arr = Array.isArray(val) ? val : [0,0,0,0];
-    return label + `<div style="display:flex; gap:4px; grid-column-end:span 1;">
-      <input type="number" data-key="${f.key}__0" value="${arr[0]}">
-      <input type="number" data-key="${f.key}__1" value="${arr[1]}">
-      <input type="number" data-key="${f.key}__2" value="${arr[2]}">
-      <input type="number" data-key="${f.key}__3" value="${arr[3]}">
-    </div>` + unit + desc;
-  }
-  if (f.type === 'multi') {
-    const set = new Set(String(val ?? '').split(',').map(s => s.trim()).filter(s => s));
-    const chips = f.options.map(o => {
-      const on = set.has(o);
-      return `<button type="button" class="chip-toggle${on ? ' on' : ''}" data-mkey="${f.key}" data-mval="${esc(o)}">${esc(o)}</button>`;
-    }).join('');
-    return label + `<div class="chip-row" data-key="${f.key}" style="grid-column-end:span 1;">${chips}</div>` + unit + desc;
-  }
-  return label + `<input type="text" data-key="${f.key}" value="${esc(val ?? '')}">` + unit + desc;
-}
-
-function collectFormValues() {
-  const out = {};
-  for (const grp of CURRENT_GROUPS) {
-    for (const f of grp.fields) {
-      if (f.type === 'number') {
-        const el = document.querySelector('input[type=number][data-key="' + f.key + '"]');
-        if (el && el.value !== '') out[f.key] = parseFloat(el.value);
-      } else if (f.type === 'select') {
-        const el = document.querySelector('select[data-key="' + f.key + '"]');
-        if (el) out[f.key] = el.value;
-      } else if (f.type === 'bool') {
-        const el = document.querySelector('input[type=checkbox][data-key="' + f.key + '"]');
-        out[f.key] = !!(el && el.checked);
-      } else if (f.type === 'vec4') {
-        out[f.key] = [0,1,2,3].map(i => {
-          const el = document.querySelector('input[data-key="' + f.key + '__' + i + '"]');
-          return el ? parseFloat(el.value) : 0;
-        });
-      } else if (f.type === 'multi') {
-        const sel = Array.from(document.querySelectorAll('.chip-toggle.on[data-mkey="' + f.key + '"]'));
-        out[f.key] = sel.map(b => b.dataset.mval).join(',');
-      } else if (f.type === 'text') {
-        const el = document.querySelector('input[type=text][data-key="' + f.key + '"]');
-        if (el) out[f.key] = el.value;
-      }
-    }
-  }
-  return out;
-}
-
-// chip toggle click handler (delegated)
-document.addEventListener('click', e => {
-  const b = e.target.closest('.chip-toggle');
-  if (b) b.classList.toggle('on');
-});
-
-async function saveConfig() {
-  const payload = collectFormValues();
-  setStatus('saving...');
-  const r = await fetch('/api/config', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
-  const j = await r.json();
-  setStatus(j.ok ? 'saved ' + j.saved.length + ' keys.' : 'save FAILED: ' + esc(j.error));
-}
-
-async function triggerRun(interactive) {
-  await saveConfig();
-  const prefix = interactive ? 'iact_' : 'dash_';
-  const test_id = prefix + Math.floor(Date.now() / 1000);
-  setStatus('launching ' + (interactive ? 'INTERACTIVE ' : '') + 'run ' + test_id + ' ...');
-  const r = await fetch('/api/run', {method:'POST', headers:{'Content-Type':'application/json'},
-                                       body: JSON.stringify({test_id, interactive})});
-  const j = await r.json();
-  if (!j.ok) { setStatus('run launch FAILED: ' + esc(j.error)); return; }
-  pollRun(test_id);
-}
-
-async function pollRun(test_id) {
-  setStatus('running ' + test_id + ' ...');
-  const interval = setInterval(async () => {
-    const r = await fetch('/api/run_status/' + test_id);
-    const j = await r.json();
-    if (!j.running) {
-      clearInterval(interval);
-      setStatus('run ' + test_id + ' done. log tail: ' + (j.log_tail || '').slice(-120));
-      loadRuns();
-    } else {
-      setStatus('running ' + test_id + ' ... tail: ' + (j.log_tail || '').slice(-120));
-    }
-  }, 3000);
-}
-
-async function triggerThicken() {
-  const thickField = document.querySelector('input[type=number][data-key="thicken_thickness_m"]');
-  const t = thickField ? parseFloat(thickField.value) : 0.2;
-  setStatus('re-thickening collider at ' + t + 'm ...');
-  const r = await fetch('/api/thicken', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({thickness_m: t})});
-  const j = await r.json();
-  setStatus(j.ok ? 'thicken launched (' + j.thickness_m + 'm).' : 'FAILED: ' + esc(j.error));
-}
-
-document.getElementById('btn_save').addEventListener('click', saveConfig);
-document.getElementById('btn_save_run').addEventListener('click', () => triggerRun(false));
-document.getElementById('btn_save_run_int').addEventListener('click', () => triggerRun(true));
-document.getElementById('btn_thicken').addEventListener('click', triggerThicken);
-document.getElementById('btn_reload').addEventListener('click', loadConfig);
-
-// ---------- build (compile-time) form ----------
-let BUILD_GROUPS = [];
-let BUILD_CONFIG = {};
-
-async function loadBuildConfig() {
-  const r = await fetch('/api/build_config'); const j = await r.json();
-  BUILD_CONFIG = j.config; BUILD_GROUPS = j.groups; renderBuildForm();
-}
-
-function renderBuildForm() {
-  const root = document.getElementById('build_form_groups'); root.innerHTML = '';
-  for (const grp of BUILD_GROUPS) {
-    const sec = document.createElement('div');
-    sec.innerHTML = `<div class="section-title">${esc(grp.title)}</div>`;
-    const card = document.createElement('div'); card.className = 'card';
-    for (const f of grp.fields) {
-      const val = BUILD_CONFIG[f.key];
-      const row = document.createElement('div'); row.className = 'fld';
-      row.innerHTML = renderField(f, val);    // reuse same render function
-      card.appendChild(row);
-    }
-    sec.appendChild(card); root.appendChild(sec);
-  }
-}
-
-function collectBuildValues() {
-  const out = {};
-  for (const grp of BUILD_GROUPS) {
-    for (const f of grp.fields) {
-      if (f.type === 'number') {
-        const el = document.querySelector('#build_form_groups input[type=number][data-key="' + f.key + '"]');
-        if (el && el.value !== '') out[f.key] = parseFloat(el.value);
-      } else if (f.type === 'select') {
-        const el = document.querySelector('#build_form_groups select[data-key="' + f.key + '"]');
-        if (el) out[f.key] = el.value;
-      } else if (f.type === 'bool') {
-        const el = document.querySelector('#build_form_groups input[type=checkbox][data-key="' + f.key + '"]');
-        out[f.key] = !!(el && el.checked);
-      } else if (f.type === 'text') {
-        const el = document.querySelector('#build_form_groups input[type=text][data-key="' + f.key + '"]');
-        if (el) out[f.key] = el.value;
-      }
-    }
-  }
-  return out;
-}
-
-async function saveBuildConfig() {
-  const payload = collectBuildValues();
-  document.getElementById('build_status').textContent = 'saving...';
-  const r = await fetch('/api/build_config', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
-  const j = await r.json();
-  document.getElementById('build_status').textContent = j.ok ? 'saved.' : 'save FAILED: ' + esc(j.error);
-}
-
-async function triggerBuild() {
-  await saveBuildConfig();
-  document.getElementById('build_status').textContent = 'rebuilding (~1 min)...';
-  document.getElementById('build_log').textContent = '';
-  await fetch('/api/build', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({})});
-  const interval = setInterval(async () => {
-    const r = await fetch('/api/build_status'); const j = await r.json();
-    document.getElementById('build_log').textContent = j.log_tail || '(building...)';
-    if ((j.log_tail || '').includes('DONE:')) {
-      clearInterval(interval);
-      document.getElementById('build_status').textContent = 'build done. both binaries refreshed.';
-    } else if ((j.log_tail || '').match(/FAILED|ERROR/)) {
-      clearInterval(interval);
-      document.getElementById('build_status').textContent = 'build FAILED — see log below.';
-    }
-  }, 3000);
-}
-
-document.getElementById('btn_build_save').addEventListener('click', saveBuildConfig);
-document.getElementById('btn_build_run').addEventListener('click', triggerBuild);
-document.getElementById('btn_build_reload').addEventListener('click', loadBuildConfig);
-
-// ---------- history table ----------
-let CACHED_RUNS = [];
-
-async function loadRuns() {
-  const r = await fetch('/api/runs'); const j = await r.json();
-  CACHED_RUNS = j.entries || [];
-  document.getElementById('history_count').textContent = j.count + ' runs';
-  renderHistoryTable();
-}
-
-const HIST_COLS = [
-  ['ts', 'ts'], ['test_id', 'id'], ['solver_collision','solver'], ['issue','issue'], ['side_walls','walls'],
-  ['dp_m','dp'], ['timemax_s','tmax'], ['nozzle_mode','nz_mode'], ['n_nozzles','nz'], ['nozzle_horizontal_mps','h_mps'], ['nozzle_LPM','LPM'], ['thicken_thickness_m','thick'],
-  ['score','score'], ['arrival_score','arr_score'], ['arrival_floor_total','floor'], ['frames_with_floor_contact','frames_floor'],
-  ['source_tail_late_frames','src_late'], ['continuous_source','src_ok'],
-  ['top_module_final_cells','top_cells'], ['top_module_final_ratio','top_ratio'], ['modules_with_fluid','modules'],
-  ['final_reached_floor','final_floor'], ['in_positive','pos'], ['in_negative','neg'], ['in_column','col'],
-  ['splash','splash'], ['total','total'], ['wall_s','wall'],
-];
-
-function fmt(v) {
-  if (v === null || v === undefined) return '';
-  if (typeof v === 'number') return Number.isInteger(v) ? String(v) : v.toFixed(4).replace(/0+$/, '').replace(/\.$/, '');
-  return esc(v);
-}
-
-function renderHistoryTable() {
-  const root = document.getElementById('history_table');
-  if (!CACHED_RUNS.length) { root.innerHTML = '<p>No runs logged yet. Click <b>Save + Run</b> in Settings.</p>'; return; }
-  // best score row
-  const best_i = CACHED_RUNS.reduce((b, e, i) => (e.score ?? -1) > (CACHED_RUNS[b].score ?? -1) ? i : b, 0);
-
-  const thead = '<tr>' + HIST_COLS.map(([k,l]) => '<th data-key="'+k+'">'+esc(l)+'</th>').join('') + '<th>preview</th></tr>';
-  const rows = CACHED_RUNS.map((e, i) => {
-    const cls = i === best_i ? ' class="best"' : '';
-    const cells = HIST_COLS.map(([k]) => '<td data-num="' + (typeof e[k] === 'number' ? e[k] : '') + '">' + fmt(e[k]) + '</td>').join('');
-    return '<tr' + cls + '>' + cells + '<td><img src="/thumb/' + i + '" onerror="this.style.display=\'none\'"></td></tr>';
-  }).join('');
-
-  root.innerHTML = '<table class="grid"><thead>' + thead + '</thead><tbody>' + rows + '</tbody></table>';
-
-  // sort + filter
-  document.querySelectorAll('#history_table thead th').forEach((th, idx) => {
-    let asc = false;
-    th.addEventListener('click', () => {
-      const rows = Array.from(document.querySelectorAll('#history_table tbody tr'));
-      rows.sort((a, b) => {
-        const av = a.cells[idx].dataset.num || a.cells[idx].innerText;
-        const bv = b.cells[idx].dataset.num || b.cells[idx].innerText;
-        const an = parseFloat(av), bn = parseFloat(bv);
-        const cmp = (!isNaN(an) && !isNaN(bn)) ? an - bn : av.localeCompare(bv);
-        return asc ? cmp : -cmp;
-      });
-      asc = !asc;
-      const tbody = document.querySelector('#history_table tbody');
-      rows.forEach(r => tbody.appendChild(r));
-    });
-  });
-}
-
-document.getElementById('q_history').addEventListener('input', e => {
-  const q = e.target.value.toLowerCase();
-  document.querySelectorAll('#history_table tbody tr').forEach(r => {
-    r.style.display = r.innerText.toLowerCase().includes(q) ? '' : 'none';
-  });
-});
-document.getElementById('btn_refresh_runs').addEventListener('click', loadRuns);
-
-// ---------- charts ----------
-const CHART_INSTANCES = {};
-async function loadCharts() {
-  if (!CACHED_RUNS.length) { await loadRuns(); }
-  mkScatter('c_dp', 'dp_m');
-  mkScatter('c_t', 'timemax_s');
-  mkScatter('c_l', 'nozzle_LPM');
-  mkScatter('c_th', 'thicken_thickness_m');
-}
-function mkScatter(canvasId, key) {
-  if (CHART_INSTANCES[canvasId]) CHART_INSTANCES[canvasId].destroy();
-  const pts = CACHED_RUNS.filter(d => d[key] !== null && d[key] !== undefined && d.score !== null)
-                          .map(d => ({x: d[key], y: d.score, label: d.test_id}));
-  CHART_INSTANCES[canvasId] = new Chart(document.getElementById(canvasId), {
-    type: 'scatter',
-    data: {datasets: [{data: pts, backgroundColor: '#0969da', pointRadius: 5}]},
-    options: {
-      plugins: {tooltip: {callbacks: {label: c => c.raw.label + ': (' + c.raw.x + ', ' + (c.raw.y || 0).toFixed(4) + ')'}}, legend: {display: false}},
-      scales: {x: {title: {display: true, text: key}}, y: {title: {display: true, text: 'score'}, min: 0, max: 1}}
-    }
-  });
-}
-document.getElementById('btn_refresh_charts').addEventListener('click', loadCharts);
-
-// ---------- files (tree) ----------
-async function loadFiles() {
-  const r = await fetch('/api/structure'); const j = await r.json();
-  document.getElementById('file_list').innerHTML = renderTree(j.files);
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[ch]));
 }
 
 function buildTree(files) {
-  // files: [{path, role}, ...]  -> nested map
   const root = {children: new Map(), role: null};
-  for (const f of files) {
-    const parts = f.path.split('/').filter(p => p !== '');
+  for (const file of files) {
+    const parts = file.path.split('/').filter(Boolean);
     let node = root;
     for (let i = 0; i < parts.length; i++) {
-      const seg = parts[i];
-      if (!node.children.has(seg)) node.children.set(seg, {children: new Map(), role: null});
-      node = node.children.get(seg);
-      if (i === parts.length - 1) node.role = f.role;
+      const segment = parts[i];
+      if (!node.children.has(segment)) {
+        node.children.set(segment, {children: new Map(), role: null});
+      }
+      node = node.children.get(segment);
+      if (i === parts.length - 1) node.role = file.role;
     }
   }
   return root;
 }
 
 function renderTree(files) {
+  if (!files.length) {
+    return '<div class="empty">No matching files.</div>';
+  }
+
   const root = buildTree(files);
-  const lines = [];
+  const lines = [
+    '<div class="tree-line"><div class="path"><span class="seg-dir">LFTH_CFD v2.0/</span></div><div class="role">project root</div></div>'
+  ];
+
   function walk(node, prefix, isLast, name, depth) {
     if (depth >= 0) {
-      const branch = depth === 0 ? '' : (isLast ? '└── ' : '├── ');
+      const branch = depth === 0 ? '' : (isLast ? '`-- ' : '+-- ');
       const isDir = node.children.size > 0;
-      const segCls = isDir ? 'seg-dir' : 'seg-file';
-      const display = name + (isDir ? '/' : '');
-      const pathHtml = '<span class="branch">' + esc(prefix + branch) + '</span>'
-                     + '<span class="' + segCls + '">' + esc(display) + '</span>';
-      const role = node.role || (isDir ? '' : '');
-      lines.push('<div class="tree-line"><div class="path">' + pathHtml + '</div><div class="role">' + esc(role) + '</div></div>');
+      const segmentClass = isDir ? 'seg-dir' : 'seg-file';
+      const displayName = name + (isDir ? '/' : '');
+      const path = '<span class="branch">' + esc(prefix + branch) + '</span>' +
+                   '<span class="' + segmentClass + '">' + esc(displayName) + '</span>';
+      lines.push(
+        '<div class="tree-line"><div class="path">' + path + '</div><div class="role">' +
+        esc(node.role || '') + '</div></div>'
+      );
     }
-    const kids = Array.from(node.children.entries());
-    // sort: dirs first, then files; alphabetical within each
-    kids.sort(([a, na], [b, nb]) => {
-      const ad = na.children.size > 0, bd = nb.children.size > 0;
-      if (ad !== bd) return ad ? -1 : 1;
-      return a.localeCompare(b);
+
+    const children = Array.from(node.children.entries());
+    children.sort(([aName, aNode], [bName, bNode]) => {
+      const aDir = aNode.children.size > 0;
+      const bDir = bNode.children.size > 0;
+      if (aDir !== bDir) return aDir ? -1 : 1;
+      return aName.localeCompare(bName);
     });
-    kids.forEach(([childName, child], i) => {
-      const last = i === kids.length - 1;
-      const nextPrefix = depth < 0 ? '' : (prefix + (isLast ? '    ' : '│   '));
-      walk(child, nextPrefix, last, childName, depth + 1);
+
+    children.forEach(([childName, childNode], index) => {
+      const childIsLast = index === children.length - 1;
+      const nextPrefix = depth < 0 ? '' : prefix + (isLast ? '    ' : '|   ');
+      walk(childNode, nextPrefix, childIsLast, childName, depth + 1);
     });
   }
+
   walk(root, '', true, 'LFTH_CFD v2.0', -1);
-  // Add the root line manually at the top
-  lines.unshift('<div class="tree-line"><div class="path"><span class="seg-dir">LFTH_CFD v2.0/</span></div><div class="role">project root</div></div>');
   return '<div class="tree-wrap">' + lines.join('') + '</div>';
 }
 
-// ---------- init ----------
-loadGitStatus();
-loadConfig();
+function applyFilter() {
+  const query = document.getElementById('file_search').value.trim().toLowerCase();
+  const filtered = query
+    ? ALL_FILES.filter(file => (file.path + ' ' + file.role).toLowerCase().includes(query))
+    : ALL_FILES;
+  document.getElementById('file_list').innerHTML = renderTree(filtered);
+}
+
+async function loadFiles() {
+  const response = await fetch('/api/structure');
+  if (!response.ok) throw new Error('structure API failed: ' + response.status);
+  const data = await response.json();
+  ALL_FILES = data.files || [];
+  applyFilter();
+}
+
+document.getElementById('file_search').addEventListener('input', applyFilter);
+loadFiles().catch(error => {
+  document.getElementById('file_list').innerHTML =
+    '<div class="empty">Failed to load files: ' + esc(error.message || error) + '</div>';
+});
 </script>
 </body>
 </html>

@@ -207,7 +207,7 @@ table.grid th {
           <button class="action" id="btn_preview">Preview STL</button>
           <button class="action warn" id="btn_bake">Bake to Rhino</button>
           <button class="action secondary" id="btn_save">Save params</button>
-          <button class="action secondary" id="btn_defaults">Load bbox defaults</button>
+          <button class="action secondary" id="btn_boundary">Refresh boundary</button>
           <label class="check"><input type="checkbox" id="auto_bake"> Auto bake</label>
         </div>
         <div class="status-bar" id="status">ready.</div>
@@ -236,26 +236,26 @@ const PARAM_GROUPS = [
   {
     key: 'shape',
     label: '형상',
-    title: '타원체 형상',
-    desc: 'ellipsoid의 기본 크기와 깊이를 정합니다. cut profile이 없으면 z=0 기준의 기본 bowl이 됩니다.'
+    title: '타원 x / y / z',
+    desc: 'ellipsoid의 세 반지름을 독립적으로 조절합니다. x는 길이, y는 폭, z는 깊이와 곡률에 직접 영향을 줍니다.'
   },
   {
     key: 'cut',
     label: '컷 라인',
-    title: '비수평 cut profile',
-    desc: '수평면 대신 각도별 rim 높이를 바꿔서 비대칭 또는 물결형 opening을 만듭니다.'
+    title: '기울이고 자르기',
+    desc: 'ellipsoid를 먼저 기울인 뒤, 수직 접점을 hinge로 잡고 cut plane을 아래쪽으로 회전합니다.'
+  },
+  {
+    key: 'transform',
+    label: '위치 / 회전',
+    title: '위치와 회전',
+    desc: '기존 base point 기준 위치와 평면 방향만 조절합니다. 입사각에 영향을 주는 기울기는 컷 라인 탭에서 먼저 적용됩니다.'
   },
   {
     key: 'rim',
     label: '두께 / 림',
     title: '두께와 림',
     desc: 'FluidX3D용 closed solid를 만들기 위한 outer offset과 rim 쪽 보강 형상을 조절합니다.'
-  },
-  {
-    key: 'transform',
-    label: '위치 / 회전',
-    title: '위치와 회전',
-    desc: '기존 base point를 기준으로 모듈별 위치 보정과 자세를 조절합니다.'
   },
   {
     key: 'mesh',
@@ -265,31 +265,26 @@ const PARAM_GROUPS = [
   }
 ];
 const PARAM_CONTROLS = [
-  ['axis_x_mm', 'axis x', 500, 12000, 10, 'mm', 'shape', 'X 방향 ellipsoid 반축입니다. rim ellipse의 좌우 폭에 직접 영향을 줍니다.'],
-  ['axis_y_mm', 'axis y', 500, 12000, 10, 'mm', 'shape', 'Y 방향 ellipsoid 반축입니다. rim ellipse의 앞뒤 폭을 정합니다.'],
-  ['axis_z_mm', 'axis z', 500, 14000, 10, 'mm', 'shape', 'Z 방향 ellipsoid 반축입니다. cap depth와 함께 bowl 곡률을 결정합니다.'],
-  ['cap_depth_mm', 'cap depth', 100, 12000, 10, 'mm', 'shape', 'rim plane에서 bowl bottom까지의 깊이입니다. 커질수록 더 깊은 bowl이 됩니다.'],
-  ['cut_slope_x_mm', 'cut x', -3000, 3000, 10, 'mm', 'cut', '+X 쪽 rim은 올리고 -X 쪽 rim은 내리는 비대칭 cut입니다. 음수면 반대로 작동합니다.'],
-  ['cut_slope_y_mm', 'cut y', -3000, 3000, 10, 'mm', 'cut', '+Y 쪽 rim과 -Y 쪽 rim의 높이 차이를 만듭니다. 전체 tilt와 달리 opening 자체가 비스듬해집니다.'],
-  ['rim_wave_amp_mm', 'wave amp', 0, 3000, 10, 'mm', 'cut', 'rim 둘레에 주기적인 높낮이를 추가합니다. 0이면 wave가 꺼집니다.'],
-  ['rim_wave_count', 'waves', 0, 8, 1, 'cnt', 'cut', 'rim을 한 바퀴 돌 때 반복되는 wave 개수입니다. 2~4 정도가 형태 차이를 보기 좋습니다.'],
-  ['rim_wave_phase_deg', 'phase', 0, 360, 1, 'deg', 'cut', 'wave profile을 rim 둘레 방향으로 회전합니다.'],
-  ['wall_thickness_mm', 'wall', 50, 2500, 10, 'mm', 'rim', 'inner cap을 surface normal 방향으로 offset하는 두께입니다. STL을 닫힌 solid로 만드는 핵심 값입니다.'],
-  ['rim_lift_mm', 'rim lift', 0, 2500, 10, 'mm', 'rim', 'rim plane 쪽으로 올리는 lip 높이입니다. 0이면 추가 lift 없이 기본 stitch만 사용합니다.'],
-  ['tilt_x_deg', 'tilt x', -45, 45, 0.5, 'deg', 'transform', 'local X축 기준 기울기입니다. bowl이 앞뒤 방향으로 누워 보입니다.'],
-  ['tilt_y_deg', 'tilt y', -45, 45, 0.5, 'deg', 'transform', 'local Y축 기준 기울기입니다. bowl이 좌우 방향으로 기울어집니다.'],
-  ['rotation_z_deg', 'rotate z', 0, 360, 1, 'deg', 'transform', 'rim plane 위에서 모듈을 회전합니다. ellipse의 장축 방향을 맞출 때 씁니다.'],
-  ['tx_mm', 'tx', -4000, 4000, 10, 'mm', 'transform', 'base point에서 X 방향으로 추가 이동하는 최적화 위치 변수입니다.'],
-  ['ty_mm', 'ty', -4000, 4000, 10, 'mm', 'transform', 'base point에서 Y 방향으로 추가 이동하는 최적화 위치 변수입니다.'],
-  ['tz_mm', 'tz', -4000, 4000, 10, 'mm', 'transform', 'base point에서 Z 방향으로 추가 이동하는 최적화 위치 변수입니다.']
+  ['axis_x_mm', 'axis x', 500, 14000, 10, 'mm', 'shape', 'ellipsoid의 local X 반지름입니다. 모듈이 흐름 방향으로 얼마나 길게 뻗는지 정합니다.'],
+  ['axis_y_mm', 'axis y', 100, 12000, 10, 'mm', 'shape', 'ellipsoid의 local Y 반지름입니다. 입구와 bowl의 좌우 폭을 정합니다.'],
+  ['axis_z_mm', 'axis z', 100, 14000, 10, 'mm', 'shape', 'ellipsoid의 local Z 반지름입니다. bowl 깊이와 곡면 완만함을 정합니다.'],
+  ['ellipsoid_tilt_deg', 'tilt before cut', 0, 35, 0.5, 'deg', 'cut', 'ellipsoid를 먼저 기울이는 각도입니다. 앞쪽 rim의 수직 접점을 정하는 핵심 변수입니다.'],
+  ['cut_drop_deg', 'cut drop', 0, 35, 0.5, 'deg', 'cut', '수직 접점을 고정한 상태에서 cut plane 뒤쪽을 아래로 회전시키는 각도입니다.'],
+  ['wall_thickness_mm', 'wall', 50, 2500, 10, 'mm', 'rim', 'inner cap을 surface normal 방향으로 offset하는 두께입니다.'],
+  ['rim_lift_mm', 'rim lift', 0, 2500, 10, 'mm', 'rim', 'rim에서 cut plane normal 방향으로 올리는 lip 높이입니다.'],
+  ['rotation_z_deg', 'rotate z', 0, 360, 1, 'deg', 'transform', '기울이고 자르는 방향을 평면상에서 돌립니다. cut azimuth 대신 이 값 하나를 씁니다.'],
+  ['tx_mm', 'tx', -4000, 4000, 10, 'mm', 'transform', 'base point에서 X 방향으로 추가 이동합니다.'],
+  ['ty_mm', 'ty', -4000, 4000, 10, 'mm', 'transform', 'base point에서 Y 방향으로 추가 이동합니다.'],
+  ['tz_mm', 'tz', -4000, 4000, 10, 'mm', 'transform', 'base point에서 Z 방향으로 추가 이동합니다.']
 ];
 const RES_CONTROLS = [
-  ['theta_segments', 'theta', 8, 160, 1, 'seg', 'mesh', 'rim 둘레 방향 분할 수입니다. 높이면 rim과 곡면이 더 둥글게 보입니다.'],
-  ['radial_segments', 'radial', 3, 64, 1, 'seg', 'mesh', 'bottom에서 rim까지 깊이 방향 분할 수입니다. 높이면 cap 곡률이 더 부드러워집니다.']
+  ['theta_segments', 'theta', 8, 160, 1, 'seg', 'mesh', 'rim 둘레 방향 분할 수입니다. 높이면 입구와 곡면이 더 둥글게 보입니다.'],
+  ['radial_segments', 'radial', 3, 64, 1, 'seg', 'mesh', 'bottom에서 rim까지 깊이 방향 분할 수입니다.']
 ];
 
 let STATE = null;
 let MODULES = [];
+let BOUNDARY = null;
 let LATEST_META = null;
 let autoTimer = null;
 let busy = false;
@@ -427,6 +422,7 @@ async function loadInitial() {
   STATE = j.params;
   STATE.selected_index = 'all';
   MODULES = j.modules || [];
+  BOUNDARY = j.boundary || null;
   ACTIVE_MODULE = moduleKeys()[0] || '0';
   renderControls();
   drawPreview();
@@ -437,6 +433,7 @@ async function loadInitial() {
     if (mr.ok) {
       const mj = await mr.json();
       LATEST_META = mj.meta;
+      BOUNDARY = mj.meta.boundary || BOUNDARY;
       renderMeta();
     }
   } catch (_) {}
@@ -448,6 +445,7 @@ async function loadDefaults() {
   STATE = j.params;
   STATE.selected_index = 'all';
   MODULES = j.modules || MODULES;
+  BOUNDARY = j.boundary || BOUNDARY;
   ACTIVE_MODULE = moduleKeys().includes(ACTIVE_MODULE) ? ACTIVE_MODULE : (moduleKeys()[0] || '0');
   VIEW.frame = null;
   renderControls();
@@ -467,6 +465,22 @@ async function saveParams() {
   setStatus(j.ok ? 'saved ' + j.saved : 'save failed: ' + j.error);
 }
 
+async function refreshBoundary() {
+  setBusy(true);
+  setStatus('reading env::boundary from Rhino...');
+  const r = await fetch('/api/boundary', {method: 'POST'});
+  const j = await r.json();
+  setBusy(false);
+  if (!j.ok) {
+    setStatus('boundary refresh failed: ' + (j.error || 'unknown error'));
+    return;
+  }
+  BOUNDARY = j.boundary;
+  VIEW.frame = null;
+  drawPreview();
+  setStatus('boundary loaded: ' + (BOUNDARY.xy_curve_mm || []).length + ' xy samples, z=' + fmtNum(BOUNDARY.z_min_mm) + '..' + fmtNum(BOUNDARY.z_max_mm));
+}
+
 async function preview() {
   setBusy(true);
   setStatus('generating STL...');
@@ -480,9 +494,11 @@ async function preview() {
     return;
   }
   LATEST_META = j.meta;
+  BOUNDARY = j.meta.boundary || BOUNDARY;
   renderMeta();
   renderFiles();
-  setStatus('preview generated. watertight=' + j.meta.watertight + ' bad_edges=' + j.meta.nonmanifold_or_boundary_edges);
+  const boundary = j.meta.boundary_ok === null ? 'boundary=missing' : 'boundary=' + (j.meta.boundary_ok ? 'inside' : 'OUTSIDE');
+  setStatus('preview generated. watertight=' + j.meta.watertight + ' bad_edges=' + j.meta.nonmanifold_or_boundary_edges + ' ' + boundary);
 }
 
 async function bake() {
@@ -499,6 +515,7 @@ async function bake() {
     return;
   }
   LATEST_META = j.meta;
+  BOUNDARY = j.meta.boundary || BOUNDARY;
   renderMeta();
   renderFiles();
   const rhino = (j.meta.rhino || []).join(' | ');
@@ -516,6 +533,7 @@ function renderMeta() {
   }
   const rows = (LATEST_META.modules || []).map(m => {
     const err = m.solid_extent_error_mm || [];
+    const bnd = m.boundary ? (m.boundary.inside ? 'inside' : 'OUT ' + fmtNum(m.boundary.max_violation_mm)) : '';
     return `<tr>
       <td>Module ${m.index}</td>
       <td>${fmtNum(err[0])}</td>
@@ -523,10 +541,11 @@ function renderMeta() {
       <td>${fmtNum(err[2])}</td>
       <td>${m.solid_triangles}</td>
       <td>${m.watertight ? 'true' : 'false'}</td>
+      <td>${bnd}</td>
     </tr>`;
   }).join('');
   document.getElementById('module_table').innerHTML =
-    `<table class="grid"><thead><tr><th>module</th><th>dx mm</th><th>dy mm</th><th>dz mm</th><th>tris</th><th>closed</th></tr></thead><tbody>${rows}</tbody></table>`;
+    `<table class="grid"><thead><tr><th>module</th><th>dx mm</th><th>dy mm</th><th>dz mm</th><th>tris</th><th>closed</th><th>boundary</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function renderFiles(outputs) {
@@ -534,7 +553,8 @@ function renderFiles(outputs) {
     solid_stl: LATEST_META?.solid_stl || 'opt_pymoo/runs/_ui_ellipsoid_parametric.stl',
     viz_stl: LATEST_META?.viz_stl || 'opt_pymoo/runs/_ui_ellipsoid_parametric_viz.stl',
     meta: LATEST_META?.meta_path || 'opt_pymoo/runs/_ui_ellipsoid_parametric_meta.json',
-    params: 'opt_pymoo/runs/_ui_ellipsoid_params.json'
+    params: 'opt_pymoo/runs/_ui_ellipsoid_params.json',
+    boundary: BOUNDARY?.path || 'env_fx3d/runs/_boundary.json'
   };
   document.getElementById('file_list').innerHTML = Object.entries(paths)
     .map(([k, v]) => `<div><b>${esc(k)}</b> ${esc(v)}</div>`).join('');
@@ -554,23 +574,90 @@ function moduleInfo(idx) {
   return MODULES.find(m => String(m.index) === String(idx));
 }
 
+function boundaryLoops() {
+  const curve = BOUNDARY?.xy_curve_mm;
+  if (!Array.isArray(curve) || curve.length < 3) return null;
+  const zMin = Number(BOUNDARY.z_min_mm ?? 0);
+  const zMax = Number(BOUNDARY.z_max_mm ?? zMin);
+  const bottom = curve.map(p => ({x: Number(p[0]), y: Number(p[1]), z: zMin}));
+  const top = curve.map(p => ({x: Number(p[0]), y: Number(p[1]), z: zMax}));
+  return {bottom, top};
+}
+
+function boundaryPreviewPoints() {
+  const loops = boundaryLoops();
+  return loops ? loops.bottom.concat(loops.top) : [];
+}
+
+function derivedGeometry(params) {
+  const axisX = Math.max(1, Number(params.axis_x_mm || 1));
+  const axisY = Math.max(1, Number(params.axis_y_mm || 1));
+  const axisZ = Math.max(1, Number(params.axis_z_mm || 1));
+  const tilt = Number(params.ellipsoid_tilt_deg || 0) * Math.PI / 180;
+  const drop = Number(params.cut_drop_deg || 0) * Math.PI / 180;
+  const tangentSlope = Math.tan(tilt);
+  const localCutAngle = tilt + drop;
+  const slope = Math.tan(localCutAngle);
+  const dropSlope = Math.tan(drop);
+  const denom = Math.sqrt(axisX * axisX + axisZ * axisZ * tangentSlope * tangentSlope);
+  const tangentX = axisX * axisX / denom;
+  const tangentZ = axisZ * axisZ * tangentSlope / denom;
+  const cutWorldZ = -tangentX * Math.sin(tilt) + tangentZ * Math.cos(tilt);
+  const offsetZ = tangentZ - slope * tangentX;
+  const worldTangentX = tangentX * Math.cos(tilt) + tangentZ * Math.sin(tilt);
+  return {
+    axisX,
+    axisY,
+    axisZ,
+    centerZ: 0,
+    slopeX: slope,
+    slopeY: 0,
+    offsetZ,
+    dropSlope,
+    cutWorldZ,
+    worldTangentX,
+    tangentX,
+    tangentZ
+  };
+}
+
+function rimIntersectionP(theta, geom) {
+  const ct = Math.cos(theta);
+  const st = Math.sin(theta);
+  const f = p => {
+    const rf = Math.sqrt(Math.max(0, 1 - p * p));
+    const x = geom.axisX * rf * ct;
+    const y = geom.axisY * rf * st;
+    const z = geom.centerZ + geom.axisZ * p;
+    return z - (geom.slopeX * x + geom.slopeY * y + geom.offsetZ);
+  };
+  let lo = -1 + 1e-7;
+  let hi = 1 - 1e-7;
+  if (f(lo) >= 0) return lo;
+  if (f(hi) <= 0) return hi;
+  for (let i = 0; i < 52; i++) {
+    const mid = (lo + hi) * 0.5;
+    if (f(mid) >= 0) hi = mid;
+    else lo = mid;
+  }
+  return (lo + hi) * 0.5;
+}
+
 function ellipsoidRings(params, thetaSeg, radialSeg) {
-  const c = Number(params.axis_z_mm);
-  const depth = Number(params.cap_depth_mm);
-  const centerZ = c - depth;
-  const rings = [[{x: 0, y: 0, z: centerZ - c}]];
+  const geom = derivedGeometry(params);
+  const thetas = Array.from({length: thetaSeg}, (_, t) => 2 * Math.PI * t / thetaSeg);
+  const rimPs = thetas.map(th => rimIntersectionP(th, geom));
+  const rings = [[{x: 0, y: 0, z: geom.centerZ - geom.axisZ}]];
   for (let r = 1; r <= radialSeg; r++) {
     const ring = [];
     for (let t = 0; t < thetaSeg; t++) {
-      const th = 2 * Math.PI * t / thetaSeg;
-      const rimP = rimProfileP(params, th, centerZ, c);
-      const p = -1 + (rimP + 1) * (r / radialSeg);
+      const th = thetas[t];
+      const p = -1 + (rimPs[t] + 1) * (r / radialSeg);
       const rf = Math.sqrt(Math.max(0, 1 - p * p));
-      const z = centerZ + c * p;
       ring.push({
-        x: params.axis_x_mm * rf * Math.cos(th),
-        y: params.axis_y_mm * rf * Math.sin(th),
-        z
+        x: geom.axisX * rf * Math.cos(th),
+        y: geom.axisY * rf * Math.sin(th),
+        z: geom.centerZ + geom.axisZ * p
       });
     }
     rings.push(ring);
@@ -578,31 +665,60 @@ function ellipsoidRings(params, thetaSeg, radialSeg) {
   return rings;
 }
 
-function rimProfileZ(params, theta) {
-  const waveCount = Math.max(0, Math.round(Number(params.rim_wave_count || 0)));
-  const phase = Number(params.rim_wave_phase_deg || 0) * Math.PI / 180;
-  const wave = waveCount > 0
-    ? Number(params.rim_wave_amp_mm || 0) * Math.cos(waveCount * (theta - phase))
-    : 0;
-  return Number(params.cut_slope_x_mm || 0) * Math.cos(theta) +
-    Number(params.cut_slope_y_mm || 0) * Math.sin(theta) +
-    wave;
-}
+function fullEllipsoidSurface(params, thetaSeg, latSeg) {
+  const geom = derivedGeometry(params);
+  const rings = [];
+  const faces = [];
 
-function rimProfileP(params, theta, centerZ, axisZ) {
-  const eps = Math.max(1e-6, axisZ * 1e-6);
-  const z = clamp(rimProfileZ(params, theta), centerZ - axisZ + eps, centerZ + axisZ - eps);
-  return (z - centerZ) / axisZ;
+  for (let r = 0; r <= latSeg; r++) {
+    const p = -1 + 2 * r / latSeg;
+    if (r === 0 || r === latSeg) {
+      rings.push([{x: 0, y: 0, z: geom.centerZ + geom.axisZ * p}]);
+      continue;
+    }
+    const rf = Math.sqrt(Math.max(0, 1 - p * p));
+    const ring = [];
+    for (let t = 0; t < thetaSeg; t++) {
+      const th = 2 * Math.PI * t / thetaSeg;
+      ring.push({
+        x: geom.axisX * rf * Math.cos(th),
+        y: geom.axisY * rf * Math.sin(th),
+        z: geom.centerZ + geom.axisZ * p
+      });
+    }
+    rings.push(ring);
+  }
+
+  for (let t = 0; t < thetaSeg; t++) {
+    faces.push([rings[0][0], rings[1][t], rings[1][(t + 1) % thetaSeg]]);
+  }
+  for (let r = 1; r < latSeg - 1; r++) {
+    const lower = rings[r];
+    const upper = rings[r + 1];
+    for (let t = 0; t < thetaSeg; t++) {
+      const a = lower[t];
+      const b = lower[(t + 1) % thetaSeg];
+      const c = upper[(t + 1) % thetaSeg];
+      const d = upper[t];
+      faces.push([a, b, c]);
+      faces.push([a, c, d]);
+    }
+  }
+  for (let t = 0; t < thetaSeg; t++) {
+    faces.push([
+      rings[latSeg - 1][t],
+      rings[latSeg - 1][(t + 1) % thetaSeg],
+      rings[latSeg][0]
+    ]);
+  }
+  return {rings, faces, points: rings.flat()};
 }
 
 function transformPoint(p, params, anchor) {
-  const rx = params.tilt_x_deg * Math.PI / 180;
-  const ry = params.tilt_y_deg * Math.PI / 180;
+  const ry = params.ellipsoid_tilt_deg * Math.PI / 180;
   const rz = params.rotation_z_deg * Math.PI / 180;
   let x = p.x, y = p.y, z = p.z;
-  let cy = Math.cos(rx), sy = Math.sin(rx);
-  [y, z] = [y * cy - z * sy, y * sy + z * cy];
-  cy = Math.cos(ry); sy = Math.sin(ry);
+  let cy = Math.cos(ry), sy = Math.sin(ry);
   [x, z] = [x * cy + z * sy, -x * sy + z * cy];
   cy = Math.cos(rz); sy = Math.sin(rz);
   [x, y] = [x * cy - y * sy, x * sy + y * cy];
@@ -658,6 +774,7 @@ function buildPreviewGeometry() {
     const points = rings.flat();
     const faces = [];
     const rim = rings[rings.length - 1];
+    let ghost = null;
 
     for (let t = 0; t < theta; t++) {
       faces.push([rings[0][0], rings[1][t], rings[1][(t + 1) % theta]]);
@@ -674,9 +791,26 @@ function buildPreviewGeometry() {
         faces.push([a, c, d]);
       }
     }
-    meshes.push({idx, points, faces, rim, rings});
+
+    if (String(idx) === String(ACTIVE_MODULE)) {
+      const rawGhost = fullEllipsoidSurface(params, theta, Math.max(10, radial + 4));
+      const ghostRings = rawGhost.rings.map(ring =>
+        ring.map(p => transformPoint(p, params, info.anchor_mm))
+      );
+      ghost = {
+        rings: ghostRings,
+        faces: rawGhost.faces.map(face =>
+          face.map(p => transformPoint(p, params, info.anchor_mm))
+        ),
+        points: ghostRings.flat()
+      };
+      allPoints.push(...ghost.points);
+    }
+
+    meshes.push({idx, points, faces, rim, rings, ghost});
     allPoints.push(...points);
   }
+  allPoints.push(...boundaryPreviewPoints());
   return {meshes, allPoints};
 }
 
@@ -782,6 +916,43 @@ function drawGrid(ctx, b, map) {
   }
 }
 
+function drawPolyline(ctx, pts, close = true) {
+  if (!pts.length) return;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  if (close) ctx.closePath();
+  ctx.stroke();
+}
+
+function drawBoundaryRegion(ctx, map) {
+  const loops = boundaryLoops();
+  if (!loops) return;
+  const bottom = loops.bottom.map(map);
+  const top = loops.top.map(map);
+  const ok = LATEST_META?.boundary_ok;
+  ctx.save();
+  ctx.strokeStyle = ok === false ? 'rgba(207, 34, 46, 0.72)' : 'rgba(31, 111, 235, 0.42)';
+  ctx.lineWidth = ok === false ? 1.8 : 1.25;
+  ctx.setLineDash([6, 5]);
+  drawPolyline(ctx, bottom);
+  drawPolyline(ctx, top);
+  const stride = Math.max(1, Math.floor(top.length / 24));
+  for (let i = 0; i < top.length; i += stride) {
+    ctx.beginPath();
+    ctx.moveTo(bottom[i].x, bottom[i].y);
+    ctx.lineTo(top[i].x, top[i].y);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  const label = ok === false ? 'boundary OUT' : 'env::boundary';
+  ctx.fillStyle = ok === false ? 'rgba(207, 34, 46, 0.85)' : 'rgba(31, 111, 235, 0.72)';
+  ctx.font = '11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+  const labelPoint = top.reduce((best, p) => p.y < best.y ? p : best, top[0]);
+  ctx.fillText(label, labelPoint.x + 6, labelPoint.y - 6);
+  ctx.restore();
+}
+
 function drawArrow(ctx, x1, y1, x2, y2, color) {
   const angle = Math.atan2(y2 - y1, x2 - x1);
   const head = 6;
@@ -870,11 +1041,28 @@ function drawPreview() {
   ctx.fillStyle = '#f8fbff';
   ctx.fillRect(0, 0, w, h);
   drawGrid(ctx, b, map);
+  drawBoundaryRegion(ctx, map);
 
+  const ghostFaces = [];
   const faces = [];
   const clayColor = '#8b8172';
   const activeColor = '#6f91bc';
   for (const mesh of meshes) {
+    if (mesh.ghost) {
+      for (const face of mesh.ghost.faces) {
+        const pts = face.map(map);
+        const a = pts[0].cam, c = pts[1].cam, d = pts[2].cam;
+        const normal = vecNormalize(vecCross(vecSub(c, a), vecSub(d, a)));
+        const light = vecNormalize({x: -0.35, y: -0.55, z: 0.76});
+        const shade = Math.max(0.20, Math.min(1.0, 0.42 + 0.58 * (normal.x * light.x + normal.y * light.y + normal.z * light.z)));
+        ghostFaces.push({
+          pts,
+          depth: (pts[0].depth + pts[1].depth + pts[2].depth) / 3,
+          shade
+        });
+      }
+    }
+
     const activeMesh = String(mesh.idx) === String(ACTIVE_MODULE);
     const color = activeMesh ? activeColor : clayColor;
     for (const face of mesh.faces) {
@@ -891,7 +1079,21 @@ function drawPreview() {
       });
     }
   }
+  ghostFaces.sort((a, b) => a.depth - b.depth);
   faces.sort((a, b) => a.depth - b.depth);
+
+  for (const f of ghostFaces) {
+    ctx.beginPath();
+    ctx.moveTo(f.pts[0].x, f.pts[0].y);
+    ctx.lineTo(f.pts[1].x, f.pts[1].y);
+    ctx.lineTo(f.pts[2].x, f.pts[2].y);
+    ctx.closePath();
+    ctx.fillStyle = shadeRgba(activeColor, f.shade, 0.13);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(9, 105, 218, 0.09)';
+    ctx.lineWidth = 0.45;
+    ctx.stroke();
+  }
 
   for (const f of faces) {
     ctx.beginPath();
@@ -932,6 +1134,34 @@ function drawPreview() {
       ctx.stroke();
     }
   }
+
+  for (const mesh of meshes) {
+    if (!mesh.ghost) continue;
+    ctx.strokeStyle = 'rgba(9, 105, 218, 0.18)';
+    ctx.lineWidth = 0.8;
+    for (const ring of mesh.ghost.rings.slice(2, -1, 3)) {
+      const rr = ring.map(map);
+      ctx.beginPath();
+      for (let i = 0; i < rr.length; i++) {
+        if (i === 0) ctx.moveTo(rr[i].x, rr[i].y);
+        else ctx.lineTo(rr[i].x, rr[i].y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+    const ghostRing = mesh.ghost.rings[Math.floor(mesh.ghost.rings.length * 0.5)];
+    if (ghostRing && ghostRing.length > 1) {
+      ctx.strokeStyle = 'rgba(9, 105, 218, 0.26)';
+      const rr = ghostRing.map(map);
+      ctx.beginPath();
+      for (let i = 0; i < rr.length; i++) {
+        if (i === 0) ctx.moveTo(rr[i].x, rr[i].y);
+        else ctx.lineTo(rr[i].x, rr[i].y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+  }
   drawViewportAxes(ctx, w, h);
 }
 
@@ -941,6 +1171,14 @@ function shadeColor(hex, shade) {
   const g = Math.round(((n >> 8) & 255) * shade + 255 * (1 - shade) * 0.18);
   const b = Math.round((n & 255) * shade + 255 * (1 - shade) * 0.18);
   return `rgb(${r}, ${g}, ${b})`;
+}
+
+function shadeRgba(hex, shade, alpha) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.round(((n >> 16) & 255) * shade + 255 * (1 - shade) * 0.18);
+  const g = Math.round(((n >> 8) & 255) * shade + 255 * (1 - shade) * 0.18);
+  const b = Math.round((n & 255) * shade + 255 * (1 - shade) * 0.18);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -970,10 +1208,10 @@ document.addEventListener('click', e => {
     setStatus('Module ' + ACTIVE_MODULE + ' 편집 중 | group=' + activeGroupConfig().label);
   }
 });
-document.getElementById('btn_defaults').addEventListener('click', loadDefaults);
 document.getElementById('btn_save').addEventListener('click', saveParams);
 document.getElementById('btn_preview').addEventListener('click', preview);
 document.getElementById('btn_bake').addEventListener('click', bake);
+document.getElementById('btn_boundary').addEventListener('click', refreshBoundary);
 
 const previewCanvas = document.getElementById('preview_canvas');
 previewCanvas.addEventListener('pointerdown', e => {

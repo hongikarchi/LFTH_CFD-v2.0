@@ -1,10 +1,10 @@
-"""Ellipsoid-cut parametric module generator.
+"""Ellipsoid oblique-cut parametric module generator.
 
-Builds bowl-like modules from the lower cap of an ellipsoid. The rim starts
-from the local z=0 cut and can be varied by angular height profile parameters
-to make asymmetric or wavy openings. The simulation STL is a closed solid:
-inner cap, outer normal-offset cap, and stitched rim. All geometry is authored
-in millimeters; STL export scales vertices to meters for FluidX3D.
+Builds bowl-like modules from the lower cap of an ellipsoid. The ellipsoid uses
+independent X/Y/Z axes, is tilted first, then cut by a plane hinged at the +X
+vertical-tangent point. The simulation STL is a closed solid: inner cap, outer
+normal-offset cap, and stitched rim. All geometry is authored in millimeters;
+STL export scales vertices to meters for FluidX3D.
 """
 from __future__ import annotations
 
@@ -41,16 +41,10 @@ class ModuleParams:
     axis_x_mm: float
     axis_y_mm: float
     axis_z_mm: float
-    cap_depth_mm: float
-    cut_slope_x_mm: float = 0.0
-    cut_slope_y_mm: float = 0.0
-    rim_wave_amp_mm: float = 0.0
-    rim_wave_count: float = 3.0
-    rim_wave_phase_deg: float = 0.0
+    ellipsoid_tilt_deg: float = 0.0
+    cut_drop_deg: float = 0.0
     wall_thickness_mm: float = 500.0
     rim_lift_mm: float = 0.0
-    tilt_x_deg: float = 0.0
-    tilt_y_deg: float = 0.0
     rotation_z_deg: float = 0.0
     tx_mm: float = 0.0
     ty_mm: float = 0.0
@@ -110,48 +104,108 @@ def _round_nested(value, digits: int = 3):
 
 
 def _validate_params(params: ModuleParams) -> None:
-    if params.axis_x_mm <= 0.0 or params.axis_y_mm <= 0.0 or params.axis_z_mm <= 0.0:
-        raise ValueError("axis_x_mm, axis_y_mm, and axis_z_mm must be positive")
-    if params.cap_depth_mm <= 0.0:
-        raise ValueError("cap_depth_mm must be positive")
-    if params.cap_depth_mm >= 2.0 * params.axis_z_mm:
-        raise ValueError("cap_depth_mm must be smaller than 2 * axis_z_mm")
+    if params.axis_x_mm <= 0.0:
+        raise ValueError("axis_x_mm must be positive")
+    if params.axis_y_mm <= 0.0:
+        raise ValueError("axis_y_mm must be positive")
+    if params.axis_z_mm <= 0.0:
+        raise ValueError("axis_z_mm must be positive")
+    if not (0.0 <= params.ellipsoid_tilt_deg < 60.0):
+        raise ValueError("ellipsoid_tilt_deg must be in [0, 60)")
+    if not (0.0 <= params.cut_drop_deg <= 35.0):
+        raise ValueError("cut_drop_deg must be in [0, 35]")
+    if params.ellipsoid_tilt_deg + params.cut_drop_deg >= 75.0:
+        raise ValueError("ellipsoid_tilt_deg + cut_drop_deg must be < 75")
     if params.wall_thickness_mm <= 0.0:
         raise ValueError("wall_thickness_mm must be positive")
     if params.rim_lift_mm < 0.0:
         raise ValueError("rim_lift_mm must be non-negative")
-    if params.rim_wave_count < 0.0:
-        raise ValueError("rim_wave_count must be non-negative")
 
 
-def _rim_factor(axis_z_mm: float, cap_depth_mm: float) -> tuple[float, float, float]:
-    """Return (rim_radius_factor, rim_p, center_z_mm)."""
-    center_z = axis_z_mm - cap_depth_mm
-    rim_p = (0.0 - center_z) / axis_z_mm
-    factor = math.sqrt(max(0.0, 1.0 - rim_p * rim_p))
-    return factor, rim_p, center_z
+def derived_geometry(params: ModuleParams) -> dict[str, float | tuple[float, float, float]]:
+    """Return internal ellipsoid axes and local cut plane values."""
+    _validate_params(params)
+    axis_x = float(params.axis_x_mm)
+    axis_y = float(params.axis_y_mm)
+    axis_z = float(params.axis_z_mm)
+    tilt = math.radians(float(params.ellipsoid_tilt_deg))
+    drop = math.radians(float(params.cut_drop_deg))
+    local_cut_angle = tilt + drop
+    tangent_slope = math.tan(tilt)
+    slope = math.tan(local_cut_angle)
+    drop_slope = math.tan(drop)
+    denom = math.sqrt(axis_x * axis_x + axis_z * axis_z * tangent_slope * tangent_slope)
+    tangent_x = axis_x * axis_x / denom
+    tangent_z = axis_z * axis_z * tangent_slope / denom
+    cut_world_z = -tangent_x * math.sin(tilt) + tangent_z * math.cos(tilt)
+    cut_offset_z = tangent_z - slope * tangent_x
+    plane_normal = _normalize((-slope, 0.0, 1.0))
+    world_tangent_x = tangent_x * math.cos(tilt) + tangent_z * math.sin(tilt)
+    return {
+        "axis_x_mm": axis_x,
+        "axis_y_mm": axis_y,
+        "axis_z_mm": axis_z,
+        "center_z_mm": 0.0,
+        "vertical_tangent_point_mm": (tangent_x, 0.0, tangent_z),
+        "world_tangent_point_mm": (world_tangent_x, 0.0, cut_world_z),
+        "local_cut_angle_deg": math.degrees(local_cut_angle),
+        "cut_slope_x": slope,
+        "cut_slope_y": 0.0,
+        "cut_offset_z_mm": cut_offset_z,
+        "cut_drop_slope": drop_slope,
+        "cut_world_z_mm": cut_world_z,
+        "cut_plane_normal": plane_normal,
+    }
 
 
-def _rim_profile_z(params: ModuleParams, theta: float) -> float:
-    """Angular rim-height profile in local millimeters before rim_lift."""
-    phase = math.radians(float(params.rim_wave_phase_deg))
-    wave_count = max(0, int(round(float(params.rim_wave_count))))
-    wave = 0.0
-    if wave_count > 0 and abs(params.rim_wave_amp_mm) > 1.0e-12:
-        wave = float(params.rim_wave_amp_mm) * math.cos(wave_count * (theta - phase))
+def _cut_plane_z(params: ModuleParams, x: float, y: float) -> float:
+    geom = derived_geometry(params)
     return (
-        float(params.cut_slope_x_mm) * math.cos(theta)
-        + float(params.cut_slope_y_mm) * math.sin(theta)
-        + wave
+        float(geom["cut_slope_x"]) * x
+        + float(geom["cut_slope_y"]) * y
+        + float(geom["cut_offset_z_mm"])
     )
 
 
-def _profiled_rim_p(params: ModuleParams, theta: float, center_z: float, axis_z_mm: float) -> float:
-    """Latitude value p for the angular rim profile, clamped to the ellipsoid."""
-    eps = max(1.0e-6, axis_z_mm * 1.0e-6)
-    z = _rim_profile_z(params, theta)
-    z = max(center_z - axis_z_mm + eps, min(center_z + axis_z_mm - eps, z))
-    return (z - center_z) / axis_z_mm
+def _cut_plane_normal(params: ModuleParams) -> Vec3:
+    return derived_geometry(params)["cut_plane_normal"]  # type: ignore[return-value]
+
+
+def _rim_intersection_p(params: ModuleParams, theta: float, geom: dict[str, float | tuple[float, float, float]]) -> float:
+    """Find latitude p where the ellipsoid ray intersects the oblique cut plane."""
+    a = float(geom["axis_x_mm"])
+    b = float(geom["axis_y_mm"])
+    c = float(geom["axis_z_mm"])
+    center_z = float(geom["center_z_mm"])
+    sx = float(geom["cut_slope_x"])
+    sy = float(geom["cut_slope_y"])
+    offset_z = float(geom["cut_offset_z_mm"])
+    ct = math.cos(theta)
+    st = math.sin(theta)
+
+    def f(p: float) -> float:
+        radius_factor = math.sqrt(max(0.0, 1.0 - p * p))
+        x = a * radius_factor * ct
+        y = b * radius_factor * st
+        z = center_z + c * p
+        return z - (sx * x + sy * y + offset_z)
+
+    eps = max(1.0e-7, c * 1.0e-12)
+    lo = -1.0 + eps
+    hi = 1.0 - eps
+    f_lo = f(lo)
+    f_hi = f(hi)
+    if f_lo >= 0.0:
+        return lo
+    if f_hi <= 0.0:
+        return hi
+    for _ in range(52):
+        mid = (lo + hi) * 0.5
+        if f(mid) >= 0.0:
+            hi = mid
+        else:
+            lo = mid
+    return (lo + hi) * 0.5
 
 
 def default_params_from_module(
@@ -164,22 +218,13 @@ def default_params_from_module(
     bounds = module_info["bbox_mm"]
     ext = [bounds[1][i] - bounds[0][i] for i in range(3)]
     wall = min(float(wall_thickness_mm), max(50.0, ext[2] * 0.35))
-    cap_depth = max(100.0, ext[2] - wall - float(rim_lift_mm))
-
-    # c > D keeps the cut on the lower half of the ellipsoid, giving a stable
-    # upward-open bowl whose outer normal offset goes outward/downward at the rim.
-    axis_z = max(cap_depth * 1.35, cap_depth + 1.0)
-    factor, _, _ = _rim_factor(axis_z, cap_depth)
-    if factor <= 1.0e-9:
-        factor = 1.0
-
-    inner_rim_x = max(100.0, ext[0] * 0.5 - wall)
-    inner_rim_y = max(100.0, ext[1] * 0.5 - wall)
+    axis_x = max(100.0, (ext[0] - 2.0 * wall) * 0.5)
+    axis_y = max(100.0, (ext[1] - 2.0 * wall) * 0.5)
+    axis_z = max(100.0, ext[2] - wall - float(rim_lift_mm))
     return ModuleParams(
-        axis_x_mm=inner_rim_x / factor,
-        axis_y_mm=inner_rim_y / factor,
+        axis_x_mm=axis_x,
+        axis_y_mm=axis_y,
         axis_z_mm=axis_z,
-        cap_depth_mm=cap_depth,
         wall_thickness_mm=wall,
         rim_lift_mm=float(rim_lift_mm),
     )
@@ -198,12 +243,13 @@ def _inner_cap(
     if radial_segments < 3:
         raise ValueError("radial_segments must be >= 3")
 
-    a = float(params.axis_x_mm)
-    b = float(params.axis_y_mm)
-    c = float(params.axis_z_mm)
-    _, _, center_z = _rim_factor(c, float(params.cap_depth_mm))
+    geom = derived_geometry(params)
+    a = float(geom["axis_x_mm"])
+    b = float(geom["axis_y_mm"])
+    c = float(geom["axis_z_mm"])
+    center_z = float(geom["center_z_mm"])
     thetas = [2.0 * math.pi * (t / theta_segments) for t in range(theta_segments)]
-    rim_ps = [_profiled_rim_p(params, theta, center_z, c) for theta in thetas]
+    rim_ps = [_rim_intersection_p(params, theta, geom) for theta in thetas]
 
     vertices: list[Vec3] = [(0.0, 0.0, center_z - c)]
     normals: list[Vec3] = [(0.0, 0.0, -1.0)]
@@ -245,8 +291,11 @@ def _inner_cap(
 
 
 def _rim_horizontal_normal(v: Vec3, params: ModuleParams) -> Vec3:
-    nx = v[0] / (params.axis_x_mm * params.axis_x_mm)
-    ny = v[1] / (params.axis_y_mm * params.axis_y_mm)
+    geom = derived_geometry(params)
+    axis_x = float(geom["axis_x_mm"])
+    axis_y = float(geom["axis_y_mm"])
+    nx = v[0] / (axis_x * axis_x)
+    ny = v[1] / (axis_y * axis_y)
     h = _normalize((nx, ny, 0.0))
     if _length(h) > 1.0e-12:
         return h
@@ -274,10 +323,10 @@ def build_module_mesh(
         vertices = list(inner_v)
         faces = list(inner_f)
         if params.rim_lift_mm > 1.0e-9:
+            lift_normal = _cut_plane_normal(params)
             lip_start = len(vertices)
             for idx in rim_loop:
-                x, y, z = inner_v[idx]
-                vertices.append((x, y, z + params.rim_lift_mm))
+                vertices.append(_add(inner_v[idx], _mul(lift_normal, params.rim_lift_mm)))
             n = len(rim_loop)
             for t in range(n):
                 a = rim_loop[t]
@@ -304,11 +353,11 @@ def build_module_mesh(
         n = len(rim_loop)
         inner_lip: list[int] = []
         outer_lip: list[int] = []
+        lift_normal = _cut_plane_normal(params)
 
         for idx in rim_loop:
-            x, y, z = inner_v[idx]
             inner_lip.append(len(vertices))
-            vertices.append((x, y, z + params.rim_lift_mm))
+            vertices.append(_add(inner_v[idx], _mul(lift_normal, params.rim_lift_mm)))
 
         for idx in rim_loop:
             base = vertices[inner_lip[len(outer_lip)]]
@@ -337,6 +386,20 @@ def build_module_mesh(
     return Mesh(_transform_vertices(vertices, anchor_mm, params), faces)
 
 
+def build_module_rim_points(
+    params: ModuleParams,
+    *,
+    anchor_mm: Vec3 = (0.0, 0.0, 0.0),
+    theta_segments: int = 64,
+) -> list[Vec3]:
+    """Return transformed samples of the ellipsoid/cut-plane intersection curve."""
+    vertices, _, _, rim_loop = _inner_cap(
+        params, theta_segments=theta_segments, radial_segments=3
+    )
+    transformed = _transform_vertices(vertices, anchor_mm, params)
+    return [transformed[idx] for idx in rim_loop]
+
+
 def _stitch_two_loops(faces: list[Face], inner_loop: list[int], outer_loop: list[int]) -> None:
     if len(inner_loop) != len(outer_loop):
         raise ValueError("loop sizes must match")
@@ -351,10 +414,8 @@ def _stitch_two_loops(faces: list[Face], inner_loop: list[int], outer_loop: list
 
 
 def _transform_vertices(vertices: list[Vec3], anchor_mm: Vec3, params: ModuleParams) -> list[Vec3]:
-    rx = math.radians(params.tilt_x_deg)
-    ry = math.radians(params.tilt_y_deg)
+    ry = math.radians(params.ellipsoid_tilt_deg)
     rz = math.radians(params.rotation_z_deg)
-    sx, cx = math.sin(rx), math.cos(rx)
     sy, cy = math.sin(ry), math.cos(ry)
     sz, cz = math.sin(rz), math.cos(rz)
     tx = anchor_mm[0] + params.tx_mm
@@ -363,7 +424,6 @@ def _transform_vertices(vertices: list[Vec3], anchor_mm: Vec3, params: ModulePar
 
     out: list[Vec3] = []
     for x, y, z in vertices:
-        y, z = y * cx - z * sx, y * sx + z * cx
         x, z = x * cy + z * sy, -x * sy + z * cy
         x, y = x * cz - y * sz, x * sz + y * cz
         out.append((x + tx, y + ty, z + tz))
@@ -428,11 +488,8 @@ def build_modules_from_infos(
     params_by_index: dict[int, ModuleParams] | None = None,
     wall_thickness_mm: float = 500.0,
     rim_lift_mm: float = 0.0,
-    cut_slope_x_mm: float = 0.0,
-    cut_slope_y_mm: float = 0.0,
-    rim_wave_amp_mm: float = 0.0,
-    rim_wave_count: float = 3.0,
-    rim_wave_phase_deg: float = 0.0,
+    ellipsoid_tilt_deg: float = 0.0,
+    cut_drop_deg: float = 0.0,
     theta_segments: int = 64,
     radial_segments: int = 16,
 ) -> tuple[Mesh, Mesh, list[dict]]:
@@ -452,11 +509,8 @@ def build_modules_from_infos(
                 wall_thickness_mm=wall_thickness_mm,
                 rim_lift_mm=rim_lift_mm,
             )
-            params.cut_slope_x_mm = float(cut_slope_x_mm)
-            params.cut_slope_y_mm = float(cut_slope_y_mm)
-            params.rim_wave_amp_mm = float(rim_wave_amp_mm)
-            params.rim_wave_count = float(rim_wave_count)
-            params.rim_wave_phase_deg = float(rim_wave_phase_deg)
+            params.ellipsoid_tilt_deg = float(ellipsoid_tilt_deg)
+            params.cut_drop_deg = float(cut_drop_deg)
         anchor = tuple(float(v) for v in module["base_point_mm"])
         solid = build_module_mesh(
             params,
@@ -478,14 +532,46 @@ def build_modules_from_infos(
         target_bbox = module["bbox_mm"]
         solid_bbox = _bbox(solid.vertices)
         viz_bbox = _bbox(viz.vertices)
+        rim_points = build_module_rim_points(
+            params,
+            anchor_mm=anchor,
+            theta_segments=theta_segments,
+        )
+        derived = derived_geometry(params)
         meta_modules.append(
             {
                 "index": idx,
                 "source_name": module.get("name"),
                 "anchor_mm": list(anchor),
                 "params": asdict(params),
+                "derived_ellipsoid_axes_mm": _round_nested(
+                    [
+                        float(derived["axis_x_mm"]),
+                        float(derived["axis_y_mm"]),
+                        float(derived["axis_z_mm"]),
+                    ]
+                ),
+                "vertical_tangent_point_mm": _round_nested(
+                    derived["vertical_tangent_point_mm"]
+                ),
+                "world_tangent_point_mm": _round_nested(
+                    derived["world_tangent_point_mm"]
+                ),
+                "cut_plane": {
+                    "equation_local_before_tilt": "z = sx*x + offset",
+                    "equation_after_tilt": "z = cut_world_z + drop_slope*(x - tangent_x)",
+                    "local_cut_angle_deg": round(float(derived["local_cut_angle_deg"]), 6),
+                    "slope_x": round(float(derived["cut_slope_x"]), 6),
+                    "slope_y": 0.0,
+                    "offset_z_mm": round(float(derived["cut_offset_z_mm"]), 6),
+                    "drop_slope": round(float(derived["cut_drop_slope"]), 6),
+                    "world_z_mm": round(float(derived["cut_world_z_mm"]), 6),
+                    "normal": _round_nested(derived["cut_plane_normal"], 6),
+                },
                 "target_bbox_mm": _round_nested(target_bbox),
                 "solid_bbox_mm": _round_nested(solid_bbox),
+                "rim_curve_mm": _round_nested(rim_points),
+                "rim_bbox_mm": _round_nested(_bbox(rim_points)),
                 "solid_bbox_error_mm": _round_nested(
                     [
                         [solid_bbox[0][i] - target_bbox[0][i] for i in range(3)],
@@ -551,11 +637,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--radial-segments", type=int, default=16)
     parser.add_argument("--wall-thickness-mm", type=float, default=500.0)
     parser.add_argument("--rim-lift-mm", type=float, default=0.0)
-    parser.add_argument("--cut-slope-x-mm", type=float, default=0.0)
-    parser.add_argument("--cut-slope-y-mm", type=float, default=0.0)
-    parser.add_argument("--rim-wave-amp-mm", type=float, default=0.0)
-    parser.add_argument("--rim-wave-count", type=float, default=3.0)
-    parser.add_argument("--rim-wave-phase-deg", type=float, default=0.0)
+    parser.add_argument(
+        "--ellipsoid-tilt-deg",
+        "--cut-tilt-deg",
+        dest="ellipsoid_tilt_deg",
+        type=float,
+        default=0.0,
+        help="tilt the ellipsoid before applying the hinged cut plane",
+    )
+    parser.add_argument(
+        "--cut-drop-deg",
+        type=float,
+        default=0.0,
+        help="rotate the cut plane downward around the vertical-tangent point",
+    )
     parser.add_argument("--push-rhino", action="store_true")
     args = parser.parse_args(argv)
 
@@ -571,11 +666,8 @@ def main(argv: list[str] | None = None) -> int:
         indices=indices,
         wall_thickness_mm=args.wall_thickness_mm,
         rim_lift_mm=args.rim_lift_mm,
-        cut_slope_x_mm=args.cut_slope_x_mm,
-        cut_slope_y_mm=args.cut_slope_y_mm,
-        rim_wave_amp_mm=args.rim_wave_amp_mm,
-        rim_wave_count=args.rim_wave_count,
-        rim_wave_phase_deg=args.rim_wave_phase_deg,
+        ellipsoid_tilt_deg=args.ellipsoid_tilt_deg,
+        cut_drop_deg=args.cut_drop_deg,
         theta_segments=args.theta_segments,
         radial_segments=args.radial_segments,
     )

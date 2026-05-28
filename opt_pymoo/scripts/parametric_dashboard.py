@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 import time
 import webbrowser
@@ -33,6 +34,7 @@ import parametric_module as pm
 HTML_PATH = MODULE_ROOT / "parametric_dashboard.html"
 RUNS = MODULE_ROOT / "runs"
 MODULES_JSON = REPO_ROOT / "env_fx3d" / "runs" / "_collider_modules.json"
+BOUNDARY_JSON = REPO_ROOT / "env_fx3d" / "runs" / "_boundary.json"
 PARAMS_PATH = RUNS / "_ui_ellipsoid_params.json"
 SOLID_STL = RUNS / "_ui_ellipsoid_parametric.stl"
 VIZ_STL = RUNS / "_ui_ellipsoid_parametric_viz.stl"
@@ -43,21 +45,16 @@ PARAM_KEYS = [
     "axis_x_mm",
     "axis_y_mm",
     "axis_z_mm",
-    "cap_depth_mm",
-    "cut_slope_x_mm",
-    "cut_slope_y_mm",
-    "rim_wave_amp_mm",
-    "rim_wave_count",
-    "rim_wave_phase_deg",
+    "ellipsoid_tilt_deg",
+    "cut_drop_deg",
     "wall_thickness_mm",
     "rim_lift_mm",
-    "tilt_x_deg",
-    "tilt_y_deg",
     "rotation_z_deg",
     "tx_mm",
     "ty_mm",
     "tz_mm",
 ]
+BOUNDARY_LAYER = "env::boundary"
 
 if HAS_FLASK:
     app = Flask(__name__, static_folder=None)
@@ -121,6 +118,303 @@ def _read_saved_state() -> dict | None:
         return None
 
 
+def _point_in_polygon_xy(x: float, y: float, polygon: list[list[float]]) -> bool:
+    inside = False
+    n = len(polygon)
+    if n < 3:
+        return False
+    j = n - 1
+    for i in range(n):
+        xi, yi = polygon[i]
+        xj, yj = polygon[j]
+        if ((yi > y) != (yj > y)) and (
+            x < (xj - xi) * (y - yi) / max(yj - yi, 1.0e-30) + xi
+        ):
+            inside = not inside
+        j = i
+    return inside
+
+
+def _point_segment_distance_xy(
+    px: float, py: float, ax: float, ay: float, bx: float, by: float
+) -> float:
+    vx, vy = bx - ax, by - ay
+    wx, wy = px - ax, py - ay
+    denom = vx * vx + vy * vy
+    if denom <= 1.0e-30:
+        return math.hypot(px - ax, py - ay)
+    t = max(0.0, min(1.0, (wx * vx + wy * vy) / denom))
+    qx, qy = ax + t * vx, ay + t * vy
+    return math.hypot(px - qx, py - qy)
+
+
+def _polygon_distance_xy(x: float, y: float, polygon: list[list[float]]) -> float:
+    if len(polygon) < 2:
+        return 0.0
+    best = float("inf")
+    for i, a in enumerate(polygon):
+        b = polygon[(i + 1) % len(polygon)]
+        best = min(best, _point_segment_distance_xy(x, y, a[0], a[1], b[0], b[1]))
+    return 0.0 if best == float("inf") else best
+
+
+def _points_boundary_check(points: list[list[float]], boundary: dict) -> dict:
+    polygon = boundary.get("xy_curve_mm") or []
+    z_min = float(boundary.get("z_min_mm", -float("inf")))
+    z_max = float(boundary.get("z_max_mm", float("inf")))
+    outside_xy = 0
+    outside_z = 0
+    max_xy_violation = 0.0
+    max_z_violation = 0.0
+    for point in points:
+        x, y, z = float(point[0]), float(point[1]), float(point[2])
+        if not _point_in_polygon_xy(x, y, polygon):
+            outside_xy += 1
+            max_xy_violation = max(max_xy_violation, _polygon_distance_xy(x, y, polygon))
+        z_violation = max(z_min - z, z - z_max, 0.0)
+        if z_violation > 0.0:
+            outside_z += 1
+            max_z_violation = max(max_z_violation, z_violation)
+    max_violation = max(max_xy_violation, max_z_violation)
+    return {
+        "mode": "rim_curve_xy_extrusion",
+        "inside": max_violation <= 1.0e-6,
+        "sample_count": len(points),
+        "outside_xy_count": outside_xy,
+        "outside_z_count": outside_z,
+        "max_xy_violation_mm": round(max_xy_violation, 3),
+        "max_z_violation_mm": round(max_z_violation, 3),
+        "max_violation_mm": round(max_violation, 3),
+    }
+
+
+def _read_boundary() -> dict | None:
+    if not BOUNDARY_JSON.exists():
+        return None
+    try:
+        data = json.loads(BOUNDARY_JSON.read_text(encoding="utf-8"))
+        polygon = data.get("xy_curve_mm")
+        if (
+            data.get("mode") == "xy_curve_extrusion"
+            and isinstance(polygon, list)
+            and len(polygon) >= 3
+        ):
+            data["xy_curve_mm"] = [[float(v[0]), float(v[1])] for v in polygon]
+            data["z_min_mm"] = float(data["z_min_mm"])
+            data["z_max_mm"] = float(data["z_max_mm"])
+            if "bbox_mm" in data:
+                data["bbox_mm"] = [[float(v) for v in row] for row in data["bbox_mm"]]
+            return data
+    except Exception:
+        return None
+    return None
+
+
+def _fetch_boundary_from_rhino() -> dict:
+    sys.path.insert(0, str(REPO_ROOT / "env_fx3d" / "scripts"))
+    from rhino_mcp import mcp_call
+
+    code = f'''
+import scriptcontext as sc
+import Rhino, System, json, math
+doc = sc.doc
+target = "{BOUNDARY_LAYER}"
+
+def layer_full_path(layer_index):
+    layer = doc.Layers[layer_index]
+    names = [layer.Name]
+    parent_id = layer.ParentLayerId
+    while parent_id != System.Guid.Empty:
+        parent = doc.Layers.FindId(parent_id)
+        if parent is None:
+            break
+        names.append(parent.Name)
+        parent_id = parent.ParentLayerId
+    return "::".join(reversed(names))
+bb_min = [1e30, 1e30, 1e30]
+bb_max = [-1e30, -1e30, -1e30]
+cnt = 0
+curves = []
+flat_curve_groups = {{}}
+
+def flat_group_key(c):
+    cb = c.GetBoundingBox(True)
+    if not cb.IsValid or abs(cb.Max.Z - cb.Min.Z) >= 5.0:
+        return None
+    return int(round(((cb.Max.Z + cb.Min.Z) * 0.5) / 10.0))
+
+def collect_flat_curve(c):
+    key = flat_group_key(c)
+    if key is None:
+        return
+    if key not in flat_curve_groups:
+        flat_curve_groups[key] = []
+    flat_curve_groups[key].append(c)
+
+def add_curve(c, source):
+    if c is None:
+        return
+    try:
+        length = c.GetLength()
+    except Exception:
+        length = 0.0
+    if length <= 1.0:
+        return
+    n = max(48, min(512, int(length / 150.0)))
+    params = c.DivideByCount(n, True)
+    if not params:
+        dom = c.Domain
+        params = [dom.T0 + (dom.T1 - dom.T0) * i / n for i in range(n)]
+    pts = []
+    zmin = 1e30
+    zmax = -1e30
+    for t in params:
+        p = c.PointAt(t)
+        pts.append([float(p.X), float(p.Y), float(p.Z)])
+        zmin = min(zmin, float(p.Z))
+        zmax = max(zmax, float(p.Z))
+    endpoint_gap = 1e30
+    if len(pts) >= 2:
+        dx = pts[0][0] - pts[-1][0]
+        dy = pts[0][1] - pts[-1][1]
+        dz = pts[0][2] - pts[-1][2]
+        endpoint_gap = math.sqrt(dx*dx + dy*dy + dz*dz)
+        if endpoint_gap < 1.0:
+            pts = pts[:-1]
+    if (not c.IsClosed) and endpoint_gap > 5.0:
+        return
+    if len(pts) < 3:
+        return
+    area = 0.0
+    for i, p in enumerate(pts):
+        q = pts[(i + 1) % len(pts)]
+        area += p[0] * q[1] - q[0] * p[1]
+    curves.append({{
+        "points": pts,
+        "xy_area": area * 0.5,
+        "length": length,
+        "z_min": zmin,
+        "z_max": zmax,
+        "closed": bool(c.IsClosed),
+        "source": source
+    }})
+
+settings = Rhino.DocObjects.ObjectEnumeratorSettings()
+settings.NormalObjects = True
+settings.LockedObjects = True
+settings.HiddenObjects = True
+settings.ReferenceObjects = True
+settings.IncludeLights = False
+
+for o in doc.Objects.GetObjectList(settings):
+    fp = layer_full_path(o.Attributes.LayerIndex)
+    if fp != target and not fp.startswith(target + "::"):
+        continue
+    cnt += 1
+    b = o.Geometry.GetBoundingBox(True)
+    if b.IsValid:
+        for k, v in enumerate([b.Min.X, b.Min.Y, b.Min.Z]):
+            bb_min[k] = min(bb_min[k], v)
+        for k, v in enumerate([b.Max.X, b.Max.Y, b.Max.Z]):
+            bb_max[k] = max(bb_max[k], v)
+    g = o.Geometry
+    if isinstance(g, Rhino.Geometry.Curve):
+        c = g.DuplicateCurve()
+        if c.IsClosed:
+            add_curve(c, "curve")
+        else:
+            collect_flat_curve(c)
+    elif isinstance(g, Rhino.Geometry.Extrusion):
+        g = g.ToBrep()
+        for edge in g.Edges:
+            c = edge.DuplicateCurve()
+            if c:
+                collect_flat_curve(c)
+    elif isinstance(g, Rhino.Geometry.Brep):
+        for edge in g.Edges:
+            c = edge.DuplicateCurve()
+            if c:
+                collect_flat_curve(c)
+
+for key, group in flat_curve_groups.items():
+    try:
+        joined = Rhino.Geometry.Curve.JoinCurves(group, 20.0)
+    except Exception:
+        joined = []
+    for c in joined:
+        if c and c.IsClosed:
+            add_curve(c, "joined_edges")
+
+payload = {{
+    "object_count": cnt,
+    "bbox_mm": [bb_min, bb_max],
+    "curves": curves
+}}
+print("BOUNDARY_CURVE_JSON " + json.dumps(payload))
+'''
+    result = mcp_call(code, timeout=60)
+    if result.get("status") != "success":
+        raise RuntimeError(f"Rhino MCP boundary fetch failed: {result}")
+    out = result.get("result", {}).get("output", "")
+    for line in out.splitlines():
+        line = line.strip()
+        if not line.startswith("BOUNDARY_CURVE_JSON "):
+            continue
+        payload = json.loads(line[len("BOUNDARY_CURVE_JSON "):])
+        count = int(payload.get("object_count", 0))
+        if count <= 0:
+            raise RuntimeError(f"{BOUNDARY_LAYER} has no objects")
+        curves = payload.get("curves") or []
+        if not curves:
+            raise RuntimeError(f"{BOUNDARY_LAYER} has no curve geometry")
+        curve = max(curves, key=lambda c: abs(float(c.get("xy_area", 0.0))))
+        points3 = curve.get("points") or []
+        polygon = [[float(p[0]), float(p[1])] for p in points3]
+        if len(polygon) < 3:
+            raise RuntimeError(f"{BOUNDARY_LAYER} curve has too few samples")
+        bbox = payload.get("bbox_mm")
+        z_min = float(bbox[0][2])
+        z_max = float(bbox[1][2])
+        boundary = {
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "layer": BOUNDARY_LAYER,
+            "source": "rhino_mcp",
+            "mode": "xy_curve_extrusion",
+            "object_count": count,
+            "curve_count": len(curves),
+            "sample_count": len(polygon),
+            "xy_curve_mm": polygon,
+            "xy_area_mm2": round(float(curve.get("xy_area", 0.0)), 3),
+            "selected_curve_source": curve.get("source", ""),
+            "selected_curve_closed": bool(curve.get("closed", False)),
+            "selected_curve_length_mm": round(float(curve.get("length", 0.0)), 3),
+            "z_min_mm": z_min,
+            "z_max_mm": z_max,
+            "bbox_mm": bbox,
+            "path": str(BOUNDARY_JSON).replace("\\", "/"),
+        }
+        BOUNDARY_JSON.parent.mkdir(parents=True, exist_ok=True)
+        BOUNDARY_JSON.write_text(json.dumps(boundary, indent=2), encoding="utf-8")
+        return boundary
+    raise RuntimeError(f"no BOUNDARY_CURVE_JSON line in Rhino output: {out[-500:]}")
+
+
+def _boundary_payload(refresh: bool = False) -> dict:
+    if refresh:
+        boundary = _fetch_boundary_from_rhino()
+    else:
+        boundary = _read_boundary()
+    if boundary is None:
+        return {
+            "ok": False,
+            "boundary": None,
+            "path": str(BOUNDARY_JSON).replace("\\", "/"),
+            "layer": BOUNDARY_LAYER,
+            "error": "boundary cache missing; refresh from Rhino env::boundary",
+        }
+    return {"ok": True, "boundary": boundary}
+
+
 def _coerce_float(payload: dict, key: str, default: float) -> float:
     value = payload.get(key, default)
     if value is None or value == "":
@@ -133,6 +427,77 @@ def _coerce_int(payload: dict, key: str, default: int) -> int:
     if value is None or value == "":
         value = default
     return int(float(value))
+
+
+def _migrate_old_module_params(raw_params: dict, default_params: dict) -> dict:
+    """Best-effort migration from earlier param sets to xyz-axis tangent-cut params."""
+    migrated = dict(default_params)
+    migrated.update({k: raw_params[k] for k in PARAM_KEYS if k in raw_params})
+    if (
+        "axis_x_mm" in raw_params
+        and "axis_y_mm" in raw_params
+        and "axis_z_mm" in raw_params
+        and "ellipsoid_tilt_deg" in raw_params
+        and "cut_drop_deg" in raw_params
+    ):
+        return migrated
+
+    try:
+        if "b_mm" in raw_params and "h_mm" in raw_params:
+            b = float(raw_params["b_mm"])
+            h = float(raw_params["h_mm"])
+            migrated["axis_x_mm"] = max(1.0, b)
+            migrated["axis_y_mm"] = max(1.0, h)
+            migrated["axis_z_mm"] = max(1.0, h)
+        elif "opening_x_mm" in raw_params and "opening_y_mm" in raw_params:
+            opening_x = float(raw_params["opening_x_mm"])
+            opening_y = float(raw_params["opening_y_mm"])
+            migrated["axis_x_mm"] = max(1.0, opening_x * 0.5)
+            migrated["axis_y_mm"] = max(1.0, opening_y * 0.5)
+            migrated["axis_z_mm"] = max(
+                1.0, float(raw_params.get("bowl_depth_mm", default_params["axis_z_mm"]))
+            )
+        elif {"axis_x_mm", "axis_y_mm", "axis_z_mm"} <= set(raw_params):
+            migrated["axis_x_mm"] = max(1.0, float(raw_params["axis_x_mm"]))
+            migrated["axis_y_mm"] = max(1.0, float(raw_params["axis_y_mm"]))
+            migrated["axis_z_mm"] = max(1.0, float(raw_params["axis_z_mm"]))
+
+        if "ellipsoid_tilt_deg" in raw_params:
+            migrated["ellipsoid_tilt_deg"] = min(
+                35.0, max(0.0, float(raw_params["ellipsoid_tilt_deg"]))
+            )
+        elif "cut_tilt_deg" in raw_params:
+            migrated["ellipsoid_tilt_deg"] = min(35.0, max(0.0, float(raw_params["cut_tilt_deg"])))
+        elif "tilt_y_deg" in raw_params or "tilt_x_deg" in raw_params:
+            tx = float(raw_params.get("tilt_x_deg", 0.0))
+            ty = float(raw_params.get("tilt_y_deg", 0.0))
+            migrated["ellipsoid_tilt_deg"] = min(35.0, math.hypot(tx, ty))
+            if math.hypot(tx, ty) > 1.0e-9:
+                direction = (math.degrees(math.atan2(-tx, ty)) + 360.0) % 360.0
+                migrated["rotation_z_deg"] = (
+                    float(migrated.get("rotation_z_deg", 0.0)) + direction
+                ) % 360.0
+        else:
+            sx = float(raw_params.get("cut_slope_x_mm", 0.0))
+            sy = float(raw_params.get("cut_slope_y_mm", 0.0))
+            scale = max(float(migrated.get("axis_x_mm", default_params["axis_x_mm"])), 1.0)
+            slope = math.hypot(sx / scale, sy / scale)
+            if slope > 1.0e-12:
+                migrated["ellipsoid_tilt_deg"] = min(35.0, math.degrees(math.atan(slope)))
+
+        if "cut_drop_deg" in raw_params:
+            migrated["cut_drop_deg"] = min(35.0, max(0.0, float(raw_params["cut_drop_deg"])))
+        else:
+            migrated["cut_drop_deg"] = 0.0
+
+        old_azimuth = float(raw_params.get("cut_azimuth_deg", 0.0))
+        if abs(old_azimuth) > 1.0e-9:
+            migrated["rotation_z_deg"] = (
+                float(migrated.get("rotation_z_deg", 0.0)) + old_azimuth
+            ) % 360.0
+    except Exception:
+        pass
+    return migrated
 
 
 def _normalize_state(payload: dict | None) -> dict:
@@ -152,6 +517,7 @@ def _normalize_state(payload: dict | None) -> dict:
         raw_params = incoming_modules.get(idx, default_params)
         if not isinstance(raw_params, dict):
             raw_params = default_params
+        raw_params = _migrate_old_module_params(raw_params, default_params)
         state["modules"][idx] = {
             key: _coerce_float(raw_params, key, float(default_params[key]))
             for key in PARAM_KEYS
@@ -183,6 +549,7 @@ def _write_meta(meta: dict) -> None:
 
 def _build_preview(state: dict) -> dict:
     modules = _load_modules()
+    boundary = _read_boundary()
     params_by_index = _state_to_module_params(state)
     solid, viz, meta_modules = pm.build_modules_from_infos(
         modules,
@@ -196,6 +563,16 @@ def _build_preview(state: dict) -> dict:
 
     edge_counts = pm.edge_incidence(solid)
     bad_edges = sum(1 for count in edge_counts.values() if count != 2)
+    solid_bbox = pm._bbox(solid.vertices)
+    viz_bbox = pm._bbox(viz.vertices)
+    boundary_check = None
+    if boundary:
+        all_rim_points: list[list[float]] = []
+        for module_meta in meta_modules:
+            rim_points = module_meta.get("rim_curve_mm") or []
+            all_rim_points.extend(rim_points)
+            module_meta["boundary"] = _points_boundary_check(rim_points, boundary)
+        boundary_check = _points_boundary_check(all_rim_points, boundary)
     meta = {
         "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "generator": "ui ellipsoid-cut parametric module",
@@ -213,10 +590,13 @@ def _build_preview(state: dict) -> dict:
         "solid_triangles": len(solid.faces),
         "viz_vertices": len(viz.vertices),
         "viz_triangles": len(viz.faces),
-        "solid_bbox_mm": pm._round_nested(pm._bbox(solid.vertices)),
-        "viz_bbox_mm": pm._round_nested(pm._bbox(viz.vertices)),
+        "solid_bbox_mm": pm._round_nested(solid_bbox),
+        "viz_bbox_mm": pm._round_nested(viz_bbox),
         "watertight": pm.is_watertight(solid),
         "nonmanifold_or_boundary_edges": bad_edges,
+        "boundary": boundary,
+        "boundary_check": boundary_check,
+        "boundary_ok": None if boundary_check is None else boundary_check["inside"],
         "modules": meta_modules,
     }
     _write_meta(meta)
@@ -229,11 +609,13 @@ def _defaults_payload() -> dict:
         "ok": True,
         "params": _default_state(),
         "modules": _module_summary(modules),
+        "boundary": _read_boundary(),
         "outputs": {
             "solid_stl": str(SOLID_STL).replace("\\", "/"),
             "viz_stl": str(VIZ_STL).replace("\\", "/"),
             "meta": str(META_PATH).replace("\\", "/"),
             "params": str(PARAMS_PATH).replace("\\", "/"),
+            "boundary": str(BOUNDARY_JSON).replace("\\", "/"),
         },
     }
 
@@ -241,7 +623,12 @@ def _defaults_payload() -> dict:
 def _params_payload() -> dict:
     modules = _load_modules()
     state = _read_saved_state() or _default_state()
-    return {"ok": True, "params": state, "modules": _module_summary(modules)}
+    return {
+        "ok": True,
+        "params": state,
+        "modules": _module_summary(modules),
+        "boundary": _read_boundary(),
+    }
 
 
 def _save_params_payload(payload: dict | None) -> dict:
@@ -318,6 +705,14 @@ def api_meta():
         abort(404)
 
 
+@app.route("/api/boundary", methods=["GET", "POST"])
+def api_boundary():
+    try:
+        return jsonify(_boundary_payload(refresh=request.method == "POST"))
+    except Exception as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 400
+
+
 class _StdlibHandler(BaseHTTPRequestHandler):
     server_version = "ParametricDashboard/1.0"
 
@@ -355,6 +750,8 @@ class _StdlibHandler(BaseHTTPRequestHandler):
                 self._send_json(200, _params_payload())
             elif path == "/api/meta":
                 self._send_json(200, _meta_payload())
+            elif path == "/api/boundary":
+                self._send_json(200, _boundary_payload(refresh=False))
             else:
                 self._send_json(404, {"ok": False, "error": "not found"})
         except FileNotFoundError as exc:
@@ -372,6 +769,8 @@ class _StdlibHandler(BaseHTTPRequestHandler):
                 self._send_json(200, _preview_payload(payload))
             elif path == "/api/bake":
                 self._send_json(200, _bake_payload(payload))
+            elif path == "/api/boundary":
+                self._send_json(200, _boundary_payload(refresh=True))
             else:
                 self._send_json(404, {"ok": False, "error": "not found"})
         except Exception as exc:

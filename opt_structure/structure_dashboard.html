@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LFTH_CFD structure optimization</title>
+<style>
+:root {
+  --bg: #f6f8fa; --panel: #ffffff; --border: #d0d7de; --border-soft: #e5e8eb;
+  --text: #1f2328; --text-soft: #57606a; --text-faint: #8c959f;
+  --accent: #0969da; --accent-soft: #ddf4ff;
+  --green: #1a7f37; --green-bg: #dafbe1;
+  --amber: #bf8700; --amber-bg: #fff8c5;
+  --red: #cf222e; --red-bg: #ffebe9;
+  --violet: #8250df; --grey-bg: #eaeef2;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+body {
+  background: var(--bg); color: var(--text); font-family: var(--sans);
+  font-size: 14px; line-height: 1.5;
+}
+code, .mono { font-family: var(--mono); }
+header {
+  height: 58px; background: var(--panel); border-bottom: 1px solid var(--border);
+  padding: 10px 22px 8px;
+}
+header .title { margin: 0 0 3px; font-size: 17px; font-weight: 600; }
+header .meta { display: flex; flex-wrap: wrap; gap: 6px 10px; font-size: 12.5px; color: var(--text-soft); }
+header .chip {
+  display: inline-flex; align-items: center; gap: 5px; background: var(--bg);
+  border: 1px solid var(--border-soft); border-radius: 999px; padding: 1px 8px;
+}
+header .chip b { color: var(--text); font-weight: 600; }
+.wrap { height: calc(100vh - 58px); padding: 0 18px 14px; }
+.tabbar {
+  display: flex; flex-wrap: wrap; gap: 2px; height: 43px; padding-top: 8px;
+  border-bottom: 1px solid var(--border); background: var(--bg);
+}
+.tab-btn {
+  appearance: none; border: none; background: transparent; color: var(--text-soft);
+  font-family: var(--sans); font-size: 13.5px; font-weight: 500;
+  padding: 7px 13px 6px; cursor: pointer; border-bottom: 2.5px solid transparent;
+  margin-bottom: -1px; border-radius: 6px 6px 0 0;
+}
+.tab-btn:hover { background: var(--panel); color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--panel); }
+.panel { display: none; height: calc(100% - 43px); padding-top: 10px; overflow: hidden; }
+.panel.active { display: block; }
+.layout {
+  display: grid; grid-template-columns: minmax(620px, 1fr) minmax(430px, 36vw);
+  gap: 14px; height: 100%; align-items: stretch;
+}
+.workpane, .sidepane { min-height: 0; height: 100%; display: flex; flex-direction: column; }
+.scrollpane { min-height: 0; overflow: auto; padding-right: 2px; }
+.section-title {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-faint); margin: 12px 0 6px;
+}
+.section-title:first-child { margin-top: 0; }
+.card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 8px; padding: 9px 11px; margin-bottom: 8px;
+}
+.param-tabs {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px; margin: 0 0 8px;
+}
+.param-tab {
+  appearance: none; border: 1px solid var(--border); background: var(--panel);
+  color: var(--text-soft); border-radius: 6px; padding: 6px 8px; cursor: pointer;
+  font-family: var(--sans); font-size: 12.5px; font-weight: 600; text-align: center;
+}
+.param-tab:hover { background: var(--bg); color: var(--text); }
+.param-tab.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.control-shell {
+  display: grid; grid-template-columns: minmax(380px, 1fr) 245px;
+  gap: 8px; align-items: stretch;
+}
+.control-shell .card { margin-bottom: 0; }
+.row {
+  display: grid; grid-template-columns: 118px minmax(130px, 1fr) 90px 48px;
+  gap: 8px; align-items: center; min-height: 32px;
+  padding: 4px 0; border-bottom: 1px dashed var(--border-soft);
+}
+.row:last-child { border-bottom: none; }
+.row label { font-size: 13px; font-weight: 500; color: var(--text); }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+input[type=number], input[type=text], select {
+  width: 100%; border: 1px solid var(--border); border-radius: 5px;
+  padding: 3px 6px; background: var(--panel); color: var(--text);
+  font-family: var(--mono); font-size: 12.5px;
+}
+.unit { color: var(--text-faint); font-family: var(--mono); font-size: 11.5px; }
+.help-card { background: var(--bg); padding: 9px 10px; }
+.help-title { margin-bottom: 4px; font-size: 12px; font-weight: 700; }
+.help-body { color: var(--text-soft); font-size: 12px; line-height: 1.45; margin-bottom: 8px; }
+.help-row {
+  display: grid; grid-template-columns: 82px 1fr; gap: 7px;
+  padding: 5px 0; border-top: 1px dashed var(--border-soft);
+}
+.help-row b { font-family: var(--mono); color: var(--text); font-size: 11.5px; font-weight: 600; }
+.help-row span { color: var(--text-soft); font-size: 11.8px; line-height: 1.4; }
+.run-grid {
+  display: grid; grid-template-columns: 105px 1fr 70px 70px 80px;
+  gap: 8px; align-items: center;
+}
+.btnrow { display: flex; gap: 8px; margin: 10px 0 0; flex-wrap: wrap; align-items: center; }
+button.action {
+  min-height: 31px; border: none; border-radius: 6px; padding: 6px 13px;
+  background: var(--accent); color: #fff; font-weight: 600; cursor: pointer;
+}
+button.action:hover { filter: brightness(1.08); }
+button.action.secondary { background: var(--grey-bg); color: var(--text); }
+button.action.secondary:hover { background: var(--border); }
+button.action.warn { background: var(--amber); }
+button.action.danger { background: var(--red); }
+button.action:disabled { opacity: 0.55; cursor: wait; }
+.status-bar {
+  min-height: 28px; margin-top: 8px; padding: 6px 10px; border-radius: 5px;
+  background: var(--grey-bg); color: var(--text-soft); font-family: var(--mono); font-size: 12px;
+}
+.stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.stat {
+  min-height: 49px; border: 1px solid var(--border-soft); background: var(--bg);
+  border-radius: 6px; padding: 6px 8px;
+}
+.stat .k { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.04em; }
+.stat .v { margin-top: 3px; font-family: var(--mono); font-size: 13px; color: var(--text); word-break: break-word; }
+.pill {
+  display: inline-flex; align-items: center; border: 1px solid var(--border);
+  border-radius: 999px; padding: 2px 8px; font-family: var(--mono); font-size: 12px;
+}
+.pill.ok { color: var(--green); background: var(--green-bg); border-color: #aceebb; }
+.pill.bad { color: var(--red); background: var(--red-bg); border-color: #ffb4ad; }
+.pill.warn { color: var(--amber); background: var(--amber-bg); border-color: #eac54f; }
+.canvas-wrap {
+  flex: 1; min-height: 0; border: 1px solid var(--border); border-radius: 8px;
+  background: linear-gradient(#f8fbff, #eef4fb); overflow: hidden; position: relative;
+}
+canvas { width: 100%; height: 100%; display: block; }
+.legend {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; color: var(--text-soft); font-size: 12px;
+}
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.swatch { width: 10px; height: 10px; border-radius: 999px; display: inline-block; }
+pre.log {
+  margin: 0; min-height: 120px; max-height: 230px; overflow: auto; white-space: pre-wrap;
+  background: #0d1117; color: #c9d1d9; border-radius: 6px; padding: 9px 10px;
+  font-family: var(--mono); font-size: 11.5px;
+}
+table.grid {
+  width: 100%; border-collapse: collapse; background: var(--panel);
+  border: 1px solid var(--border); border-radius: 8px; overflow: hidden; font-size: 12.5px;
+}
+table.grid th, table.grid td {
+  text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--border-soft); vertical-align: middle;
+}
+table.grid th:first-child, table.grid td:first-child,
+table.grid th:nth-child(2), table.grid td:nth-child(2) { text-align: left; }
+table.grid th {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-faint); background: var(--bg);
+}
+.file-list { display: grid; gap: 7px; font-family: var(--mono); font-size: 12.5px; }
+.file-list div {
+  padding: 7px 10px; border: 1px solid var(--border-soft);
+  border-radius: 6px; background: var(--panel); word-break: break-all;
+}
+@media (max-width: 980px) {
+  html, body { overflow: auto; }
+  .wrap, .panel { height: auto; overflow: visible; }
+  .layout, .control-shell { grid-template-columns: 1fr; height: auto; }
+  .param-tabs { grid-template-columns: 1fr; }
+  .row { grid-template-columns: 118px minmax(120px, 1fr) 96px 44px; }
+  .run-grid { grid-template-columns: 1fr 1fr; }
+  .canvas-wrap { height: 360px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1 class="title">Structure optimization</h1>
+  <div class="meta">
+    <span class="chip">port <b class="mono">8082</b></span>
+    <span class="chip">engine <b class="mono">PyNite</b></span>
+    <span class="chip">case <b class="mono">opt_structure/config/structure_case.json</b></span>
+    <span class="chip">output <b class="mono">opt_structure/runs</b></span>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="tabbar">
+    <button class="tab-btn active" data-tab="workbench">Workbench</button>
+    <button class="tab-btn" data-tab="members">Members</button>
+    <button class="tab-btn" data-tab="files">Files</button>
+  </nav>
+
+  <section class="panel active" id="panel-workbench">
+    <div class="layout">
+      <div class="workpane">
+        <div class="scrollpane">
+          <div class="section-title">Optimization inputs</div>
+          <div class="param-tabs" id="param_tabs"></div>
+          <div class="control-shell">
+            <div class="card"><div id="control_rows"></div></div>
+            <div class="card help-card" id="param_help"></div>
+          </div>
+
+          <div class="section-title">Run preset</div>
+          <div class="card">
+            <div class="run-grid">
+              <select id="run_engine">
+                <option value="pynite">pynite</option>
+                <option value="frame">frame</option>
+                <option value="truss">truss</option>
+              </select>
+              <span class="mono">short GA</span>
+              <input type="number" id="run_pop" min="2" max="128" step="1" value="8" title="population">
+              <input type="number" id="run_n_gen" min="1" max="100" step="1" value="2" title="generations">
+              <input type="number" id="run_seed" min="0" max="999999" step="1" value="42" title="seed">
+            </div>
+            <div class="btnrow">
+              <button class="action secondary" id="btn_save">Save config</button>
+              <button class="action secondary" id="btn_extract">Extract Rhino context</button>
+              <button class="action secondary" id="btn_graph">Generate graph</button>
+              <button class="action" id="btn_optimize">Run short PyNite optimization</button>
+              <button class="action warn" id="btn_bake">Bake to Rhino</button>
+              <button class="action secondary" id="btn_reload">Reload</button>
+            </div>
+            <div class="status-bar" id="status">ready.</div>
+          </div>
+
+          <div class="section-title">Graph and result</div>
+          <div class="card">
+            <div class="stat-grid" id="summary_stats"></div>
+          </div>
+
+          <div class="section-title">Log tail</div>
+          <pre class="log" id="log_tail"></pre>
+        </div>
+      </div>
+
+      <div class="sidepane">
+        <div class="section-title">Frame preview</div>
+        <div class="canvas-wrap"><canvas id="preview_canvas" width="900" height="760"></canvas></div>
+        <div class="legend">
+          <span><i class="swatch" style="background:#1f6feb"></i>support</span>
+          <span><i class="swatch" style="background:#d29922"></i>intermediate</span>
+          <span><i class="swatch" style="background:#cf222e"></i>module target</span>
+          <span><i class="swatch" style="background:#2f6f9f"></i>selected member</span>
+          <span><i class="swatch" style="background:#8c959f"></i>candidate</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-members">
+    <div class="section-title">Selected members</div>
+    <div id="member_table"></div>
+  </section>
+
+  <section class="panel" id="panel-files">
+    <div class="section-title">Generated files</div>
+    <div class="file-list" id="file_list"></div>
+  </section>
+</div>
+
+<script>
+let CONFIG = {};
+let GROUPS = [];
+let ACTIVE_GROUP = 'loads';
+let APP_STATE = null;
+let POLL_TIMER = null;
+const VIEW = { yaw: -0.72, pitch: 0.50, zoom: 1.0, dragging: false, lastX: 0, lastY: 0, frame: null };
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function fmtNum(v, digits = 2) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return '-';
+  return n.toLocaleString(undefined, {maximumFractionDigits: digits});
+}
+
+function getPath(obj, path, fallback = '') {
+  let cur = obj;
+  for (const part of path.split('.')) {
+    if (!cur || typeof cur !== 'object' || !(part in cur)) return fallback;
+    cur = cur[part];
+  }
+  return cur;
+}
+
+function setPath(obj, path, value) {
+  const parts = path.split('.');
+  let cur = obj;
+  for (const part of parts.slice(0, -1)) {
+    if (!cur[part] || typeof cur[part] !== 'object') cur[part] = {};
+    cur = cur[part];
+  }
+  cur[parts[parts.length - 1]] = value;
+}
+
+function statusText(msg) {
+  document.getElementById('status').textContent = msg;
+}
+
+function activeGroup() {
+  if (!GROUPS.some(g => g.key === ACTIVE_GROUP)) ACTIVE_GROUP = GROUPS[0]?.key || 'loads';
+  return GROUPS.find(g => g.key === ACTIVE_GROUP) || {fields: [], title: ''};
+}
+
+function fieldValue(field) {
+  const value = getPath(CONFIG, field.key, '');
+  return Array.isArray(value) ? value.join(',') : value;
+}
+
+function renderTabs() {
+  document.getElementById('param_tabs').innerHTML = GROUPS.map(group =>
+    `<button type="button" class="param-tab${group.key === ACTIVE_GROUP ? ' active' : ''}" data-group="${esc(group.key)}">${esc(group.title)}</button>`
+  ).join('');
+}
+
+function renderControls() {
+  renderTabs();
+  const group = activeGroup();
+  document.getElementById('control_rows').innerHTML = group.fields.map(field => rowHtml(field, fieldValue(field))).join('');
+  document.getElementById('param_help').innerHTML =
+    `<div class="help-title">${esc(group.title)}</div><div class="help-body">${esc(group.fields[0]?.desc || '')}</div>` +
+    group.fields.map(field => `<div class="help-row"><b>${esc(field.label)}</b><span>${esc(field.desc || '')}</span></div>`).join('');
+}
+
+function rowHtml(field, value) {
+  const label = `<label>${esc(field.label)}</label>`;
+  const unit = `<span class="unit">${esc(field.unit || '')}</span>`;
+  if (field.type === 'text') {
+    return `<div class="row">${label}<input type="text" data-key="${esc(field.key)}" value="${esc(value)}"><span></span>${unit}</div>`;
+  }
+  const min = field.min ?? 0;
+  const max = field.max ?? 100;
+  const step = field.step ?? 1;
+  return `<div class="row">
+    ${label}
+    <input type="range" data-key="${esc(field.key)}" min="${min}" max="${max}" step="${step}" value="${esc(value)}">
+    <input type="number" data-key="${esc(field.key)}" step="${step}" value="${esc(value)}">
+    ${unit}
+  </div>`;
+}
+
+function coerceFieldValue(field, raw) {
+  if (field.key === 'ground_structure.intermediate_levels') {
+    return String(raw).split(',').map(v => v.trim()).filter(Boolean).map(Number).filter(Number.isFinite);
+  }
+  if (field.type === 'number') {
+    return Number(raw);
+  }
+  return raw;
+}
+
+function onInput(e) {
+  const el = e.target.closest('input[data-key]');
+  if (!el) return;
+  const key = el.dataset.key;
+  const field = GROUPS.flatMap(g => g.fields).find(f => f.key === key);
+  if (!field) return;
+  const value = coerceFieldValue(field, el.value);
+  setPath(CONFIG, key, value);
+  document.querySelectorAll(`input[data-key="${CSS.escape(key)}"]`).forEach(peer => {
+    if (peer !== el) peer.value = el.value;
+  });
+}
+
+function flattenConfig() {
+  const out = {};
+  for (const field of GROUPS.flatMap(g => g.fields)) {
+    out[field.key] = getPath(CONFIG, field.key, '');
+  }
+  return out;
+}
+
+async function loadConfig() {
+  const r = await fetch('/api/config');
+  const j = await r.json();
+  CONFIG = j.config || {};
+  GROUPS = j.groups || [];
+  renderControls();
+}
+
+async function saveConfig() {
+  statusText('saving config...');
+  const r = await fetch('/api/config', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({values: flattenConfig()})
+  });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'save failed');
+  CONFIG = j.config;
+  statusText('saved ' + j.saved);
+}
+
+function runPayload() {
+  return {
+    engine: document.getElementById('run_engine').value,
+    pop: Number(document.getElementById('run_pop').value || 8),
+    n_gen: Number(document.getElementById('run_n_gen').value || 2),
+    seed: Number(document.getElementById('run_seed').value || 42)
+  };
+}
+
+async function startAction(endpoint, label, includeRun = false) {
+  try {
+    if (endpoint !== '/api/bake') await saveConfig();
+    setBusy(true);
+    statusText(label + '...');
+    const r = await fetch(endpoint, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(includeRun ? runPayload() : {})
+    });
+    const j = await r.json();
+    if (!j.ok) {
+      statusText('blocked: ' + (j.error || 'job did not start'));
+      setBusy(false);
+      return;
+    }
+    pollSoon();
+  } catch (err) {
+    statusText(String(err));
+    setBusy(false);
+  }
+}
+
+function setBusy(busy) {
+  document.querySelectorAll('button.action').forEach(btn => btn.disabled = busy);
+}
+
+async function loadState() {
+  const r = await fetch('/api/state');
+  const j = await r.json();
+  APP_STATE = j;
+  if (j.run_preset) {
+    document.getElementById('run_engine').value = j.run_preset.engine || 'pynite';
+    document.getElementById('run_pop').value = j.run_preset.pop || 8;
+    document.getElementById('run_n_gen').value = j.run_preset.n_gen || 2;
+    document.getElementById('run_seed').value = j.run_preset.seed || 42;
+  }
+  renderSummary();
+  renderFiles();
+  renderMembers();
+  drawPreview();
+  await loadLog();
+  const job = j.job || {};
+  setBusy(Boolean(job.running));
+  if (job.running) {
+    statusText(`${job.name || 'job'} running since ${job.started || ''}`);
+    pollSoon();
+  } else if (job.name) {
+    statusText(job.error ? `${job.name} failed: ${job.error}` : `${job.name} finished.`);
+  }
+}
+
+async function loadLog() {
+  const r = await fetch('/api/log');
+  const j = await r.json();
+  document.getElementById('log_tail').textContent = j.log_tail || '';
+}
+
+function pollSoon() {
+  clearTimeout(POLL_TIMER);
+  POLL_TIMER = setTimeout(loadState, 1600);
+}
+
+function statHtml(k, v) {
+  return `<div class="stat"><div class="k">${esc(k)}</div><div class="v">${v}</div></div>`;
+}
+
+function pill(ok, label) {
+  const cls = ok === true ? 'ok' : (ok === false ? 'bad' : 'warn');
+  return `<span class="pill ${cls}">${esc(label)}</span>`;
+}
+
+function renderSummary() {
+  const graph = APP_STATE?.graph_meta || {};
+  const ctx = APP_STATE?.context_meta || {};
+  const s = APP_STATE?.summary || {};
+  const def = `${fmtNum(s.max_displacement_mm)} / ${fmtNum(s.displacement_limit_mm)} mm`;
+  document.getElementById('summary_stats').innerHTML = [
+    statHtml('context', `${fmtNum(ctx.modules, 0)} modules | ${fmtNum(ctx.support_curves, 0)} start curves`),
+    statHtml('graph', `${fmtNum(graph.support_count, 0)} supports | ${fmtNum(graph.target_count, 0)} targets`),
+    statHtml('members', `${fmtNum(APP_STATE?.graph?.members?.length, 0)} candidates | ${fmtNum(s.member_count, 0)} selected`),
+    statHtml('status', pill(s.feasible, s.feasible === true ? 'feasible' : (s.feasible === false ? 'infeasible' : 'no run'))),
+    statHtml('mass', `${fmtNum(s.mass_kg, 1)} kg`),
+    statHtml('engine', esc(s.engine || '-')),
+    statHtml('utilization', fmtNum(s.max_utilization, 3)),
+    statHtml('deflection', def),
+    statHtml('slenderness', fmtNum(s.max_slenderness, 1)),
+  ].join('');
+}
+
+function renderFiles() {
+  const files = APP_STATE?.files || [];
+  document.getElementById('file_list').innerHTML = files.map(file => {
+    const tag = file.exists ? '<span class="pill ok">exists</span>' : '<span class="pill warn">missing</span>';
+    return `<div>${tag} ${esc(file.path)} <span style="color:var(--text-faint)"> ${fmtNum(file.size, 0)} bytes ${esc(file.mtime || '')}</span></div>`;
+  }).join('');
+}
+
+function renderMembers() {
+  const rows = (APP_STATE?.solution?.selected_members || []).slice().sort((a, b) => {
+    const au = Number(a.analysis?.utilization || 0);
+    const bu = Number(b.analysis?.utilization || 0);
+    return bu - au;
+  });
+  if (!rows.length) {
+    document.getElementById('member_table').innerHTML = '<div class="card">No selected members yet.</div>';
+    return;
+  }
+  document.getElementById('member_table').innerHTML = `<table class="grid">
+    <thead><tr><th>id</th><th>kind</th><th>profile</th><th>length m</th><th>util</th><th>slender</th><th>axial kN</th></tr></thead>
+    <tbody>${rows.map(row => `<tr>
+      <td>${esc(row.id)}</td>
+      <td>${esc(row.kind)}</td>
+      <td>${esc(row.profile?.name || '')}</td>
+      <td>${fmtNum(Number(row.length_mm) / 1000, 2)}</td>
+      <td>${fmtNum(row.analysis?.utilization, 3)}</td>
+      <td>${fmtNum(row.analysis?.slenderness, 1)}</td>
+      <td>${fmtNum(Number(row.analysis?.axial_N || 0) / 1000, 2)}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function sceneData() {
+  const solution = APP_STATE?.solution;
+  const graph = APP_STATE?.graph;
+  const nodes = solution?.nodes || graph?.nodes || [];
+  const nodeMap = new Map(nodes.map(n => [n.id, n]));
+  let members = [];
+  if (solution?.selected_members?.length) {
+    members = solution.selected_members.map(m => ({
+      id: m.id,
+      a: {x: m.start_mm[0], y: m.start_mm[1], z: m.start_mm[2]},
+      b: {x: m.end_mm[0], y: m.end_mm[1], z: m.end_mm[2]},
+      kind: m.kind,
+      selected: true,
+      util: Number(m.analysis?.utilization || 0),
+    }));
+  } else if (graph?.members?.length) {
+    members = graph.members.map(m => {
+      const ni = nodeMap.get(m.i);
+      const nj = nodeMap.get(m.j);
+      if (!ni || !nj) return null;
+      return {
+        id: m.id,
+        a: {x: ni.xyz_mm[0], y: ni.xyz_mm[1], z: ni.xyz_mm[2]},
+        b: {x: nj.xyz_mm[0], y: nj.xyz_mm[1], z: nj.xyz_mm[2]},
+        kind: m.kind,
+        selected: false,
+        util: 0,
+      };
+    }).filter(Boolean);
+  }
+  const points = [];
+  for (const n of nodes) points.push({x: n.xyz_mm[0], y: n.xyz_mm[1], z: n.xyz_mm[2]});
+  for (const m of members) points.push(m.a, m.b);
+  return {nodes, members, points};
+}
+
+function resizeCanvas(canvas) {
+  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  const rect = canvas.getBoundingClientRect();
+  const w = Math.max(1, Math.floor(rect.width * dpr));
+  const h = Math.max(1, Math.floor(rect.height * dpr));
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  return {w, h};
+}
+
+function boundsOf(points) {
+  const b = {
+    minX: Math.min(...points.map(p => p.x)),
+    maxX: Math.max(...points.map(p => p.x)),
+    minY: Math.min(...points.map(p => p.y)),
+    maxY: Math.max(...points.map(p => p.y)),
+    minZ: Math.min(...points.map(p => p.z)),
+    maxZ: Math.max(...points.map(p => p.z)),
+  };
+  b.cx = (b.minX + b.maxX) * 0.5;
+  b.cy = (b.minY + b.maxY) * 0.5;
+  b.cz = (b.minZ + b.maxZ) * 0.5;
+  b.span = Math.max(b.maxX - b.minX, b.maxY - b.minY, b.maxZ - b.minZ, 1);
+  return b;
+}
+
+function cameraVector(v) {
+  let x = v.x, y = v.y, z = v.z;
+  const cy = Math.cos(VIEW.yaw), sy = Math.sin(VIEW.yaw);
+  [x, y] = [x * cy - y * sy, x * sy + y * cy];
+  const cp = Math.cos(VIEW.pitch), sp = Math.sin(VIEW.pitch);
+  [y, z] = [y * cp - z * sp, y * sp + z * cp];
+  return {x, y, z};
+}
+
+function drawGrid(ctx, b, map) {
+  const step = Math.max(500, Math.round(b.span / 7 / 500) * 500);
+  const x0 = Math.floor((b.minX - step) / step) * step;
+  const x1 = Math.ceil((b.maxX + step) / step) * step;
+  const y0 = Math.floor((b.minY - step) / step) * step;
+  const y1 = Math.ceil((b.maxY + step) / step) * step;
+  const z = b.minZ;
+  ctx.strokeStyle = 'rgba(120,132,148,0.22)';
+  ctx.lineWidth = 1;
+  for (let x = x0; x <= x1; x += step) {
+    const a = map({x, y: y0, z});
+    const c = map({x, y: y1, z});
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(c.x, c.y); ctx.stroke();
+  }
+  for (let y = y0; y <= y1; y += step) {
+    const a = map({x: x0, y, z});
+    const c = map({x: x1, y, z});
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(c.x, c.y); ctx.stroke();
+  }
+}
+
+function nodeColor(node) {
+  if (node.kind === 'support' || node.kind === 'existing_structure') return '#1f6feb';
+  if (node.kind === 'intermediate') return '#d29922';
+  if (node.kind === 'module_target') return '#cf222e';
+  return '#8250df';
+}
+
+function memberColor(member) {
+  if (!member.selected) return 'rgba(110,119,129,0.28)';
+  if (member.util > 1.0) return '#cf222e';
+  if (member.util > 0.8) return '#bf8700';
+  return '#2f6f9f';
+}
+
+function drawPreview() {
+  const canvas = document.getElementById('preview_canvas');
+  const ctx = canvas.getContext('2d');
+  const {w, h} = resizeCanvas(canvas);
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#f8fbff';
+  ctx.fillRect(0, 0, w, h);
+
+  const scene = sceneData();
+  if (!scene.points.length) {
+    ctx.fillStyle = '#57606a';
+    ctx.font = '13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+    ctx.fillText('No graph or solution yet.', 24, 34);
+    return;
+  }
+
+  const b = boundsOf(scene.points);
+  const scale = Math.min(w, h) * 0.70 / b.span * VIEW.zoom;
+  const map = p => {
+    const q = cameraVector({x: p.x - b.cx, y: p.y - b.cy, z: p.z - b.cz});
+    const depthFade = 1 + q.y / (b.span * 3.6);
+    return {
+      x: w * 0.5 + q.x * scale / depthFade,
+      y: h * 0.53 - q.z * scale / depthFade,
+      depth: q.y,
+    };
+  };
+
+  drawGrid(ctx, b, map);
+
+  const lines = scene.members.map(m => {
+    const a = map(m.a);
+    const c = map(m.b);
+    return {...m, pa: a, pb: c, depth: (a.depth + c.depth) * 0.5};
+  }).sort((a, b) => a.depth - b.depth);
+
+  ctx.lineCap = 'round';
+  for (const m of lines) {
+    ctx.strokeStyle = memberColor(m);
+    ctx.lineWidth = m.selected ? Math.max(1.4, Math.min(4.0, 1.6 + m.util * 2.0)) : 0.7;
+    ctx.beginPath();
+    ctx.moveTo(m.pa.x, m.pa.y);
+    ctx.lineTo(m.pb.x, m.pb.y);
+    ctx.stroke();
+  }
+
+  const drawnNodes = scene.nodes.map(n => {
+    const p = map({x: n.xyz_mm[0], y: n.xyz_mm[1], z: n.xyz_mm[2]});
+    return {node: n, p};
+  }).sort((a, b) => a.p.depth - b.p.depth);
+
+  for (const item of drawnNodes) {
+    const n = item.node;
+    const p = item.p;
+    const radius = n.kind === 'module_target' ? 4.2 : (n.kind === 'support' ? 4.0 : 3.3);
+    ctx.fillStyle = nodeColor(n);
+    ctx.strokeStyle = 'rgba(255,255,255,0.92)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    const load = n.load_N || [0, 0, 0];
+    if (Math.abs(load[2] || 0) > 1e-6) {
+      ctx.strokeStyle = 'rgba(207,34,46,0.62)';
+      ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y - 10);
+      ctx.lineTo(p.x, p.y + 10);
+      ctx.stroke();
+    }
+  }
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    drawPreview();
+  });
+});
+
+document.addEventListener('input', onInput);
+document.addEventListener('click', e => {
+  const tab = e.target.closest('.param-tab');
+  if (tab) {
+    ACTIVE_GROUP = tab.dataset.group;
+    renderControls();
+  }
+});
+
+document.getElementById('btn_save').addEventListener('click', () => saveConfig().catch(err => statusText(String(err))));
+document.getElementById('btn_extract').addEventListener('click', () => startAction('/api/extract', 'extracting Rhino context'));
+document.getElementById('btn_graph').addEventListener('click', () => startAction('/api/graph', 'generating ground structure'));
+document.getElementById('btn_optimize').addEventListener('click', () => startAction('/api/optimize', 'running optimization', true));
+document.getElementById('btn_bake').addEventListener('click', () => startAction('/api/bake', 'baking to Rhino'));
+document.getElementById('btn_reload').addEventListener('click', async () => {
+  await loadConfig();
+  await loadState();
+});
+
+const previewCanvas = document.getElementById('preview_canvas');
+previewCanvas.addEventListener('pointerdown', e => {
+  VIEW.dragging = true;
+  VIEW.lastX = e.clientX;
+  VIEW.lastY = e.clientY;
+  previewCanvas.setPointerCapture(e.pointerId);
+});
+previewCanvas.addEventListener('pointermove', e => {
+  if (!VIEW.dragging) return;
+  const dx = e.clientX - VIEW.lastX;
+  const dy = e.clientY - VIEW.lastY;
+  VIEW.lastX = e.clientX;
+  VIEW.lastY = e.clientY;
+  VIEW.yaw += dx * 0.008;
+  VIEW.pitch = Math.max(-1.25, Math.min(1.25, VIEW.pitch + dy * 0.007));
+  drawPreview();
+});
+previewCanvas.addEventListener('pointerup', e => {
+  VIEW.dragging = false;
+  try { previewCanvas.releasePointerCapture(e.pointerId); } catch (_) {}
+});
+previewCanvas.addEventListener('pointercancel', () => {
+  VIEW.dragging = false;
+});
+previewCanvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  VIEW.zoom = Math.max(0.35, Math.min(3.0, VIEW.zoom * Math.exp(-e.deltaY * 0.0011)));
+  drawPreview();
+}, {passive: false});
+window.addEventListener('resize', drawPreview);
+
+(async function init() {
+  await loadConfig();
+  await loadState();
+})();
+</script>
+</body>
+</html>

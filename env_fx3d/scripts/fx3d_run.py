@@ -99,6 +99,17 @@ def select_nozzles(nozzles_m: list, cfg: dict) -> list:
     mode = str(cfg.get("nozzle_mode", "centroid")).lower()
     if mode == "all" or len(nozzles_m) <= 1:
         return nozzles_m
+    if mode in {"analytic_circle", "analytic_disk", "analytic_ring", "circle", "disk", "ring"}:
+        center = cfg.get("nozzle_center_m")
+        if isinstance(center, list) and len(center) >= 2:
+            z = float(center[2]) if len(center) >= 3 else max(float(p[2]) for p in nozzles_m)
+            return [[float(center[0]), float(center[1]), z]]
+        n = float(len(nozzles_m))
+        return [[
+            sum(float(p[0]) for p in nozzles_m) / n,
+            sum(float(p[1]) for p in nozzles_m) / n,
+            max(float(p[2]) for p in nozzles_m),
+        ]]
     if mode == "index":
         idx = int(cfg.get("nozzle_index", 0) or 0) % len(nozzles_m)
         return [nozzles_m[idx]]
@@ -144,7 +155,10 @@ def select_nozzles(nozzles_m: list, cfg: dict) -> list:
         step = max(len(nozzles_m) / float(max_points), 1.0)
         return [nozzles_m[min(int(round(i * step)), len(nozzles_m) - 1)]
                 for i in range(max_points)]
-    raise ValueError(f"unknown nozzle_mode={mode!r}; expected all, centroid, downstream_edge, index, or stride")
+    raise ValueError(
+        f"unknown nozzle_mode={mode!r}; expected all, centroid, downstream_edge, "
+        "index, stride, analytic_circle, analytic_disk, or analytic_ring"
+    )
 
 
 def pick_default_stl() -> Path:
@@ -286,6 +300,9 @@ def append_settings_log(test_id: str, case: dict, result: dict,
         "nozzle_refill_dt_s": case.get("nozzle_refill_dt_s"),
         "nozzle_refill_col_h": case.get("nozzle_refill_col_h"),
         "nozzle_emit_col_h": case.get("nozzle_emit_col_h"),
+        "nozzle_pulse_dt_s": case.get("nozzle_pulse_dt_s"),
+        "nozzle_pulse_depth_h": case.get("nozzle_pulse_depth_h"),
+        "nozzle_pulse_layers": case.get("nozzle_pulse_layers"),
         "surface_tension_Npm": case.get("surface_tension_Npm"),
         "viscosity_m2ps": case.get("viscosity_m2ps"),
         "density_kgpm3": case.get("density_kgpm3"),
@@ -298,6 +315,9 @@ def append_settings_log(test_id: str, case: dict, result: dict,
         "raw_n_nozzles": cfg.get("_raw_n_nozzles"),
         "nozzle_mode": cfg.get("nozzle_mode"),
         "nozzle_max_points": cfg.get("nozzle_max_points"),
+        "nozzle_shape": cfg.get("nozzle_shape"),
+        "nozzle_diameter_m": cfg.get("nozzle_diameter_m"),
+        "nozzle_ring_width_m": cfg.get("nozzle_ring_width_m"),
         "nozzle_LPM": cfg.get("nozzle_LPM"),
         "nozzle_velocity_mps": cfg.get("nozzle_velocity_mps"),
         "nozzle_velocity_floor_mps": cfg.get("nozzle_velocity_floor_mps"),
@@ -332,6 +352,15 @@ def append_settings_log(test_id: str, case: dict, result: dict,
         "modules_with_fluid": arrival.get("modules_with_fluid"),
         "source_tail_late_frames": diagnostics.get("source_tail_late_frames"),
         "max_source_tail_cells": diagnostics.get("max_source_tail_cells"),
+        "source_pulse_late_events": diagnostics.get("source_pulse_late_events"),
+        "source_boundary_late_events": diagnostics.get("source_boundary_late_events"),
+        "source_pulse_late_cells": diagnostics.get("source_pulse_late_cells"),
+        "source_pulse_late_new_cells": diagnostics.get("source_pulse_late_new_cells"),
+        "source_pulse_late_added_phi": diagnostics.get("source_pulse_late_added_phi"),
+        "source_pulse_late_depths": diagnostics.get("source_pulse_late_depths"),
+        "source_pulse_ok": diagnostics.get("source_pulse_ok"),
+        "source_boundary_ok": diagnostics.get("source_boundary_ok"),
+        "source_tail_ok": diagnostics.get("source_tail_ok"),
         "continuous_source": diagnostics.get("continuous_source"),
         "top_module_final_cells": diagnostics.get("top_module_final_cells"),
         "top_module_final_ratio": diagnostics.get("top_module_final_ratio"),
@@ -411,10 +440,16 @@ def run_experiment(test_id: str,
         "nozzle_refill_dt_s": cfg.get("nozzle_refill_dt_s", cfg["dt_out_s"]),
         "nozzle_refill_col_h": cfg.get("nozzle_refill_col_h", 3),
         "nozzle_emit_col_h": cfg.get("nozzle_emit_col_h", cfg.get("nozzle_refill_col_h", 3)),
+        "nozzle_pulse_dt_s": cfg.get("nozzle_pulse_dt_s", 0.1),
+        "nozzle_pulse_depth_h": cfg.get("nozzle_pulse_depth_h", 7),
+        "nozzle_pulse_layers": cfg.get("nozzle_pulse_layers", 1),
         "seed_col_h": cfg["seed_col_h"],
         "lbm_u_ref": cfg.get("lbm_u_ref", 0.05),
         "nozzle_rho_inflow": cfg.get("nozzle_rho_inflow", 1.0),
         "nozzle_area_cells": cfg.get("nozzle_area_cells", 1),
+        "nozzle_shape": cfg.get("nozzle_shape", "square"),
+        "nozzle_diameter_m": cfg.get("nozzle_diameter_m", 0.0),
+        "nozzle_ring_width_m": cfg.get("nozzle_ring_width_m", 0.0),
         "pond_prefill_z_m": cfg.get("pond_prefill_z_m", 0),
         "pond_prefill_z_bot_m": cfg.get("pond_prefill_z_bot_m", 0),
         "pond_prefill_xy_bbox_m": cfg.get("pond_prefill_xy_bbox_m", [0, 0, 0, 0]),
@@ -450,6 +485,8 @@ def run_experiment(test_id: str,
         "cascade_min_modules_with_fluid": cfg.get("cascade_min_modules_with_fluid", 3),
         "source_tail_min_cells": cfg.get("source_tail_min_cells"),
         "source_tail_min_late_frames": cfg.get("source_tail_min_late_frames"),
+        "source_pulse_min_late_events": cfg.get("source_pulse_min_late_events"),
+        "source_pulse_min_depths": cfg.get("source_pulse_min_depths"),
         "fluid_threshold": cfg.get("fluid_threshold", 0.5),
         "n_nozzles": len(nozzles_m),
         "raw_n_nozzles": len(raw_nozzles_m),
@@ -458,9 +495,16 @@ def run_experiment(test_id: str,
         "nozzle_LPM": cfg["nozzle_LPM"],
         "nozzle_velocity_mps": cfg.get("nozzle_velocity_mps", 0),
         "nozzle_velocity_floor_mps": cfg.get("nozzle_velocity_floor_mps", 1.0),
+        "nozzle_shape": cfg.get("nozzle_shape", "square"),
+        "nozzle_diameter_m": cfg.get("nozzle_diameter_m", 0.0),
+        "nozzle_ring_width_m": cfg.get("nozzle_ring_width_m", 0.0),
+        "nozzle_center_m": nozzles_m[0] if nozzles_m else None,
         "nozzle_refill_dt_s": cfg.get("nozzle_refill_dt_s", cfg["dt_out_s"]),
         "nozzle_refill_col_h": cfg.get("nozzle_refill_col_h", 3),
         "nozzle_emit_col_h": cfg.get("nozzle_emit_col_h", cfg.get("nozzle_refill_col_h", 3)),
+        "nozzle_pulse_dt_s": cfg.get("nozzle_pulse_dt_s", 0.1),
+        "nozzle_pulse_depth_h": cfg.get("nozzle_pulse_depth_h", 7),
+        "nozzle_pulse_layers": cfg.get("nozzle_pulse_layers", 1),
         "nozzle_vz_mps": vz,
         "nozzle_vx_mps": vx,
         "nozzle_vy_mps": vy,
@@ -516,7 +560,8 @@ def run_experiment(test_id: str,
           f"top_final={diagnostics.get('top_module_final_cells', 0)}  "
           f"top_ratio={diagnostics.get('top_module_final_ratio', 0):.3f}  "
           f"modules={diagnostics.get('modules_with_fluid', 0)}  "
-          f"source_late={diagnostics.get('source_tail_late_frames', 0)}")
+          f"source_late={diagnostics.get('source_tail_late_frames', 0)}  "
+          f"pulse_late={diagnostics.get('source_pulse_late_events', 0)}")
 
     # Settings DB
     cfg_for_log = {**cfg,
