@@ -1,0 +1,45 @@
+{
+  "_doc": {
+    "module_dead_kg": "Estimated dead load per CFD module until measured mass is known.",
+    "module_water_kg": "Estimated quasi-static water mass per module before dynamic factor.",
+    "water_dynamic_factor": "Initial impact/modeling allowance for water load.",
+    "max_deflection_mm": "Absolute serviceability limit.",
+    "deflection_span_ratio": "Span-based serviceability limit; actual limit is min(max_deflection_mm, L/ratio).",
+    "max_slenderness": "Compression member slenderness limit L/r."
+  },
+  "material": {
+    "name": "Steel",
+    "E_Pa": 200000000000.0,
+    "nu": 0.3,
+    "density_kgpm3": 7850.0,
+    "Fy_Pa": 275000000.0
+  },
+  "loads": {
+    "module_dead_kg": 500.0,
+    "module_water_kg": 300.0,
+    "water_dynamic_factor": 2.0,
+    "gravity_mps2": 9.81
+  },
+  "constraints": {
+    "max_utilization": 1.0,
+    "max_deflection_mm": 25.0,
+    "deflection_span_ratio": 250.0,
+    "max_slenderness": 200.0
+  },
+  "ground_structure": {
+    "support_sample_step_mm": 1500.0,
+    "min_member_length_mm": 300.0,
+    "max_member_length_mm": 35000.0,
+    "target_corner_scale": 0.65,
+    "intermediate_levels": [0.33, 0.66],
+    "nearest_supports_per_target": 4,
+    "target_to_target_max_mm": 9000.0
+  },
+  "optimization": {
+    "default_pop": 32,
+    "default_n_gen": 30,
+    "fallback_n_eval": 120,
+    "seed": 42
+  }
+}
+

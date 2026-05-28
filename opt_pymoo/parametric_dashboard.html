@@ -1,0 +1,1012 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LFTH_CFD parametric module</title>
+<style>
+:root {
+  --bg: #f6f8fa; --panel: #ffffff; --border: #d0d7de; --border-soft: #e5e8eb;
+  --text: #1f2328; --text-soft: #57606a; --text-faint: #8c959f;
+  --accent: #0969da; --accent-soft: #ddf4ff;
+  --green: #1a7f37; --green-bg: #dafbe1;
+  --grey-bg: #eaeef2; --amber: #bf8700; --amber-bg: #fff8c5;
+  --red: #cf222e; --red-bg: #ffebe9;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+body {
+  font-family: var(--sans); background: var(--bg); color: var(--text);
+  font-size: 14px; line-height: 1.5;
+}
+code, .mono { font-family: var(--mono); }
+header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 10px 22px 8px; height: 58px; }
+header .title { font-size: 17px; font-weight: 600; margin: 0 0 3px; }
+header .meta { display: flex; flex-wrap: wrap; gap: 6px 10px; font-size: 12.5px; color: var(--text-soft); }
+header .chip {
+  display: inline-flex; align-items: center; gap: 5px; background: var(--bg);
+  border: 1px solid var(--border-soft); border-radius: 999px; padding: 1px 8px;
+}
+header .chip b { color: var(--text); font-weight: 600; }
+.wrap { max-width: none; height: calc(100vh - 58px); margin: 0 auto; padding: 0 18px 14px; }
+.tabbar {
+  display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--border);
+  background: var(--bg); z-index: 5; padding-top: 8px; height: 43px;
+}
+.tab-btn {
+  appearance: none; border: none; background: transparent; font-family: var(--sans);
+  font-size: 13.5px; font-weight: 500; color: var(--text-soft);
+  padding: 7px 13px 6px; cursor: pointer; border-bottom: 2.5px solid transparent;
+  margin-bottom: -1px; border-radius: 6px 6px 0 0;
+}
+.tab-btn:hover { background: var(--panel); color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--panel); }
+.panel { display: none; padding-top: 10px; height: calc(100% - 43px); overflow: hidden; }
+.panel.active { display: block; }
+.layout { display: grid; grid-template-columns: minmax(680px, 1fr) minmax(390px, 34vw); gap: 14px; align-items: stretch; height: 100%; }
+.section-title {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-faint); margin: 12px 0 6px;
+}
+.section-title:first-child { margin-top: 0; }
+.card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 8px; padding: 9px 11px; margin-bottom: 8px;
+}
+.row label { font-size: 13px; font-weight: 500; color: var(--text); }
+select, input[type=number], input[type=text] {
+  font-family: var(--mono); font-size: 12.5px; border: 1px solid var(--border);
+  border-radius: 5px; padding: 3px 6px; background: var(--panel); color: var(--text); width: 100%;
+}
+#geometry_controls { display: grid; grid-template-columns: 1fr; gap: 0; }
+.module-tabs {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px;
+  margin: 0 0 8px;
+}
+.module-tab {
+  appearance: none; border: 1px solid var(--border); background: var(--panel);
+  color: var(--text-soft); border-radius: 6px; padding: 7px 8px; cursor: pointer;
+  font-family: var(--sans); font-size: 12.5px; font-weight: 600; text-align: center;
+}
+.module-tab:hover { background: var(--bg); color: var(--text); }
+.module-tab.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.param-tabs {
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px;
+  margin: 0 0 8px;
+}
+.param-tab {
+  appearance: none; border: 1px solid var(--border); background: var(--panel);
+  color: var(--text-soft); border-radius: 6px; padding: 6px 8px; cursor: pointer;
+  font-family: var(--sans); font-size: 12.5px; font-weight: 600; text-align: center;
+}
+.param-tab:hover { background: var(--bg); color: var(--text); }
+.param-tab.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.control-shell {
+  display: grid; grid-template-columns: minmax(390px, 1fr) 240px; gap: 8px; align-items: stretch;
+}
+.control-shell .card { margin-bottom: 0; }
+.help-card { background: var(--bg); padding: 9px 10px; }
+.help-title {
+  font-size: 12px; font-weight: 700; color: var(--text);
+  margin-bottom: 4px;
+}
+.help-body { color: var(--text-soft); font-size: 12px; line-height: 1.45; margin-bottom: 8px; }
+.help-row {
+  display: grid; grid-template-columns: 72px 1fr; gap: 7px;
+  padding: 5px 0; border-top: 1px dashed var(--border-soft);
+}
+.help-row b { font-family: var(--mono); color: var(--text); font-size: 11.5px; font-weight: 600; }
+.help-row span { color: var(--text-soft); font-size: 11.8px; line-height: 1.4; }
+.row {
+  display: grid; grid-template-columns: 92px minmax(120px, 1fr) 82px 34px;
+  gap: 8px; align-items: center; padding: 4px 0; border-bottom: 1px dashed var(--border-soft);
+  min-height: 31px;
+}
+.row:last-child { border-bottom: none; }
+.unit { font-family: var(--mono); color: var(--text-faint); font-size: 11.5px; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.btnrow { display: flex; gap: 8px; margin: 10px 0 0; flex-wrap: wrap; align-items: center; }
+button.action {
+  background: var(--accent); color: white; border: none; border-radius: 6px;
+  padding: 6px 13px; font-weight: 600; cursor: pointer; min-height: 31px;
+}
+button.action:hover { filter: brightness(1.08); }
+button.action.secondary { background: var(--grey-bg); color: var(--text); }
+button.action.secondary:hover { background: var(--border); }
+button.action.warn { background: var(--amber); }
+button.action:disabled { opacity: 0.55; cursor: wait; }
+.check {
+  display: inline-flex; align-items: center; gap: 7px; color: var(--text-soft);
+  font-size: 13px; padding: 6px 2px;
+}
+.check input { width: 18px; height: 18px; }
+.status-bar {
+  font-family: var(--mono); font-size: 12px; color: var(--text-soft); padding: 6px 10px;
+  background: var(--grey-bg); border-radius: 5px; margin-top: 8px; min-height: 28px;
+}
+.canvas-wrap {
+  flex: 1; min-height: 0; border: 1px solid var(--border); border-radius: 8px;
+  background: linear-gradient(#f8fbff, #eef4fb); overflow: hidden; position: relative;
+}
+canvas { width: 100%; height: 100%; display: block; }
+.stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.stat {
+  border: 1px solid var(--border-soft); background: var(--bg); border-radius: 6px;
+  padding: 6px 8px; min-height: 49px;
+}
+.stat .k { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.04em; }
+.stat .v { font-family: var(--mono); font-size: 13px; color: var(--text); margin-top: 3px; word-break: break-word; }
+.pill {
+  display: inline-flex; align-items: center; border: 1px solid var(--border);
+  border-radius: 999px; padding: 2px 8px; font-family: var(--mono); font-size: 12px;
+}
+.pill.ok { color: var(--green); background: var(--green-bg); border-color: #aceebb; }
+.pill.bad { color: var(--red); background: var(--red-bg); border-color: #ffb4ad; }
+table.grid {
+  width: 100%; border-collapse: collapse; background: var(--panel);
+  border: 1px solid var(--border); border-radius: 8px; overflow: hidden; font-size: 12.5px;
+}
+table.grid th, table.grid td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
+table.grid th:first-child, table.grid td:first-child { text-align: left; }
+table.grid th {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-faint); background: var(--bg);
+}
+.file-list { font-family: var(--mono); font-size: 12.5px; display: grid; gap: 7px; }
+.file-list div { padding: 7px 10px; border: 1px solid var(--border-soft); border-radius: 6px; background: var(--panel); word-break: break-all; }
+.workpane { min-height: 0; }
+.sidepane { min-height: 0; display: flex; flex-direction: column; height: 100%; }
+.sidepane .card { margin-bottom: 0; }
+#module_table { height: calc(100vh - 140px); overflow: auto; }
+#file_list { height: calc(100vh - 140px); overflow: auto; }
+@media (max-width: 980px) {
+  html, body { overflow: auto; }
+  .wrap { height: auto; }
+  .panel { height: auto; overflow: visible; }
+  .layout { grid-template-columns: 1fr; height: auto; }
+  .module-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .param-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .control-shell { grid-template-columns: 1fr; }
+  #geometry_controls { grid-template-columns: 1fr; }
+  .row { grid-template-columns: 118px minmax(120px, 1fr) 96px 44px; gap: 8px; }
+  .canvas-wrap { height: 300px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1 class="title">Parametric module</h1>
+  <div class="meta">
+    <span class="chip">port <b class="mono">8081</b></span>
+    <span class="chip">source <b class="mono">env_fx3d/runs/_collider_modules.json</b></span>
+    <span class="chip">output <b class="mono">opt_pymoo/runs</b></span>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="tabbar">
+    <button class="tab-btn active" data-tab="geometry">Geometry</button>
+    <button class="tab-btn" data-tab="metadata">Metadata</button>
+    <button class="tab-btn" data-tab="files">Files</button>
+  </nav>
+
+  <section class="panel active" id="panel-geometry">
+    <div class="layout">
+      <div class="workpane">
+        <div class="section-title">Module parameters</div>
+        <div class="module-tabs" id="module_tabs"></div>
+        <div class="param-tabs" id="param_group_tabs"></div>
+        <div class="control-shell">
+          <div class="card control-card"><div id="geometry_controls"></div></div>
+          <div class="card help-card" id="param_help"></div>
+        </div>
+
+        <div class="btnrow">
+          <button class="action" id="btn_preview">Preview STL</button>
+          <button class="action warn" id="btn_bake">Bake to Rhino</button>
+          <button class="action secondary" id="btn_save">Save params</button>
+          <button class="action secondary" id="btn_defaults">Load bbox defaults</button>
+          <label class="check"><input type="checkbox" id="auto_bake"> Auto bake</label>
+        </div>
+        <div class="status-bar" id="status">ready.</div>
+      </div>
+
+      <div class="sidepane">
+        <div class="section-title">Preview</div>
+        <div class="canvas-wrap"><canvas id="preview_canvas" width="860" height="720"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-metadata">
+    <div class="section-title">Module errors</div>
+    <div id="module_table"></div>
+  </section>
+
+  <section class="panel" id="panel-files">
+    <div class="section-title">Generated files</div>
+    <div class="file-list" id="file_list"></div>
+  </section>
+</div>
+
+<script>
+const PARAM_GROUPS = [
+  {
+    key: 'shape',
+    label: '형상',
+    title: '타원체 형상',
+    desc: 'ellipsoid의 기본 크기와 깊이를 정합니다. cut profile이 없으면 z=0 기준의 기본 bowl이 됩니다.'
+  },
+  {
+    key: 'cut',
+    label: '컷 라인',
+    title: '비수평 cut profile',
+    desc: '수평면 대신 각도별 rim 높이를 바꿔서 비대칭 또는 물결형 opening을 만듭니다.'
+  },
+  {
+    key: 'rim',
+    label: '두께 / 림',
+    title: '두께와 림',
+    desc: 'FluidX3D용 closed solid를 만들기 위한 outer offset과 rim 쪽 보강 형상을 조절합니다.'
+  },
+  {
+    key: 'transform',
+    label: '위치 / 회전',
+    title: '위치와 회전',
+    desc: '기존 base point를 기준으로 모듈별 위치 보정과 자세를 조절합니다.'
+  },
+  {
+    key: 'mesh',
+    label: '메쉬',
+    title: '메쉬 해상도',
+    desc: '브라우저 preview와 STL 생성에 쓰는 분할 수입니다. 값이 커질수록 부드럽지만 파일과 계산량이 늘어납니다.'
+  }
+];
+const PARAM_CONTROLS = [
+  ['axis_x_mm', 'axis x', 500, 12000, 10, 'mm', 'shape', 'X 방향 ellipsoid 반축입니다. rim ellipse의 좌우 폭에 직접 영향을 줍니다.'],
+  ['axis_y_mm', 'axis y', 500, 12000, 10, 'mm', 'shape', 'Y 방향 ellipsoid 반축입니다. rim ellipse의 앞뒤 폭을 정합니다.'],
+  ['axis_z_mm', 'axis z', 500, 14000, 10, 'mm', 'shape', 'Z 방향 ellipsoid 반축입니다. cap depth와 함께 bowl 곡률을 결정합니다.'],
+  ['cap_depth_mm', 'cap depth', 100, 12000, 10, 'mm', 'shape', 'rim plane에서 bowl bottom까지의 깊이입니다. 커질수록 더 깊은 bowl이 됩니다.'],
+  ['cut_slope_x_mm', 'cut x', -3000, 3000, 10, 'mm', 'cut', '+X 쪽 rim은 올리고 -X 쪽 rim은 내리는 비대칭 cut입니다. 음수면 반대로 작동합니다.'],
+  ['cut_slope_y_mm', 'cut y', -3000, 3000, 10, 'mm', 'cut', '+Y 쪽 rim과 -Y 쪽 rim의 높이 차이를 만듭니다. 전체 tilt와 달리 opening 자체가 비스듬해집니다.'],
+  ['rim_wave_amp_mm', 'wave amp', 0, 3000, 10, 'mm', 'cut', 'rim 둘레에 주기적인 높낮이를 추가합니다. 0이면 wave가 꺼집니다.'],
+  ['rim_wave_count', 'waves', 0, 8, 1, 'cnt', 'cut', 'rim을 한 바퀴 돌 때 반복되는 wave 개수입니다. 2~4 정도가 형태 차이를 보기 좋습니다.'],
+  ['rim_wave_phase_deg', 'phase', 0, 360, 1, 'deg', 'cut', 'wave profile을 rim 둘레 방향으로 회전합니다.'],
+  ['wall_thickness_mm', 'wall', 50, 2500, 10, 'mm', 'rim', 'inner cap을 surface normal 방향으로 offset하는 두께입니다. STL을 닫힌 solid로 만드는 핵심 값입니다.'],
+  ['rim_lift_mm', 'rim lift', 0, 2500, 10, 'mm', 'rim', 'rim plane 쪽으로 올리는 lip 높이입니다. 0이면 추가 lift 없이 기본 stitch만 사용합니다.'],
+  ['tilt_x_deg', 'tilt x', -45, 45, 0.5, 'deg', 'transform', 'local X축 기준 기울기입니다. bowl이 앞뒤 방향으로 누워 보입니다.'],
+  ['tilt_y_deg', 'tilt y', -45, 45, 0.5, 'deg', 'transform', 'local Y축 기준 기울기입니다. bowl이 좌우 방향으로 기울어집니다.'],
+  ['rotation_z_deg', 'rotate z', 0, 360, 1, 'deg', 'transform', 'rim plane 위에서 모듈을 회전합니다. ellipse의 장축 방향을 맞출 때 씁니다.'],
+  ['tx_mm', 'tx', -4000, 4000, 10, 'mm', 'transform', 'base point에서 X 방향으로 추가 이동하는 최적화 위치 변수입니다.'],
+  ['ty_mm', 'ty', -4000, 4000, 10, 'mm', 'transform', 'base point에서 Y 방향으로 추가 이동하는 최적화 위치 변수입니다.'],
+  ['tz_mm', 'tz', -4000, 4000, 10, 'mm', 'transform', 'base point에서 Z 방향으로 추가 이동하는 최적화 위치 변수입니다.']
+];
+const RES_CONTROLS = [
+  ['theta_segments', 'theta', 8, 160, 1, 'seg', 'mesh', 'rim 둘레 방향 분할 수입니다. 높이면 rim과 곡면이 더 둥글게 보입니다.'],
+  ['radial_segments', 'radial', 3, 64, 1, 'seg', 'mesh', 'bottom에서 rim까지 깊이 방향 분할 수입니다. 높이면 cap 곡률이 더 부드러워집니다.']
+];
+
+let STATE = null;
+let MODULES = [];
+let LATEST_META = null;
+let autoTimer = null;
+let busy = false;
+let ACTIVE_MODULE = '0';
+let ACTIVE_PARAM_GROUP = 'shape';
+const VIEW = { yaw: -0.65, pitch: 0.46, zoom: 1.0, dragging: false, lastX: 0, lastY: 0, frame: null };
+const FRAME_MARGIN = 1.55;
+const FRAME_KEEP = 0.92;
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function setStatus(msg) {
+  document.getElementById('status').textContent = msg;
+}
+
+function activeIndex() {
+  const keys = moduleKeys();
+  if (!keys.includes(String(ACTIVE_MODULE))) ACTIVE_MODULE = keys[0] || '0';
+  return String(ACTIVE_MODULE);
+}
+
+function activeParams() {
+  return STATE.modules[activeIndex()];
+}
+
+function moduleKeys() {
+  return Object.keys(STATE.modules).sort((a, b) => Number(a) - Number(b));
+}
+
+function editScopeIndices() {
+  return [activeIndex()];
+}
+
+function previewScopeIndices() {
+  return moduleKeys();
+}
+
+function rowHtml(def, value) {
+  const [key, label, min, max, step, unit] = def;
+  const v = Number(value ?? 0);
+  return `<div class="row">
+    <label>${esc(label)}</label>
+    <input type="range" data-key="${key}" min="${min}" max="${max}" step="${step}" value="${v}">
+    <input type="number" data-key="${key}" step="${step}" value="${v}">
+    <span class="unit">${esc(unit)}</span>
+  </div>`;
+}
+
+function renderControls() {
+  renderModuleTabs();
+  renderParamGroupTabs();
+  const params = activeParams();
+  const defs = activeControlDefs();
+  document.getElementById('geometry_controls').innerHTML =
+    defs.map(def => rowHtml(def, controlValue(def, params))).join('');
+  renderParamHelp(defs);
+}
+
+function renderModuleTabs() {
+  const root = document.getElementById('module_tabs');
+  const active = activeIndex();
+  root.innerHTML = moduleKeys().map(idx => {
+    const info = moduleInfo(idx);
+    const name = info?.name ? ` (${esc(info.name)})` : '';
+    return `<button type="button" class="module-tab${idx === active ? ' active' : ''}" data-module="${idx}">Module ${idx}${name}</button>`;
+  }).join('');
+}
+
+function activeGroupConfig() {
+  if (!PARAM_GROUPS.some(g => g.key === ACTIVE_PARAM_GROUP)) ACTIVE_PARAM_GROUP = PARAM_GROUPS[0].key;
+  return PARAM_GROUPS.find(g => g.key === ACTIVE_PARAM_GROUP);
+}
+
+function activeControlDefs() {
+  const group = activeGroupConfig().key;
+  return PARAM_CONTROLS.concat(RES_CONTROLS).filter(def => def[6] === group);
+}
+
+function controlValue(def, params) {
+  const key = def[0];
+  if (PARAM_CONTROLS.some(item => item[0] === key)) return params[key];
+  return STATE[key];
+}
+
+function renderParamGroupTabs() {
+  const active = activeGroupConfig().key;
+  document.getElementById('param_group_tabs').innerHTML = PARAM_GROUPS.map(group =>
+    `<button type="button" class="param-tab${group.key === active ? ' active' : ''}" data-param-group="${group.key}">${esc(group.label)}</button>`
+  ).join('');
+}
+
+function renderParamHelp(defs) {
+  const group = activeGroupConfig();
+  const rows = defs.map(def =>
+    `<div class="help-row"><b>${esc(def[1])}</b><span>${esc(def[7] || '')}</span></div>`
+  ).join('');
+  document.getElementById('param_help').innerHTML =
+    `<div class="help-title">${esc(group.title)}</div><div class="help-body">${esc(group.desc)}</div>${rows}`;
+}
+
+function applyParam(key, value) {
+  if (PARAM_CONTROLS.some(def => def[0] === key)) {
+    for (const idx of editScopeIndices()) {
+      STATE.modules[idx][key] = value;
+    }
+  } else {
+    STATE[key] = Math.round(value);
+  }
+}
+
+function onControlInput(e) {
+  const el = e.target.closest('input[data-key]');
+  if (!el) return;
+  const key = el.dataset.key;
+  const value = Number(el.value);
+  if (!Number.isFinite(value)) return;
+  applyParam(key, value);
+  document.querySelectorAll(`input[data-key="${key}"]`).forEach(peer => {
+    if (peer !== el) peer.value = value;
+  });
+  drawPreview();
+  if (document.getElementById('auto_bake').checked) scheduleAutoBake();
+}
+
+function scheduleAutoBake() {
+  clearTimeout(autoTimer);
+  autoTimer = setTimeout(() => bake(), 1200);
+}
+
+async function loadInitial() {
+  const r = await fetch('/api/params');
+  const j = await r.json();
+  STATE = j.params;
+  STATE.selected_index = 'all';
+  MODULES = j.modules || [];
+  ACTIVE_MODULE = moduleKeys()[0] || '0';
+  renderControls();
+  drawPreview();
+  renderFiles();
+  setStatus('Module ' + ACTIVE_MODULE + ' 편집 중 | preview=all modules');
+  try {
+    const mr = await fetch('/api/meta');
+    if (mr.ok) {
+      const mj = await mr.json();
+      LATEST_META = mj.meta;
+      renderMeta();
+    }
+  } catch (_) {}
+}
+
+async function loadDefaults() {
+  const r = await fetch('/api/defaults');
+  const j = await r.json();
+  STATE = j.params;
+  STATE.selected_index = 'all';
+  MODULES = j.modules || MODULES;
+  ACTIVE_MODULE = moduleKeys().includes(ACTIVE_MODULE) ? ACTIVE_MODULE : (moduleKeys()[0] || '0');
+  VIEW.frame = null;
+  renderControls();
+  drawPreview();
+  renderFiles(j.outputs);
+  setStatus('bbox defaults loaded | editing Module ' + ACTIVE_MODULE);
+}
+
+async function saveParams() {
+  setBusy(true);
+  setStatus('saving params...');
+  const r = await fetch('/api/params', {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(STATE)
+  });
+  const j = await r.json();
+  setBusy(false);
+  setStatus(j.ok ? 'saved ' + j.saved : 'save failed: ' + j.error);
+}
+
+async function preview() {
+  setBusy(true);
+  setStatus('generating STL...');
+  const r = await fetch('/api/preview', {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(STATE)
+  });
+  const j = await r.json();
+  setBusy(false);
+  if (!j.ok) {
+    setStatus('preview failed: ' + j.error);
+    return;
+  }
+  LATEST_META = j.meta;
+  renderMeta();
+  renderFiles();
+  setStatus('preview generated. watertight=' + j.meta.watertight + ' bad_edges=' + j.meta.nonmanifold_or_boundary_edges);
+}
+
+async function bake() {
+  if (busy) return;
+  setBusy(true);
+  setStatus('baking to Rhino...');
+  const r = await fetch('/api/bake', {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(STATE)
+  });
+  const j = await r.json();
+  setBusy(false);
+  if (!j.ok) {
+    setStatus('bake failed: ' + j.error);
+    return;
+  }
+  LATEST_META = j.meta;
+  renderMeta();
+  renderFiles();
+  const rhino = (j.meta.rhino || []).join(' | ');
+  setStatus('baked. ' + rhino);
+}
+
+function setBusy(on) {
+  busy = on;
+  document.querySelectorAll('button.action').forEach(b => b.disabled = on);
+}
+
+function renderMeta() {
+  if (!LATEST_META) {
+    return;
+  }
+  const rows = (LATEST_META.modules || []).map(m => {
+    const err = m.solid_extent_error_mm || [];
+    return `<tr>
+      <td>Module ${m.index}</td>
+      <td>${fmtNum(err[0])}</td>
+      <td>${fmtNum(err[1])}</td>
+      <td>${fmtNum(err[2])}</td>
+      <td>${m.solid_triangles}</td>
+      <td>${m.watertight ? 'true' : 'false'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('module_table').innerHTML =
+    `<table class="grid"><thead><tr><th>module</th><th>dx mm</th><th>dy mm</th><th>dz mm</th><th>tris</th><th>closed</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderFiles(outputs) {
+  const paths = outputs || {
+    solid_stl: LATEST_META?.solid_stl || 'opt_pymoo/runs/_ui_ellipsoid_parametric.stl',
+    viz_stl: LATEST_META?.viz_stl || 'opt_pymoo/runs/_ui_ellipsoid_parametric_viz.stl',
+    meta: LATEST_META?.meta_path || 'opt_pymoo/runs/_ui_ellipsoid_parametric_meta.json',
+    params: 'opt_pymoo/runs/_ui_ellipsoid_params.json'
+  };
+  document.getElementById('file_list').innerHTML = Object.entries(paths)
+    .map(([k, v]) => `<div><b>${esc(k)}</b> ${esc(v)}</div>`).join('');
+}
+
+function fmtNum(v) {
+  if (v === null || v === undefined || Number.isNaN(Number(v))) return '';
+  return Number(v).toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
+}
+
+function fmtVec(v) {
+  if (!Array.isArray(v)) return '';
+  return '[' + v.map(fmtNum).join(', ') + ']';
+}
+
+function moduleInfo(idx) {
+  return MODULES.find(m => String(m.index) === String(idx));
+}
+
+function ellipsoidRings(params, thetaSeg, radialSeg) {
+  const c = Number(params.axis_z_mm);
+  const depth = Number(params.cap_depth_mm);
+  const centerZ = c - depth;
+  const rings = [[{x: 0, y: 0, z: centerZ - c}]];
+  for (let r = 1; r <= radialSeg; r++) {
+    const ring = [];
+    for (let t = 0; t < thetaSeg; t++) {
+      const th = 2 * Math.PI * t / thetaSeg;
+      const rimP = rimProfileP(params, th, centerZ, c);
+      const p = -1 + (rimP + 1) * (r / radialSeg);
+      const rf = Math.sqrt(Math.max(0, 1 - p * p));
+      const z = centerZ + c * p;
+      ring.push({
+        x: params.axis_x_mm * rf * Math.cos(th),
+        y: params.axis_y_mm * rf * Math.sin(th),
+        z
+      });
+    }
+    rings.push(ring);
+  }
+  return rings;
+}
+
+function rimProfileZ(params, theta) {
+  const waveCount = Math.max(0, Math.round(Number(params.rim_wave_count || 0)));
+  const phase = Number(params.rim_wave_phase_deg || 0) * Math.PI / 180;
+  const wave = waveCount > 0
+    ? Number(params.rim_wave_amp_mm || 0) * Math.cos(waveCount * (theta - phase))
+    : 0;
+  return Number(params.cut_slope_x_mm || 0) * Math.cos(theta) +
+    Number(params.cut_slope_y_mm || 0) * Math.sin(theta) +
+    wave;
+}
+
+function rimProfileP(params, theta, centerZ, axisZ) {
+  const eps = Math.max(1e-6, axisZ * 1e-6);
+  const z = clamp(rimProfileZ(params, theta), centerZ - axisZ + eps, centerZ + axisZ - eps);
+  return (z - centerZ) / axisZ;
+}
+
+function transformPoint(p, params, anchor) {
+  const rx = params.tilt_x_deg * Math.PI / 180;
+  const ry = params.tilt_y_deg * Math.PI / 180;
+  const rz = params.rotation_z_deg * Math.PI / 180;
+  let x = p.x, y = p.y, z = p.z;
+  let cy = Math.cos(rx), sy = Math.sin(rx);
+  [y, z] = [y * cy - z * sy, y * sy + z * cy];
+  cy = Math.cos(ry); sy = Math.sin(ry);
+  [x, z] = [x * cy + z * sy, -x * sy + z * cy];
+  cy = Math.cos(rz); sy = Math.sin(rz);
+  [x, y] = [x * cy - y * sy, x * sy + y * cy];
+  return {
+    x: x + anchor[0] + params.tx_mm,
+    y: y + anchor[1] + params.ty_mm,
+    z: z + anchor[2] + params.tz_mm
+  };
+}
+
+function resizeCanvas(canvas) {
+  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  const rect = canvas.getBoundingClientRect();
+  const w = Math.max(1, Math.floor(rect.width * dpr));
+  const h = Math.max(1, Math.floor(rect.height * dpr));
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  return {w, h, dpr};
+}
+
+function vecSub(a, b) {
+  return {x: a.x - b.x, y: a.y - b.y, z: a.z - b.z};
+}
+
+function vecCross(a, b) {
+  return {
+    x: a.y * b.z - a.z * b.y,
+    y: a.z * b.x - a.x * b.z,
+    z: a.x * b.y - a.y * b.x
+  };
+}
+
+function vecNormalize(v) {
+  const n = Math.hypot(v.x, v.y, v.z) || 1;
+  return {x: v.x / n, y: v.y / n, z: v.z / n};
+}
+
+function buildPreviewGeometry() {
+  const theta = Math.min(96, Math.max(16, Number(STATE.theta_segments || 64)));
+  const radial = Math.min(28, Math.max(5, Number(STATE.radial_segments || 16)));
+  const meshes = [];
+  const allPoints = [];
+
+  for (const idx of previewScopeIndices()) {
+    const params = STATE.modules[idx];
+    const info = moduleInfo(idx);
+    if (!params || !info) continue;
+    const rings = ellipsoidRings(params, theta, radial).map(ring =>
+      ring.map(p => transformPoint(p, params, info.anchor_mm))
+    );
+    const points = rings.flat();
+    const faces = [];
+    const rim = rings[rings.length - 1];
+
+    for (let t = 0; t < theta; t++) {
+      faces.push([rings[0][0], rings[1][t], rings[1][(t + 1) % theta]]);
+    }
+    for (let r = 1; r < rings.length - 1; r++) {
+      const lower = rings[r];
+      const upper = rings[r + 1];
+      for (let t = 0; t < theta; t++) {
+        const a = lower[t];
+        const b = lower[(t + 1) % theta];
+        const c = upper[(t + 1) % theta];
+        const d = upper[t];
+        faces.push([a, b, c]);
+        faces.push([a, c, d]);
+      }
+    }
+    meshes.push({idx, points, faces, rim, rings});
+    allPoints.push(...points);
+  }
+  return {meshes, allPoints};
+}
+
+function boundsOf(points) {
+  const b = {
+    minX: Math.min(...points.map(p => p.x)),
+    maxX: Math.max(...points.map(p => p.x)),
+    minY: Math.min(...points.map(p => p.y)),
+    maxY: Math.max(...points.map(p => p.y)),
+    minZ: Math.min(...points.map(p => p.z)),
+    maxZ: Math.max(...points.map(p => p.z))
+  };
+  b.cx = (b.minX + b.maxX) * 0.5;
+  b.cy = (b.minY + b.maxY) * 0.5;
+  b.cz = (b.minZ + b.maxZ) * 0.5;
+  b.span = Math.max(b.maxX - b.minX, b.maxY - b.minY, b.maxZ - b.minZ, 1);
+  return b;
+}
+
+function frameFromCenterSpan(cx, cy, cz, span) {
+  const half = span * 0.5;
+  return {
+    minX: cx - half,
+    maxX: cx + half,
+    minY: cy - half,
+    maxY: cy + half,
+    minZ: cz - half,
+    maxZ: cz + half,
+    cx,
+    cy,
+    cz,
+    span
+  };
+}
+
+function paddedFrame(raw) {
+  const span = Math.max(raw.span * FRAME_MARGIN, 1);
+  return frameFromCenterSpan(raw.cx, raw.cy, raw.cz, span);
+}
+
+function rawFitsFrame(raw, frame) {
+  const half = frame.span * FRAME_KEEP * 0.5;
+  return raw.minX >= frame.cx - half && raw.maxX <= frame.cx + half &&
+    raw.minY >= frame.cy - half && raw.maxY <= frame.cy + half &&
+    raw.minZ >= frame.cz - half && raw.maxZ <= frame.cz + half;
+}
+
+function clamp(v, lo, hi) {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+function stablePreviewFrame(raw) {
+  if (!VIEW.frame) {
+    VIEW.frame = paddedFrame(raw);
+    return VIEW.frame;
+  }
+  if (rawFitsFrame(raw, VIEW.frame)) {
+    return VIEW.frame;
+  }
+  const span = Math.max(VIEW.frame.span, raw.span * FRAME_MARGIN);
+  const half = span * FRAME_KEEP * 0.5;
+  const cx = clamp(VIEW.frame.cx, raw.maxX - half, raw.minX + half);
+  const cy = clamp(VIEW.frame.cy, raw.maxY - half, raw.minY + half);
+  const cz = clamp(VIEW.frame.cz, raw.maxZ - half, raw.minZ + half);
+  VIEW.frame = frameFromCenterSpan(cx, cy, cz, span);
+  return VIEW.frame;
+}
+
+function cameraPoint(p, b) {
+  let x = p.x - b.cx;
+  let y = p.y - b.cy;
+  let z = p.z - b.cz;
+  return cameraVector({x, y, z});
+}
+
+function cameraVector(v) {
+  let x = v.x, y = v.y, z = v.z;
+  const cy = Math.cos(VIEW.yaw), sy = Math.sin(VIEW.yaw);
+  [x, y] = [x * cy - y * sy, x * sy + y * cy];
+  const cp = Math.cos(VIEW.pitch), sp = Math.sin(VIEW.pitch);
+  [y, z] = [y * cp - z * sp, y * sp + z * cp];
+  return {x, y, z};
+}
+
+function drawGrid(ctx, b, map) {
+  const floorZ = b.minZ;
+  const step = Math.max(500, Math.round(b.span / 7 / 500) * 500);
+  const x0 = Math.floor((b.minX - step) / step) * step;
+  const x1 = Math.ceil((b.maxX + step) / step) * step;
+  const y0 = Math.floor((b.minY - step) / step) * step;
+  const y1 = Math.ceil((b.maxY + step) / step) * step;
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(120, 132, 148, 0.22)';
+  for (let x = x0; x <= x1; x += step) {
+    const a = map({x, y: y0, z: floorZ});
+    const c = map({x, y: y1, z: floorZ});
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(c.x, c.y); ctx.stroke();
+  }
+  for (let y = y0; y <= y1; y += step) {
+    const a = map({x: x0, y, z: floorZ});
+    const c = map({x: x1, y, z: floorZ});
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(c.x, c.y); ctx.stroke();
+  }
+}
+
+function drawArrow(ctx, x1, y1, x2, y2, color) {
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  const head = 6;
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - head * Math.cos(angle - 0.55), y2 - head * Math.sin(angle - 0.55));
+  ctx.lineTo(x2 - head * Math.cos(angle + 0.55), y2 - head * Math.sin(angle + 0.55));
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawViewportAxes(ctx, w, h) {
+  const size = Math.max(34, Math.min(54, Math.min(w, h) * 0.075));
+  const ox = Math.max(44, size + 16);
+  const oy = h - Math.max(42, size + 12);
+  const axes = [
+    {label: 'X', color: '#cf222e', v: cameraVector({x: 1, y: 0, z: 0})},
+    {label: 'Y', color: '#1a7f37', v: cameraVector({x: 0, y: 1, z: 0})},
+    {label: 'Z', color: '#0969da', v: cameraVector({x: 0, y: 0, z: 1})}
+  ].map(axis => ({
+    ...axis,
+    x: ox + axis.v.x * size,
+    y: oy - axis.v.z * size,
+    depth: axis.v.y
+  })).sort((a, b) => a.depth - b.depth);
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.font = '11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+  ctx.fillStyle = 'rgba(248, 251, 255, 0.72)';
+  ctx.strokeStyle = 'rgba(120, 132, 148, 0.25)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(ox, oy, size + 14, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  for (const axis of axes) {
+    const alpha = axis.depth < 0 ? 0.55 : 1.0;
+    ctx.globalAlpha = alpha;
+    ctx.lineWidth = axis.depth < 0 ? 1.7 : 2.3;
+    drawArrow(ctx, ox, oy, axis.x, axis.y, axis.color);
+    ctx.fillStyle = axis.color;
+    ctx.fillText(axis.label, axis.x + 5, axis.y + 4);
+  }
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#ffffff';
+  ctx.strokeStyle = 'rgba(31, 35, 40, 0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(ox, oy, 3.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawPreview() {
+  if (!STATE || !MODULES.length) return;
+  const canvas = document.getElementById('preview_canvas');
+  const ctx = canvas.getContext('2d');
+  const {w, h} = resizeCanvas(canvas);
+  ctx.clearRect(0, 0, w, h);
+
+  const {meshes, allPoints} = buildPreviewGeometry();
+  if (!allPoints.length) return;
+  const rawBounds = boundsOf(allPoints);
+  const b = stablePreviewFrame(rawBounds);
+  const scale = Math.min(w, h) * 0.70 / b.span * VIEW.zoom;
+  const map = p => {
+    const q = cameraPoint(p, b);
+    const depthFade = 1 + q.y / (b.span * 3.6);
+    return {
+      x: w * 0.5 + q.x * scale / depthFade,
+      y: h * 0.52 - q.z * scale / depthFade,
+      depth: q.y,
+      cam: q
+    };
+  };
+
+  ctx.fillStyle = '#f8fbff';
+  ctx.fillRect(0, 0, w, h);
+  drawGrid(ctx, b, map);
+
+  const faces = [];
+  const clayColor = '#8b8172';
+  const activeColor = '#6f91bc';
+  for (const mesh of meshes) {
+    const activeMesh = String(mesh.idx) === String(ACTIVE_MODULE);
+    const color = activeMesh ? activeColor : clayColor;
+    for (const face of mesh.faces) {
+      const pts = face.map(map);
+      const a = pts[0].cam, c = pts[1].cam, d = pts[2].cam;
+      const normal = vecNormalize(vecCross(vecSub(c, a), vecSub(d, a)));
+      const light = vecNormalize({x: -0.35, y: -0.55, z: 0.76});
+      const shade = Math.max(0.20, Math.min(1.0, 0.42 + 0.58 * (normal.x * light.x + normal.y * light.y + normal.z * light.z)));
+      faces.push({
+        pts,
+        depth: (pts[0].depth + pts[1].depth + pts[2].depth) / 3,
+        color,
+        shade
+      });
+    }
+  }
+  faces.sort((a, b) => a.depth - b.depth);
+
+  for (const f of faces) {
+    ctx.beginPath();
+    ctx.moveTo(f.pts[0].x, f.pts[0].y);
+    ctx.lineTo(f.pts[1].x, f.pts[1].y);
+    ctx.lineTo(f.pts[2].x, f.pts[2].y);
+    ctx.closePath();
+    ctx.fillStyle = shadeColor(f.color, f.shade);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(31, 35, 40, 0.10)';
+    ctx.lineWidth = 0.55;
+    ctx.stroke();
+  }
+
+  for (const mesh of meshes) {
+    const activeMesh = String(mesh.idx) === String(ACTIVE_MODULE);
+    ctx.strokeStyle = activeMesh ? 'rgba(9, 105, 218, 0.70)' : 'rgba(72, 65, 56, 0.38)';
+    ctx.lineWidth = activeMesh ? 2.1 : 1.2;
+    const rim = mesh.rim.map(map);
+    ctx.beginPath();
+    for (let i = 0; i < rim.length; i++) {
+      if (i === 0) ctx.moveTo(rim[i].x, rim[i].y);
+      else ctx.lineTo(rim[i].x, rim[i].y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.strokeStyle = activeMesh ? 'rgba(9, 105, 218, 0.38)' : 'rgba(72, 65, 56, 0.16)';
+    ctx.lineWidth = activeMesh ? 1.0 : 0.75;
+    for (const ring of mesh.rings.slice(2, -1, 2)) {
+      const rr = ring.map(map);
+      ctx.beginPath();
+      for (let i = 0; i < rr.length; i++) {
+        if (i === 0) ctx.moveTo(rr[i].x, rr[i].y);
+        else ctx.lineTo(rr[i].x, rr[i].y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+  }
+  drawViewportAxes(ctx, w, h);
+}
+
+function shadeColor(hex, shade) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.round(((n >> 16) & 255) * shade + 255 * (1 - shade) * 0.18);
+  const g = Math.round(((n >> 8) & 255) * shade + 255 * (1 - shade) * 0.18);
+  const b = Math.round((n & 255) * shade + 255 * (1 - shade) * 0.18);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    drawPreview();
+  });
+});
+
+document.addEventListener('input', onControlInput);
+document.addEventListener('click', e => {
+  const moduleTab = e.target.closest('.module-tab');
+  if (moduleTab) {
+    ACTIVE_MODULE = String(moduleTab.dataset.module);
+    renderControls();
+    drawPreview();
+    setStatus('Module ' + ACTIVE_MODULE + ' 편집 중 | preview=all modules');
+    return;
+  }
+  const paramTab = e.target.closest('.param-tab');
+  if (paramTab) {
+    ACTIVE_PARAM_GROUP = String(paramTab.dataset.paramGroup);
+    renderControls();
+    setStatus('Module ' + ACTIVE_MODULE + ' 편집 중 | group=' + activeGroupConfig().label);
+  }
+});
+document.getElementById('btn_defaults').addEventListener('click', loadDefaults);
+document.getElementById('btn_save').addEventListener('click', saveParams);
+document.getElementById('btn_preview').addEventListener('click', preview);
+document.getElementById('btn_bake').addEventListener('click', bake);
+
+const previewCanvas = document.getElementById('preview_canvas');
+previewCanvas.addEventListener('pointerdown', e => {
+  VIEW.dragging = true;
+  VIEW.lastX = e.clientX;
+  VIEW.lastY = e.clientY;
+  previewCanvas.setPointerCapture(e.pointerId);
+});
+previewCanvas.addEventListener('pointermove', e => {
+  if (!VIEW.dragging) return;
+  const dx = e.clientX - VIEW.lastX;
+  const dy = e.clientY - VIEW.lastY;
+  VIEW.lastX = e.clientX;
+  VIEW.lastY = e.clientY;
+  VIEW.yaw += dx * 0.008;
+  VIEW.pitch = Math.max(-1.25, Math.min(1.25, VIEW.pitch + dy * 0.007));
+  drawPreview();
+});
+previewCanvas.addEventListener('pointerup', e => {
+  VIEW.dragging = false;
+  try { previewCanvas.releasePointerCapture(e.pointerId); } catch (_) {}
+});
+previewCanvas.addEventListener('pointercancel', () => {
+  VIEW.dragging = false;
+});
+previewCanvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  VIEW.zoom = Math.max(0.35, Math.min(3.0, VIEW.zoom * Math.exp(-e.deltaY * 0.0011)));
+  drawPreview();
+}, {passive: false});
+window.addEventListener('resize', drawPreview);
+
+loadInitial();
+</script>
+</body>
+</html>

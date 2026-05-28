@@ -1,0 +1,3 @@
+[mcp_servers.rhino]
+command = 'C:\Users\user\.local\bin\uvx.exe'
+args = ["rhinomcp"]
