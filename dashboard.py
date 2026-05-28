@@ -1,21 +1,21 @@
 """LFTH_CFD dashboard server (Flask + sliders).
 
 Run:
-    python scripts/dashboard_server.py
+    python dashboard.py    # from repo root
     -> opens browser at http://localhost:8080
 
 Tabs:
-    Settings   edit config/case.json with sliders + Save / Save & Run buttons
-    History    sortable table of runs/_settings_log.jsonl
+    Settings   edit env_fx3d/config/case.json with sliders + Save / Save & Run buttons
+    History    sortable table of env_fx3d/_settings_log.jsonl
     Charts     scatter plots (dp vs score, etc)
     Files      project file structure + roles
 
 API:
-    GET  /api/config              -> config/case.json
-    POST /api/config              -> write config/case.json (validated)
+    GET  /api/config              -> env_fx3d/config/case.json
+    POST /api/config              -> write env_fx3d/config/case.json (validated)
     GET  /api/runs                -> list of settings-log entries
-    POST /api/run                 -> trigger fx3d_run.py (background subprocess)
-    POST /api/thicken             -> trigger thicken_collider.py with given thickness
+    POST /api/run                 -> trigger env_fx3d/scripts/fx3d_run.py (background subprocess)
+    POST /api/thicken             -> trigger env_fx3d/scripts/thicken_collider.py with given thickness
     GET  /thumb/<idx>             -> last PNG frame of run #idx
     GET  /api/structure           -> static file-structure metadata
 """
@@ -32,14 +32,13 @@ from pathlib import Path
 
 from flask import Flask, jsonify, request, send_file, Response, abort
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-MODULE_ROOT = SCRIPT_DIR.parent
-REPO_ROOT = MODULE_ROOT.parent
+REPO_ROOT = Path(__file__).resolve().parent
+ENV_FX3D = REPO_ROOT / "env_fx3d"
 
-CONFIG_PATH = MODULE_ROOT / "config" / "case.json"
-BUILD_CONFIG_PATH = MODULE_ROOT / "config" / "build.json"
-SETTINGS_LOG = MODULE_ROOT / "_settings_log.jsonl"
-SCRIPTS = SCRIPT_DIR
+CONFIG_PATH = ENV_FX3D / "config" / "case.json"
+BUILD_CONFIG_PATH = ENV_FX3D / "config" / "build.json"
+SETTINGS_LOG = ENV_FX3D / "_settings_log.jsonl"
+SCRIPTS = ENV_FX3D / "scripts"
 HTML_PATH = REPO_ROOT / "dashboard.html"
 
 PORT = 8080
@@ -200,27 +199,32 @@ BUILD_FIELD_GROUPS = [
 
 
 FILE_STRUCTURE = [
-    {"path": "config/case.json", "role": "캐노니컬 runtime 파라미터. Settings 탭에서 편집. fx3d_run.py가 매 실행마다 iter_dir/case.txt로 복사 (재빌드 불필요)."},
-    {"path": "config/build.json", "role": "캐노니컬 compile-time 파라미터 (precision/velocity_set/SUBGRID/graphics 상수). Build 탭에서 편집 + Rebuild 버튼."},
-    {"path": "runs/_real_targets.json", "role": "Rhino에서 추출한 positive/negative bbox + 230 nozzle 좌표. extract_targets.py로 생성."},
-    {"path": "runs/_real_collider.stl", "role": "Rhino env::collider 원본 STL (open mesh)."},
-    {"path": "runs/_real_collider_thickened.stl", "role": "thicken_collider.py가 만든 closed manifold. fx3d_run.py가 우선 사용."},
-    {"path": "runs/_settings_log.jsonl", "role": "append-only DB. 매 실험 한 줄. History 탭이 이 파일을 읽음."},
-    {"path": "runs/iter_*/", "role": "실험마다 한 폴더 (case.txt + nozzles.txt + sculpture.stl + result.json + fx3d_out/{frames,vtk}/)."},
-    {"path": "scripts/dashboard.py", "role": "이 서버 (Flask). 포트 8080."},
-    {"path": "scripts/fx3d_run.py", "role": "통합 runner. CLI + 라이브러리 함수 run_experiment(). --interactive 플래그 = GUI 변종 사용."},
-    {"path": "scripts/build_fluidx3d.py", "role": "build.json 읽어 defines.hpp 패치 → msbuild 2회 → PNG + Interactive 두 binary 생성."},
-    {"path": "scripts/fx3d_postprocess.py", "role": "VTK → result.json (in_pos, in_neg, score 계산). case.json의 fluid_threshold 사용."},
-    {"path": "scripts/extract_targets.py", "role": "Rhino MCP → runs/_real_targets.json + _real_collider.stl."},
-    {"path": "scripts/thicken_collider.py", "role": "open mesh → closed manifold. 인자 = 두께(m)."},
-    {"path": "scripts/fx3d_visualize_in_rhino.py", "role": "iter_real STL을 Rhino 레이어에 푸시."},
-    {"path": "scripts/rhino_mcp.py", "role": "Rhino MCP socket 호출 헬퍼."},
-    {"path": "scripts/pymoo_run.py", "role": "pymoo NSGA-II 멀티오브젝티브 최적화 루프 (splash_frac, -dist_from_nozzle). 모듈별 sequential staging + 인터랙티브 Pareto 픽."},
-    {"path": "scripts/pymoo_gen_module.py", "role": "parametric STL 생성 (추후 신규 design용)."},
-    {"path": "external/FluidX3D/src/setup.cpp", "role": "FluidX3D 시뮬 로직. case.txt를 cwd에서 읽음. 수정시 Build 탭 → Rebuild."},
-    {"path": "external/FluidX3D/src/defines.hpp", "role": "compile-time 매크로 baseline. build_fluidx3d.py가 build.json대로 임시 패치 후 복구."},
-    {"path": "external/FluidX3D/bin/FluidX3D.exe", "role": "PNG 모드 binary (백그라운드, frames + VTK 저장)."},
-    {"path": "external/FluidX3D/bin/FluidX3D_interactive.exe", "role": "Interactive 모드 binary (실시간 GUI 윈도우, P/WASD 조작, DB 안 남김)."},
+    {"path": "dashboard.py", "role": "이 서버 (Flask). 포트 8080. repo root."},
+    {"path": "dashboard.html", "role": "대시보드 UI markup. dashboard.py가 GET /로 serve."},
+    {"path": "CLAUDE.md", "role": "프로젝트 가이드 (디렉토리 맵 + 진입점 + 학습 인덱스)."},
+    {"path": "env_fx3d/config/case.json", "role": "캐노니컬 runtime 파라미터. Settings 탭에서 편집. fx3d_run.py가 매 실행마다 iter_dir/case.txt로 복사 (재빌드 불필요)."},
+    {"path": "env_fx3d/config/build.json", "role": "캐노니컬 compile-time 파라미터 (precision/velocity_set/SUBGRID/graphics 상수). Build 탭에서 편집 + Rebuild 버튼."},
+    {"path": "env_fx3d/_settings_log.jsonl", "role": "append-only DB. 매 실험 한 줄. History 탭이 이 파일을 읽음. issue/notes 필드 post-hoc 채움."},
+    {"path": "env_fx3d/runs/_real_targets.json", "role": "Rhino에서 추출한 positive/negative bbox + 230 nozzle 좌표. extract_targets.py로 생성."},
+    {"path": "env_fx3d/runs/_real_collider.stl", "role": "Rhino env::collider 원본 STL (open mesh)."},
+    {"path": "env_fx3d/runs/_real_collider_thickened.stl", "role": "thicken_collider.py가 만든 closed manifold. fx3d_run.py가 우선 사용."},
+    {"path": "env_fx3d/runs/iter_*/", "role": "dashboard 실험마다 한 폴더 (case.txt + nozzles.txt + sculpture.stl + result.json + fx3d_out/{frames,vtk}/)."},
+    {"path": "env_fx3d/scripts/fx3d_run.py", "role": "통합 runner. CLI + 라이브러리 함수 run_experiment(runs_root=...). --interactive 플래그 = GUI 변종 사용."},
+    {"path": "env_fx3d/scripts/build_fluidx3d.py", "role": "build.json 읽어 defines.hpp 패치 → msbuild 2회 → PNG + Interactive 두 binary 생성."},
+    {"path": "env_fx3d/scripts/fx3d_postprocess.py", "role": "VTK → result.json (in_pos, in_neg, score 계산). case.json의 fluid_threshold 사용."},
+    {"path": "env_fx3d/scripts/thicken_collider.py", "role": "open mesh → closed manifold. 인자 = 두께(m)."},
+    {"path": "env_fx3d/scripts/fx3d_visualize_in_rhino.py", "role": "iter_real STL을 Rhino 레이어에 푸시."},
+    {"path": "env_fx3d/scripts/rhino_mcp.py", "role": "Rhino MCP socket 호출 헬퍼."},
+    {"path": "env_fx3d/scripts/rhino_export/extract_targets.py", "role": "Rhino MCP → runs/_real_targets.json + _real_collider.stl."},
+    {"path": "env_fx3d/external/FluidX3D/src/setup.cpp", "role": "FluidX3D 시뮬 로직. case.txt를 cwd에서 읽음. 수정시 Build 탭 → Rebuild."},
+    {"path": "env_fx3d/external/FluidX3D/src/defines.hpp", "role": "compile-time 매크로 baseline. build_fluidx3d.py가 build.json대로 임시 패치 후 복구."},
+    {"path": "env_fx3d/external/FluidX3D/bin/FluidX3D.exe", "role": "PNG 모드 binary (백그라운드, frames + VTK 저장)."},
+    {"path": "env_fx3d/external/FluidX3D/bin/FluidX3D_interactive.exe", "role": "Interactive 모드 binary (실시간 GUI 윈도우, P/WASD 조작, DB 안 남김)."},
+    {"path": "opt_pymoo/scripts/pymoo_run.py", "role": "pymoo NSGA-II 멀티오브젝티브 최적화 루프 (splash_frac, -dist_from_nozzle). 모듈별 sequential staging + 인터랙티브 Pareto 픽."},
+    {"path": "opt_pymoo/scripts/pymoo_gen_module.py", "role": "parametric STL 생성 (gene → geometry, trimesh-based)."},
+    {"path": "opt_pymoo/experiments/pymoo_state.json", "role": "GA 진행 snapshot (resumable). stage·gen·population."},
+    {"path": "opt_pymoo/runs/iter_*/", "role": "GA 실험 산출물 (env_fx3d/runs와 분리)."},
+    {"path": "opt_pymoo/_optimization_log.jsonl", "role": "append-only 개체별 DB. issue/notes 필드."},
 ]
 
 
@@ -276,7 +280,7 @@ def api_build_post():
 def api_build():
     cmd = [sys.executable, str(SCRIPTS / "build_fluidx3d.py")]
     def _runner():
-        log_path = MODULE_ROOT / "runs" / "_dashboard_build.log"
+        log_path = ENV_FX3D / "runs" / "_dashboard_build.log"
         log_path.parent.mkdir(parents=True, exist_ok=True)
         with log_path.open("w", encoding="utf-8") as f:
             subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, cwd=str(REPO_ROOT))
@@ -286,7 +290,7 @@ def api_build():
 
 @app.route("/api/build_status")
 def api_build_status():
-    log_path = MODULE_ROOT / "runs" / "_dashboard_build.log"
+    log_path = ENV_FX3D / "runs" / "_dashboard_build.log"
     out = log_path.read_text(encoding="utf-8")[-3000:] if log_path.exists() else ""
     return jsonify({"log_tail": out})
 
@@ -323,7 +327,7 @@ def api_run():
         cmd.append("--interactive")
 
     def _runner():
-        log_path = MODULE_ROOT / "runs" / f"_dashboard_run_{test_id}.log"
+        log_path = ENV_FX3D / "runs" / f"_dashboard_run_{test_id}.log"
         log_path.parent.mkdir(parents=True, exist_ok=True)
         with log_path.open("w", encoding="utf-8") as f:
             proc = subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT,
@@ -345,7 +349,7 @@ def api_thicken():
     cmd = [sys.executable, str(SCRIPTS / "thicken_collider.py"), str(thickness)]
 
     def _runner():
-        log_path = MODULE_ROOT / "runs" / "_dashboard_thicken.log"
+        log_path = ENV_FX3D / "runs" / "_dashboard_thicken.log"
         log_path.parent.mkdir(parents=True, exist_ok=True)
         with log_path.open("w", encoding="utf-8") as f:
             subprocess.run(cmd, stdout=f, stderr=subprocess.STDOUT, cwd=str(REPO_ROOT))
@@ -357,7 +361,7 @@ def api_thicken():
 
 @app.route("/api/run_status/<test_id>")
 def api_run_status(test_id):
-    log_path = MODULE_ROOT / "runs" / f"_dashboard_run_{test_id}.log"
+    log_path = ENV_FX3D / "runs" / f"_dashboard_run_{test_id}.log"
     running = test_id in _run_locks
     out = ""
     if log_path.exists():

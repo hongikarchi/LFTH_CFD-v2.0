@@ -14,7 +14,7 @@
 
 ```powershell
 # 대시보드 (Settings · History · Charts · Files 탭, 포트 8080)
-python env_fx3d/scripts/dashboard.py
+python dashboard.py
 
 # 단일 sim
 python env_fx3d/scripts/fx3d_run.py --test-id myrun

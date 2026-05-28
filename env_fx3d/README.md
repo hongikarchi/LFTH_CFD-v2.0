@@ -36,8 +36,8 @@ python env_fx3d/scripts/fx3d_run.py --test-id myrun
 # → env_fx3d/runs/iter_myrun/ 생성
 # → env_fx3d/_settings_log.jsonl 한 줄 append
 
-# C) 대시보드
-python env_fx3d/scripts/dashboard.py
+# C) 대시보드 (repo root에서)
+python dashboard.py
 # → http://localhost:8080
 # → Settings 탭에서 슬라이더 + Save+Run
 ```
@@ -84,7 +84,7 @@ FluidX3D는 ASCII STL 못 읽음. trimesh `export(file_type='stl')` 는 BINARY �
 | `scripts/fx3d_run.py` | 통합 runner. `run_experiment(test_id, ..., runs_root=None)` 라이브러리 API |
 | `scripts/fx3d_postprocess.py` | VTK → result.json (in_pos/in_neg/splash/total) |
 | `scripts/fx3d_visualize_in_rhino.py` | iter_*/sculpture.stl 을 Rhino 레이어에 push |
-| `scripts/dashboard.py` | Flask 서버, `dashboard.html` (repo root) serve |
+| (`dashboard.py` 는 repo root에 있음 — env_fx3d 외부에서 dashboard.html과 함께 serve) | |
 | `scripts/build_fluidx3d.py` | defines.hpp 패치 + msbuild |
 | `scripts/thicken_collider.py` | open mesh → closed manifold (CLI: `... 0.20` = 두께 m) |
 | `scripts/rhino_mcp.py` | Rhino MCP socket helper |

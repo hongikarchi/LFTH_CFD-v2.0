@@ -8,7 +8,8 @@
 LFTH_CFD v2.0/
 ├── CLAUDE.md                            이 문서 (프로젝트 가이드)
 ├── README.md                            한 줄 요약 + 모듈 포인터
-├── dashboard.html                       대시보드 UI (Flask가 serve)
+├── dashboard.py                         Flask 서버 진입점 (포트 8080)
+├── dashboard.html                       대시보드 UI (dashboard.py가 serve)
 │
 ├── env_fx3d/                            FluidX3D 시뮬레이션 모듈
 │   ├── README.md                        FluidX3D 셋업 + 학습된 함정
@@ -24,7 +25,6 @@ LFTH_CFD v2.0/
 │       ├── fx3d_run.py                  통합 runner (CLI + library)
 │       ├── fx3d_postprocess.py          VTK → result.json
 │       ├── fx3d_visualize_in_rhino.py   결과 Rhino push
-│       ├── dashboard.py                 Flask 서버 (포트 8080)
 │       ├── build_fluidx3d.py            msbuild wrapper
 │       ├── thicken_collider.py          open mesh → closed manifold
 │       ├── rhino_mcp.py                 Rhino MCP socket helper
@@ -48,7 +48,7 @@ LFTH_CFD v2.0/
 
 ```powershell
 # 대시보드 (실험·세팅 탭, 포트 8080, 브라우저 자동 오픈)
-python env_fx3d/scripts/dashboard.py
+python dashboard.py
 
 # 단일 시뮬 (CLI)
 python env_fx3d/scripts/fx3d_run.py --test-id myrun
