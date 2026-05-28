@@ -38,6 +38,7 @@ Thumbs.db
 __pycache__/
 *.pyc
 *.pyo
+.venv*/
 
 # Large project assets (kept local)
 *.pdf

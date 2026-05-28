@@ -15,14 +15,21 @@
     "Fy_Pa": 275000000.0
   },
   "loads": {
-    "module_dead_kg": 500.0,
-    "module_water_kg": 300.0,
+    "module_dead_kg": 1050.0,
+    "module_water_kg": 750.0,
     "water_dynamic_factor": 2.0,
     "gravity_mps2": 9.81
   },
+  "analysis": {
+    "engine": "pynite",
+    "fallback_engine": "frame",
+    "member_model": "3d_beam_column",
+    "support_model": "fixed",
+    "load_combo": "DL"
+  },
   "constraints": {
     "max_utilization": 1.0,
-    "max_deflection_mm": 25.0,
+    "max_deflection_mm": 25,
     "deflection_span_ratio": 250.0,
     "max_slenderness": 200.0
   },
@@ -31,7 +38,10 @@
     "min_member_length_mm": 300.0,
     "max_member_length_mm": 35000.0,
     "target_corner_scale": 0.65,
-    "intermediate_levels": [0.33, 0.66],
+    "intermediate_levels": [
+      0.33,
+      0.66
+    ],
     "nearest_supports_per_target": 4,
     "target_to_target_max_mm": 9000.0
   },
@@ -42,4 +52,3 @@
     "seed": 42
   }
 }
-
