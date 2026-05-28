@@ -7,7 +7,6 @@ opt_pymoo/_optimization_log.jsonl
 *.vtk
 *.vtu
 *.csv
-!opt_structure/data/*.csv
 *.out
 data/
 !opt_structure/data/

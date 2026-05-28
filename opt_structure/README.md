@@ -18,6 +18,9 @@ The pipeline is:
 ## Quick start
 
 ```powershell
+# Optional, in a Python 3.12 venv for pymoo + PyNite:
+python -m pip install -r opt_structure/requirements.txt
+
 # 1) Rhino extraction, requires Rhino MCP running
 python opt_structure/scripts/extract_structure.py
 
@@ -41,4 +44,3 @@ python -m unittest opt_structure.tests.smoke_tests
   loads are wired in.
 - The bundled KS/JIS H-section CSV is a seed library. Replace it with a
   certified fabricator/Tekla export before final engineering checks.
-
