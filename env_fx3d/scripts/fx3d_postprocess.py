@@ -23,6 +23,7 @@ falls back to defaults from _collider_modules.json + pond floor at z<0.5m.
 """
 
 from __future__ import annotations
+import csv
 import json
 import re
 import sys
@@ -104,6 +105,8 @@ DEFAULT_TOP_RETENTION_MAX_FINAL_CELLS = 1000
 DEFAULT_MIN_MODULE_TOUCH_CELLS = 25
 DEFAULT_MIN_MODULES_WITH_FLUID = 3
 DEFAULT_SOURCE_TAIL_MIN_LATE_FRAMES = 3
+DEFAULT_SOURCE_PULSE_MIN_LATE_EVENTS = 5
+DEFAULT_SOURCE_PULSE_MIN_DEPTHS = 2
 
 
 def _inflate_to_slab(bbox: list, slab_m: float) -> list:
@@ -192,6 +195,31 @@ def load_nozzles(case: dict) -> list[list[float]]:
         except ValueError:
             continue
     return out
+
+
+def load_source_log(iter_dir: Path) -> list[dict]:
+    path = iter_dir / "source_log.csv"
+    if not path.exists():
+        path = iter_dir / "fx3d_out" / "source_log.csv"
+    if not path.exists():
+        return []
+    rows = []
+    with path.open("r", encoding="utf-8", newline="") as f:
+        for row in csv.DictReader(f):
+            parsed = {}
+            for key, val in row.items():
+                if val is None or val == "":
+                    continue
+                try:
+                    if key in {"step", "top_cells", "throat_cells", "pulse_depth",
+                               "pulse_cells", "pulse_new_cells"}:
+                        parsed[key] = int(float(val))
+                    else:
+                        parsed[key] = float(val)
+                except ValueError:
+                    parsed[key] = val
+            rows.append(parsed)
+    return rows
 
 
 def postprocess(iter_dir: Path, fluid_threshold: float | None = None) -> dict:
@@ -316,11 +344,38 @@ def postprocess(iter_dir: Path, fluid_threshold: float | None = None) -> dict:
         max(0.25, (nozzle_area_cells // 2 + 2) * dp_m),
     ))
     source_anchor_depth_m = max((refill_col_h + 1) * dp_m, 0.25)
-    source_tail_depth_m = max((emit_col_h + 6) * dp_m, source_anchor_depth_m + 0.75)
+    source_tail_depth_m = max((refill_col_h + emit_col_h + 4) * dp_m,
+                              source_anchor_depth_m + 0.75)
     source_tail_min_cells = int(case.get("source_tail_min_cells",
                                         max(3, len(nozzles_m) // 2 if nozzles_m else 3)))
     source_tail_min_late_frames = int(case.get("source_tail_min_late_frames",
                                               DEFAULT_SOURCE_TAIL_MIN_LATE_FRAMES))
+    source_pulse_min_late_events = int(case.get("source_pulse_min_late_events",
+                                                DEFAULT_SOURCE_PULSE_MIN_LATE_EVENTS))
+    source_pulse_min_depths = int(case.get("source_pulse_min_depths",
+                                           DEFAULT_SOURCE_PULSE_MIN_DEPTHS))
+    source_log_rows = load_source_log(iter_dir)
+    sim_time_s = float(case.get("timemax_s", 0.0) or 0.0)
+    source_late_time_s = sim_time_s * 0.5 if sim_time_s > 0.0 else 0.0
+    source_late_rows = [r for r in source_log_rows
+                        if float(r.get("time_s", 0.0) or 0.0) >= source_late_time_s]
+    source_pulse_late_events = sum(1 for r in source_late_rows
+                                   if int(r.get("pulse_cells", 0) or 0) > 0)
+    source_boundary_late_events = sum(
+        1 for r in source_late_rows
+        if int(r.get("top_cells", 0) or 0) > 0 or int(r.get("throat_cells", 0) or 0) > 0
+    )
+    source_pulse_late_cells = sum(int(r.get("pulse_cells", 0) or 0)
+                                  for r in source_late_rows)
+    source_pulse_late_new_cells = sum(int(r.get("pulse_new_cells", 0) or 0)
+                                      for r in source_late_rows)
+    source_pulse_late_added_phi = sum(float(r.get("pulse_added_phi", 0.0) or 0.0)
+                                      for r in source_late_rows)
+    source_pulse_late_depths = sorted({
+        int(r.get("pulse_depth", 0) or 0)
+        for r in source_late_rows
+        if int(r.get("pulse_cells", 0) or 0) > 0
+    })
     top_module_idx = None
     if module_bboxes:
         top_module_idx = max(range(len(module_bboxes)),
@@ -362,8 +417,9 @@ def postprocess(iter_dir: Path, fluid_threshold: float | None = None) -> dict:
                 z_min_first = z_min_t
             z_min_lowest = z_min_t if z_min_lowest is None else min(z_min_lowest, z_min_t)
             if nozzles_m:
-                # Use the full fluid coordinate arrays for source bands; this
-                # is stricter than counting the fixed top source cells alone.
+                # Use the full fluid coordinate arrays for source bands. The
+                # tail starts below the fixed top/throat region, so a stationary
+                # TYPE_F|TYPE_E source alone cannot satisfy continuous inflow.
                 zidx, yidx, xidx = np.where(fl_t)
                 xs_t = origin[0] + (xidx + 0.5) * spacing[0]
                 ys_t = origin[1] + (yidx + 0.5) * spacing[1]
@@ -417,14 +473,28 @@ def postprocess(iter_dir: Path, fluid_threshold: float | None = None) -> dict:
         source_tail_late_frames = sum(
             1 for s in late_stats if int(s.get("source_tail_cells") or 0) >= source_tail_min_cells
         )
-    continuous_source = bool(
+    source_boundary_ok = bool(
+        not nozzles_m
+        or (
+            bool(source_log_rows)
+            and source_boundary_late_events >= source_pulse_min_late_events
+        )
+    )
+    source_pulse_ok = bool(
+        not nozzles_m
+        or source_pulse_late_events == 0
+        or len(source_pulse_late_depths) >= source_pulse_min_depths
+    )
+    source_tail_ok = bool(
         not nozzles_m
         or source_tail_late_frames >= source_tail_min_late_frames
     )
+    continuous_source = bool(not nozzles_m or (source_boundary_ok and source_pulse_ok and source_tail_ok))
 
     if not continuous_source:
         issue = "source_not_continuous"
-        notes = "No moving source-tail fluid was detected near the nozzle in enough late VTK frames."
+        notes = ("Nozzle source did not show both late pulse events and late VTK fluid "
+                 "below the fixed top/throat region.")
     elif top_retention_failure:
         issue = "top_retention_failure"
         notes = ("Fluid remains concentrated in the top module at the final frame; "
@@ -504,6 +574,15 @@ def postprocess(iter_dir: Path, fluid_threshold: float | None = None) -> dict:
             "source_tail_frames": source_tail_frames,
             "source_tail_late_frames": source_tail_late_frames,
             "max_source_tail_cells": max_source_tail_cells,
+            "source_pulse_late_events": source_pulse_late_events,
+            "source_boundary_late_events": source_boundary_late_events,
+            "source_pulse_late_cells": source_pulse_late_cells,
+            "source_pulse_late_new_cells": source_pulse_late_new_cells,
+            "source_pulse_late_added_phi": source_pulse_late_added_phi,
+            "source_pulse_late_depths": source_pulse_late_depths,
+            "source_pulse_ok": source_pulse_ok,
+            "source_boundary_ok": source_boundary_ok,
+            "source_tail_ok": source_tail_ok,
             "continuous_source": continuous_source,
             "min_floor_cells_per_frame": min_floor_cells_per_frame,
             "min_floor_contact_frames": min_floor_contact_frames,
@@ -535,6 +614,21 @@ def postprocess(iter_dir: Path, fluid_threshold: float | None = None) -> dict:
             "source_tail_min_cells": source_tail_min_cells,
             "source_tail_min_late_frames": source_tail_min_late_frames,
             "max_source_tail_cells": max_source_tail_cells,
+            "source_anchor_depth_m": source_anchor_depth_m,
+            "source_tail_depth_m": source_tail_depth_m,
+            "source_pulse_log_rows": len(source_log_rows),
+            "source_pulse_late_time_s": source_late_time_s,
+            "source_pulse_late_events": source_pulse_late_events,
+            "source_boundary_late_events": source_boundary_late_events,
+            "source_pulse_min_late_events": source_pulse_min_late_events,
+            "source_pulse_late_cells": source_pulse_late_cells,
+            "source_pulse_late_new_cells": source_pulse_late_new_cells,
+            "source_pulse_late_added_phi": source_pulse_late_added_phi,
+            "source_pulse_late_depths": source_pulse_late_depths,
+            "source_pulse_min_depths": source_pulse_min_depths,
+            "source_pulse_ok": source_pulse_ok,
+            "source_boundary_ok": source_boundary_ok,
+            "source_tail_ok": source_tail_ok,
             "continuous_source": continuous_source,
             "top_module_idx": top_module_idx,
             "top_module_final_cells": final_top_module_cells,
@@ -587,6 +681,7 @@ def main(argv: list[str]) -> int:
           f"modules_with_fluid={d.get('modules_with_fluid', 0)}")
     print(f"  source_tail_late={d.get('source_tail_late_frames', 0)}  "
           f"max_source_tail={d.get('max_source_tail_cells', 0)}  "
+          f"pulse_late={d.get('source_pulse_late_events', 0)}  "
           f"continuous_source={d.get('continuous_source')}")
     return 0
 
