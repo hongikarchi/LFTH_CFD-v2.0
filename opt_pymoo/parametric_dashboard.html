@@ -608,6 +608,55 @@ function ellipsoidRings(params, thetaSeg, radialSeg) {
   return rings;
 }
 
+function fullEllipsoidSurface(params, thetaSeg, latSeg) {
+  const geom = derivedGeometry(params);
+  const rings = [];
+  const faces = [];
+
+  for (let r = 0; r <= latSeg; r++) {
+    const p = -1 + 2 * r / latSeg;
+    if (r === 0 || r === latSeg) {
+      rings.push([{x: 0, y: 0, z: geom.centerZ + geom.axisZ * p}]);
+      continue;
+    }
+    const rf = Math.sqrt(Math.max(0, 1 - p * p));
+    const ring = [];
+    for (let t = 0; t < thetaSeg; t++) {
+      const th = 2 * Math.PI * t / thetaSeg;
+      ring.push({
+        x: geom.axisX * rf * Math.cos(th),
+        y: geom.axisY * rf * Math.sin(th),
+        z: geom.centerZ + geom.axisZ * p
+      });
+    }
+    rings.push(ring);
+  }
+
+  for (let t = 0; t < thetaSeg; t++) {
+    faces.push([rings[0][0], rings[1][t], rings[1][(t + 1) % thetaSeg]]);
+  }
+  for (let r = 1; r < latSeg - 1; r++) {
+    const lower = rings[r];
+    const upper = rings[r + 1];
+    for (let t = 0; t < thetaSeg; t++) {
+      const a = lower[t];
+      const b = lower[(t + 1) % thetaSeg];
+      const c = upper[(t + 1) % thetaSeg];
+      const d = upper[t];
+      faces.push([a, b, c]);
+      faces.push([a, c, d]);
+    }
+  }
+  for (let t = 0; t < thetaSeg; t++) {
+    faces.push([
+      rings[latSeg - 1][t],
+      rings[latSeg - 1][(t + 1) % thetaSeg],
+      rings[latSeg][0]
+    ]);
+  }
+  return {rings, faces, points: rings.flat()};
+}
+
 function transformPoint(p, params, anchor) {
   const rx = params.tilt_x_deg * Math.PI / 180;
   const ry = params.tilt_y_deg * Math.PI / 180;
@@ -671,6 +720,7 @@ function buildPreviewGeometry() {
     const points = rings.flat();
     const faces = [];
     const rim = rings[rings.length - 1];
+    let ghost = null;
 
     for (let t = 0; t < theta; t++) {
       faces.push([rings[0][0], rings[1][t], rings[1][(t + 1) % theta]]);
@@ -687,7 +737,23 @@ function buildPreviewGeometry() {
         faces.push([a, c, d]);
       }
     }
-    meshes.push({idx, points, faces, rim, rings});
+
+    if (String(idx) === String(ACTIVE_MODULE)) {
+      const rawGhost = fullEllipsoidSurface(params, theta, Math.max(10, radial + 4));
+      const ghostRings = rawGhost.rings.map(ring =>
+        ring.map(p => transformPoint(p, params, info.anchor_mm))
+      );
+      ghost = {
+        rings: ghostRings,
+        faces: rawGhost.faces.map(face =>
+          face.map(p => transformPoint(p, params, info.anchor_mm))
+        ),
+        points: ghostRings.flat()
+      };
+      allPoints.push(...ghost.points);
+    }
+
+    meshes.push({idx, points, faces, rim, rings, ghost});
     allPoints.push(...points);
   }
   return {meshes, allPoints};
@@ -884,10 +950,26 @@ function drawPreview() {
   ctx.fillRect(0, 0, w, h);
   drawGrid(ctx, b, map);
 
+  const ghostFaces = [];
   const faces = [];
   const clayColor = '#8b8172';
   const activeColor = '#6f91bc';
   for (const mesh of meshes) {
+    if (mesh.ghost) {
+      for (const face of mesh.ghost.faces) {
+        const pts = face.map(map);
+        const a = pts[0].cam, c = pts[1].cam, d = pts[2].cam;
+        const normal = vecNormalize(vecCross(vecSub(c, a), vecSub(d, a)));
+        const light = vecNormalize({x: -0.35, y: -0.55, z: 0.76});
+        const shade = Math.max(0.20, Math.min(1.0, 0.42 + 0.58 * (normal.x * light.x + normal.y * light.y + normal.z * light.z)));
+        ghostFaces.push({
+          pts,
+          depth: (pts[0].depth + pts[1].depth + pts[2].depth) / 3,
+          shade
+        });
+      }
+    }
+
     const activeMesh = String(mesh.idx) === String(ACTIVE_MODULE);
     const color = activeMesh ? activeColor : clayColor;
     for (const face of mesh.faces) {
@@ -904,7 +986,21 @@ function drawPreview() {
       });
     }
   }
+  ghostFaces.sort((a, b) => a.depth - b.depth);
   faces.sort((a, b) => a.depth - b.depth);
+
+  for (const f of ghostFaces) {
+    ctx.beginPath();
+    ctx.moveTo(f.pts[0].x, f.pts[0].y);
+    ctx.lineTo(f.pts[1].x, f.pts[1].y);
+    ctx.lineTo(f.pts[2].x, f.pts[2].y);
+    ctx.closePath();
+    ctx.fillStyle = shadeRgba(activeColor, f.shade, 0.13);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(9, 105, 218, 0.09)';
+    ctx.lineWidth = 0.45;
+    ctx.stroke();
+  }
 
   for (const f of faces) {
     ctx.beginPath();
@@ -945,6 +1041,34 @@ function drawPreview() {
       ctx.stroke();
     }
   }
+
+  for (const mesh of meshes) {
+    if (!mesh.ghost) continue;
+    ctx.strokeStyle = 'rgba(9, 105, 218, 0.18)';
+    ctx.lineWidth = 0.8;
+    for (const ring of mesh.ghost.rings.slice(2, -1, 3)) {
+      const rr = ring.map(map);
+      ctx.beginPath();
+      for (let i = 0; i < rr.length; i++) {
+        if (i === 0) ctx.moveTo(rr[i].x, rr[i].y);
+        else ctx.lineTo(rr[i].x, rr[i].y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+    const ghostRing = mesh.ghost.rings[Math.floor(mesh.ghost.rings.length * 0.5)];
+    if (ghostRing && ghostRing.length > 1) {
+      ctx.strokeStyle = 'rgba(9, 105, 218, 0.26)';
+      const rr = ghostRing.map(map);
+      ctx.beginPath();
+      for (let i = 0; i < rr.length; i++) {
+        if (i === 0) ctx.moveTo(rr[i].x, rr[i].y);
+        else ctx.lineTo(rr[i].x, rr[i].y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+  }
   drawViewportAxes(ctx, w, h);
 }
 
@@ -954,6 +1078,14 @@ function shadeColor(hex, shade) {
   const g = Math.round(((n >> 8) & 255) * shade + 255 * (1 - shade) * 0.18);
   const b = Math.round((n & 255) * shade + 255 * (1 - shade) * 0.18);
   return `rgb(${r}, ${g}, ${b})`;
+}
+
+function shadeRgba(hex, shade, alpha) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.round(((n >> 16) & 255) * shade + 255 * (1 - shade) * 0.18);
+  const g = Math.round(((n >> 8) & 255) * shade + 255 * (1 - shade) * 0.18);
+  const b = Math.round((n & 255) * shade + 255 * (1 - shade) * 0.18);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
