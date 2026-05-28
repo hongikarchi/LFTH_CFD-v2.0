@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 import time
 import webbrowser
@@ -40,19 +41,12 @@ META_PATH = RUNS / "_ui_ellipsoid_parametric_meta.json"
 PORT = 8081
 
 PARAM_KEYS = [
-    "axis_x_mm",
-    "axis_y_mm",
-    "axis_z_mm",
-    "cap_depth_mm",
-    "cut_slope_x_mm",
-    "cut_slope_y_mm",
-    "rim_wave_amp_mm",
-    "rim_wave_count",
-    "rim_wave_phase_deg",
+    "b_mm",
+    "h_mm",
+    "ellipsoid_tilt_deg",
+    "cut_drop_deg",
     "wall_thickness_mm",
     "rim_lift_mm",
-    "tilt_x_deg",
-    "tilt_y_deg",
     "rotation_z_deg",
     "tx_mm",
     "ty_mm",
@@ -135,6 +129,75 @@ def _coerce_int(payload: dict, key: str, default: int) -> int:
     return int(float(value))
 
 
+def _migrate_old_module_params(raw_params: dict, default_params: dict) -> dict:
+    """Best-effort migration from earlier param sets to b/h tangent-cut params."""
+    migrated = dict(default_params)
+    migrated.update({k: raw_params[k] for k in PARAM_KEYS if k in raw_params})
+    if (
+        "b_mm" in raw_params
+        and "h_mm" in raw_params
+        and "ellipsoid_tilt_deg" in raw_params
+        and "cut_drop_deg" in raw_params
+    ):
+        return migrated
+
+    try:
+        if "opening_x_mm" in raw_params and "opening_y_mm" in raw_params:
+            opening_x = float(raw_params["opening_x_mm"])
+            opening_y = float(raw_params["opening_y_mm"])
+            migrated["b_mm"] = max(1.0, max(opening_x, opening_y) * 0.5)
+            migrated["h_mm"] = max(1.0, min(opening_x, opening_y) * 0.5)
+        elif {"axis_x_mm", "axis_y_mm", "axis_z_mm", "cap_depth_mm"} <= set(raw_params):
+            axis_x = float(raw_params["axis_x_mm"])
+            axis_y = float(raw_params["axis_y_mm"])
+            axis_z = float(raw_params["axis_z_mm"])
+            cap_depth = float(raw_params["cap_depth_mm"])
+            center_z = axis_z - cap_depth
+            rim_p = (0.0 - center_z) / max(axis_z, 1.0)
+            factor = math.sqrt(max(0.0, 1.0 - rim_p * rim_p)) or 1.0
+            opening_x = 2.0 * axis_x * factor
+            opening_y = 2.0 * axis_y * factor
+            migrated["b_mm"] = max(1.0, max(opening_x, opening_y) * 0.5)
+            migrated["h_mm"] = max(1.0, min(opening_x, opening_y) * 0.5)
+
+        if "ellipsoid_tilt_deg" in raw_params:
+            migrated["ellipsoid_tilt_deg"] = min(
+                35.0, max(0.0, float(raw_params["ellipsoid_tilt_deg"]))
+            )
+        elif "cut_tilt_deg" in raw_params:
+            migrated["ellipsoid_tilt_deg"] = min(35.0, max(0.0, float(raw_params["cut_tilt_deg"])))
+        elif "tilt_y_deg" in raw_params or "tilt_x_deg" in raw_params:
+            tx = float(raw_params.get("tilt_x_deg", 0.0))
+            ty = float(raw_params.get("tilt_y_deg", 0.0))
+            migrated["ellipsoid_tilt_deg"] = min(35.0, math.hypot(tx, ty))
+            if math.hypot(tx, ty) > 1.0e-9:
+                direction = (math.degrees(math.atan2(-tx, ty)) + 360.0) % 360.0
+                migrated["rotation_z_deg"] = (
+                    float(migrated.get("rotation_z_deg", 0.0)) + direction
+                ) % 360.0
+        else:
+            sx = float(raw_params.get("cut_slope_x_mm", 0.0))
+            sy = float(raw_params.get("cut_slope_y_mm", 0.0))
+            scale = max(float(migrated.get("b_mm", default_params["b_mm"])), 1.0)
+            slope = math.hypot(sx / scale, sy / scale)
+            if slope > 1.0e-12:
+                migrated["ellipsoid_tilt_deg"] = min(35.0, math.degrees(math.atan(slope)))
+
+        if "cut_drop_deg" in raw_params:
+            migrated["cut_drop_deg"] = min(35.0, max(0.0, float(raw_params["cut_drop_deg"])))
+        else:
+            migrated["cut_drop_deg"] = 0.0
+
+        old_azimuth = float(raw_params.get("cut_azimuth_deg", 0.0))
+        if abs(old_azimuth) > 1.0e-9:
+            migrated["rotation_z_deg"] = (
+                float(migrated.get("rotation_z_deg", 0.0)) + old_azimuth
+            ) % 360.0
+    except Exception:
+        pass
+    return migrated
+
+
 def _normalize_state(payload: dict | None) -> dict:
     defaults = _default_state()
     if not isinstance(payload, dict):
@@ -152,6 +215,7 @@ def _normalize_state(payload: dict | None) -> dict:
         raw_params = incoming_modules.get(idx, default_params)
         if not isinstance(raw_params, dict):
             raw_params = default_params
+        raw_params = _migrate_old_module_params(raw_params, default_params)
         state["modules"][idx] = {
             key: _coerce_float(raw_params, key, float(default_params[key]))
             for key in PARAM_KEYS
