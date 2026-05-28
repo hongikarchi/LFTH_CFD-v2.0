@@ -235,8 +235,23 @@ bb_min = [1e30, 1e30, 1e30]
 bb_max = [-1e30, -1e30, -1e30]
 cnt = 0
 curves = []
+flat_curve_groups = {{}}
 
-def add_curve(c):
+def flat_group_key(c):
+    cb = c.GetBoundingBox(True)
+    if not cb.IsValid or abs(cb.Max.Z - cb.Min.Z) >= 5.0:
+        return None
+    return int(round(((cb.Max.Z + cb.Min.Z) * 0.5) / 10.0))
+
+def collect_flat_curve(c):
+    key = flat_group_key(c)
+    if key is None:
+        return
+    if key not in flat_curve_groups:
+        flat_curve_groups[key] = []
+    flat_curve_groups[key].append(c)
+
+def add_curve(c, source):
     if c is None:
         return
     try:
@@ -258,12 +273,16 @@ def add_curve(c):
         pts.append([float(p.X), float(p.Y), float(p.Z)])
         zmin = min(zmin, float(p.Z))
         zmax = max(zmax, float(p.Z))
+    endpoint_gap = 1e30
     if len(pts) >= 2:
         dx = pts[0][0] - pts[-1][0]
         dy = pts[0][1] - pts[-1][1]
         dz = pts[0][2] - pts[-1][2]
-        if math.sqrt(dx*dx + dy*dy + dz*dz) < 1.0:
+        endpoint_gap = math.sqrt(dx*dx + dy*dy + dz*dz)
+        if endpoint_gap < 1.0:
             pts = pts[:-1]
+    if (not c.IsClosed) and endpoint_gap > 5.0:
+        return
     if len(pts) < 3:
         return
     area = 0.0
@@ -276,7 +295,8 @@ def add_curve(c):
         "length": length,
         "z_min": zmin,
         "z_max": zmax,
-        "closed": bool(c.IsClosed)
+        "closed": bool(c.IsClosed),
+        "source": source
     }})
 
 settings = Rhino.DocObjects.ObjectEnumeratorSettings()
@@ -299,22 +319,31 @@ for o in doc.Objects.GetObjectList(settings):
             bb_max[k] = max(bb_max[k], v)
     g = o.Geometry
     if isinstance(g, Rhino.Geometry.Curve):
-        add_curve(g.DuplicateCurve())
+        c = g.DuplicateCurve()
+        if c.IsClosed:
+            add_curve(c, "curve")
+        else:
+            collect_flat_curve(c)
     elif isinstance(g, Rhino.Geometry.Extrusion):
         g = g.ToBrep()
         for edge in g.Edges:
             c = edge.DuplicateCurve()
             if c:
-                cb = c.GetBoundingBox(True)
-                if cb.IsValid and abs(cb.Max.Z - cb.Min.Z) < 5.0:
-                    add_curve(c)
+                collect_flat_curve(c)
     elif isinstance(g, Rhino.Geometry.Brep):
         for edge in g.Edges:
             c = edge.DuplicateCurve()
             if c:
-                cb = c.GetBoundingBox(True)
-                if cb.IsValid and abs(cb.Max.Z - cb.Min.Z) < 5.0:
-                    add_curve(c)
+                collect_flat_curve(c)
+
+for key, group in flat_curve_groups.items():
+    try:
+        joined = Rhino.Geometry.Curve.JoinCurves(group, 20.0)
+    except Exception:
+        joined = []
+    for c in joined:
+        if c and c.IsClosed:
+            add_curve(c, "joined_edges")
 
 payload = {{
     "object_count": cnt,
@@ -356,6 +385,9 @@ print("BOUNDARY_CURVE_JSON " + json.dumps(payload))
             "sample_count": len(polygon),
             "xy_curve_mm": polygon,
             "xy_area_mm2": round(float(curve.get("xy_area", 0.0)), 3),
+            "selected_curve_source": curve.get("source", ""),
+            "selected_curve_closed": bool(curve.get("closed", False)),
+            "selected_curve_length_mm": round(float(curve.get("length", 0.0)), 3),
             "z_min_mm": z_min,
             "z_max_mm": z_max,
             "bbox_mm": bbox,
